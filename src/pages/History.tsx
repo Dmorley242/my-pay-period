@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccounts, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { money, fmtDate } from "@/lib/format";
-import { Trash2, ArrowRight, Search } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 type Row = { id: string; date: string; kind: "tx" | "transfer"; type: string; account: string; category: string; amount: number; notes: string; signed: number; };
 
 export default function History() {
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
   const { data: txs = [] } = useTransactions();
   const { data: transfers = [] } = useTransfers();
   const { data: accounts = [] } = useAccounts();
@@ -28,6 +30,11 @@ export default function History() {
   const [category, setCategory] = useState("all");
   const [type, setType] = useState("all");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const accountFromUrl = searchParams.get("account");
+    if (accountFromUrl) setAccount(accountFromUrl);
+  }, [searchParams]);
 
   const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "—";
@@ -80,7 +87,7 @@ export default function History() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold">Transaction History</h1><p className="text-muted-foreground mt-1">All transactions and transfers.</p></div>
+      <div><h1 className="text-3xl font-bold">Transaction History</h1><p className="text-muted-foreground mt-1">All transactions and transfers. Account links from the dashboard auto-filter this page.</p></div>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
