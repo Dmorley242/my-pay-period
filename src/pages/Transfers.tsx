@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccounts, usePayPeriods, useActivePayPeriod, useTransfers } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,14 +28,20 @@ export default function Transfers() {
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
 
+  useEffect(() => {
+    if (active?.id && periodId === "none") setPeriodId(active.id);
+  }, [active?.id, periodId]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !from || !to || from === to) return toast.error("Pick two different accounts");
+    const parsedAmount = parseFloat(amount);
     if (!amount) return toast.error("Amount required");
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return toast.error("Enter an amount greater than 0");
     const { error } = await supabase.from("transfers").insert({
       user_id: user.id, date, from_account_id: from, to_account_id: to,
       pay_period_id: periodId === "none" ? null : periodId,
-      amount: parseFloat(amount), notes: notes || null,
+      amount: parsedAmount, notes: notes || null,
     });
     if (error) return toast.error(error.message);
     toast.success("Transfer saved");
