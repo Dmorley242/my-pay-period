@@ -199,7 +199,7 @@ export default function PayPeriods() {
         <CardHeader><CardTitle>New Pay Period</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={add} className="space-y-4">
-            <FormFields s={form} set={setForm} />
+            <FormFields s={form} set={setForm} accounts={accounts} />
             <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Period</Button>
           </form>
         </CardContent>
@@ -234,7 +234,7 @@ export default function PayPeriods() {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Edit Pay Period</DialogTitle></DialogHeader>
           <form onSubmit={saveEdit} className="space-y-4">
-            <FormFields s={editForm} set={setEditForm} />
+            <FormFields s={editForm} set={setEditForm} accounts={accounts} />
             <DialogFooter><Button type="submit">Save</Button></DialogFooter>
           </form>
         </DialogContent>
