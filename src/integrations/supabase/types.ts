@@ -115,8 +115,13 @@ export type Database = {
           created_at: string
           end_date: string
           id: string
+          income_source: string | null
           is_active: boolean
           name: string
+          net_pay_amount: number | null
+          notes: string | null
+          paycheck_account_id: string | null
+          paycheck_transaction_id: string | null
           start_date: string
           user_id: string
         }
@@ -124,8 +129,13 @@ export type Database = {
           created_at?: string
           end_date: string
           id?: string
+          income_source?: string | null
           is_active?: boolean
           name: string
+          net_pay_amount?: number | null
+          notes?: string | null
+          paycheck_account_id?: string | null
+          paycheck_transaction_id?: string | null
           start_date: string
           user_id: string
         }
@@ -133,8 +143,13 @@ export type Database = {
           created_at?: string
           end_date?: string
           id?: string
+          income_source?: string | null
           is_active?: boolean
           name?: string
+          net_pay_amount?: number | null
+          notes?: string | null
+          paycheck_account_id?: string | null
+          paycheck_transaction_id?: string | null
           start_date?: string
           user_id?: string
         }
