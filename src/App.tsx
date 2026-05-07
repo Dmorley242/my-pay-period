@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Accounts from "./pages/Accounts";
+import AccountDetail from "./pages/AccountDetail";
 import AddTransaction from "./pages/AddTransaction";
 import Transfers from "./pages/Transfers";
 import Categories from "./pages/Categories";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Protected el={<Dashboard />} />} />
             <Route path="/accounts" element={<Protected el={<Accounts />} />} />
+            <Route path="/accounts/:accountId" element={<Protected el={<AccountDetail />} />} />
             <Route path="/add" element={<Protected el={<AddTransaction />} />} />
             <Route path="/transfers" element={<Protected el={<Transfers />} />} />
             <Route path="/categories" element={<Protected el={<Categories />} />} />
