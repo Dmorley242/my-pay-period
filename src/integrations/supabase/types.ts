@@ -19,7 +19,9 @@ export type Database = {
           account_id: string
           amount: number
           created_at: string
+          goal_amount: number | null
           hold_name: string
+          hold_type: string
           id: string
           notes: string | null
           released_at: string | null
@@ -30,7 +32,9 @@ export type Database = {
           account_id: string
           amount: number
           created_at?: string
+          goal_amount?: number | null
           hold_name: string
+          hold_type?: string
           id?: string
           notes?: string | null
           released_at?: string | null
@@ -41,7 +45,9 @@ export type Database = {
           account_id?: string
           amount?: number
           created_at?: string
+          goal_amount?: number | null
           hold_name?: string
+          hold_type?: string
           id?: string
           notes?: string | null
           released_at?: string | null
