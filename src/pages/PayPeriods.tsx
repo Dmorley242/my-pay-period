@@ -170,27 +170,6 @@ export default function PayPeriods() {
     qc.invalidateQueries();
   };
 
-  const FormFields = ({ s, set }: { s: FormState; set: (f: FormState) => void }) => (
-    <div className="grid gap-3 md:grid-cols-2">
-      <div className="md:col-span-2"><Label>Pay Period Name</Label><Input value={s.name} onChange={e => set({ ...s, name: e.target.value })} /></div>
-      <div><Label>From Date</Label><Input type="date" value={s.start} onChange={e => set({ ...s, start: e.target.value })} /></div>
-      <div><Label>To Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
-      <div><Label>Income Source</Label><Input value={s.income_source} onChange={e => set({ ...s, income_source: e.target.value })} placeholder="e.g. Fidelity Salary" /></div>
-      <div>
-        <Label>Paycheck Account</Label>
-        <Select value={s.account_id} onValueChange={v => set({ ...s, account_id: v })}>
-          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            {accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="md:col-span-2"><Label>Net Pay Amount</Label><Input type="number" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00 (leave blank to skip income)" /></div>
-      <div className="md:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       <div><h1 className="text-3xl font-bold">Pay Periods</h1><p className="text-muted-foreground mt-1">Create a pay period and optionally record your paycheck income at the same time.</p></div>
