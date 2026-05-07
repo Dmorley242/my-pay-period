@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useAccounts, useActivePayPeriod, useCategories, useTransactions, useTransfers } from "@/hooks/useFinanceData";
+import { useAccountHolds, useAccounts, useActivePayPeriod, useCategories, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate } from "@/lib/format";
@@ -21,6 +21,7 @@ export default function Dashboard() {
   const { data: accounts = [] } = useAccounts();
   const { data: txs = [] } = useTransactions();
   const { data: transfers = [] } = useTransfers();
+  const { data: holds = [] } = useAccountHolds();
   const { data: cats = [] } = useCategories();
   const active = useActivePayPeriod();
   const [idx, setIdx] = useState(0);
@@ -113,10 +114,28 @@ export default function Dashboard() {
                 <Button onClick={next} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronRight className="h-5 w-5" /></Button>
               </div>
 
-              <div className="mt-6 text-center">
-                <div className="text-4xl md:text-5xl font-bold tracking-tight tabular-nums">{money(current.current_balance)}</div>
-                <div className="mt-1 text-xs opacity-80">Current balance · started at {money(current.starting_balance)}</div>
-              </div>
+              {(() => {
+                const activeHolds = holds.filter(h => h.account_id === current.id && h.status === "active").reduce((s, h) => s + Number(h.amount), 0);
+                const available = Number(current.current_balance) - activeHolds;
+                return (
+                  <>
+                    <div className="mt-6 text-center">
+                      <div className="text-4xl md:text-5xl font-bold tracking-tight tabular-nums">{money(current.current_balance)}</div>
+                      <div className="mt-1 text-xs opacity-80">Current balance · started at {money(current.starting_balance)}</div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="rounded-xl bg-white/10 backdrop-blur p-3 text-center">
+                        <div className="text-[11px] opacity-80">Active Holds</div>
+                        <div className="text-base font-semibold tabular-nums">{money(activeHolds)}</div>
+                      </div>
+                      <div className="rounded-xl bg-white/10 backdrop-blur p-3 text-center">
+                        <div className="text-[11px] opacity-80">Available</div>
+                        <div className="text-base font-semibold tabular-nums">{money(available)}</div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="mt-6 rounded-2xl bg-white/10 backdrop-blur p-3 md:p-4">
                 <div className="flex items-center justify-between mb-2 px-1">
