@@ -14,7 +14,7 @@ const links = [
   { to: "/holds", icon: Lock, label: "Holds" },
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
-  { to: "/history", icon: History, label: "History" },
+  { to: "/history", icon: History, label: "Account History" },
 ];
 
 const NavItems = ({ onClick }: { onClick?: () => void }) => (
