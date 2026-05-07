@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { money, fmtDate } from "@/lib/format";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 type Row = { id: string; date: string; kind: "tx" | "transfer"; type: string; category: string; amount: number; notes: string; signed: number; };
 
@@ -32,6 +33,7 @@ export default function History() {
   const [period, setPeriod] = useState("all");
   const [category, setCategory] = useState("all");
   const [type, setType] = useState("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -119,40 +121,52 @@ export default function History() {
 
       {selectedAcc && (
         <>
-          <Card>
-            <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-4">
-              <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
-              <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-              <div><Label>Pay Period</Label>
-                <Select value={period} onValueChange={setPeriod}><SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="all">All</SelectItem>{periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Category</Label>
-                <Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="all">All</SelectItem>{cats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Type</Label>
-                <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                    <SelectItem value="deposit">Deposit</SelectItem>
-                    <SelectItem value="withdrawal">Withdrawal</SelectItem>
-                    <SelectItem value="transfer in">Transfer In</SelectItem>
-                    <SelectItem value="transfer out">Transfer Out</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2"><Label>Search notes</Label>
-                <div className="relative"><Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." /></div>
-              </div>
-              <div className="md:col-span-4"><Button variant="outline" size="sm" onClick={reset}>Reset filters</Button></div>
-            </CardContent>
-          </Card>
+          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="outline" size="sm" onClick={() => setFiltersOpen(o => !o)}>
+                <SlidersHorizontal className="h-4 w-4 mr-1" />
+                {filtersOpen ? "Hide Filters" : "Filter"}
+              </Button>
+              {(from || to || period !== "all" || category !== "all" || type !== "all" || search) && (
+                <Button variant="ghost" size="sm" onClick={reset}>Reset</Button>
+              )}
+            </div>
+            <CollapsibleContent>
+              <Card className="mt-3">
+                <CardContent className="pt-6 grid gap-3 md:grid-cols-4">
+                  <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
+                  <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
+                  <div><Label>Pay Period</Label>
+                    <Select value={period} onValueChange={setPeriod}><SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="all">All</SelectItem>{periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Category</Label>
+                    <Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="all">All</SelectItem>{cats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Type</Label>
+                    <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="expense">Expense</SelectItem>
+                        <SelectItem value="deposit">Deposit</SelectItem>
+                        <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                        <SelectItem value="transfer in">Transfer In</SelectItem>
+                        <SelectItem value="transfer out">Transfer Out</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-3"><Label>Search notes</Label>
+                    <div className="relative"><Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." /></div>
+                  </div>
+                  <div className="md:col-span-4"><Button variant="outline" size="sm" onClick={reset}>Reset filters</Button></div>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
 
           <Card>
             <CardHeader><CardTitle className="text-base">{rows.length} {rows.length === 1 ? "result" : "results"}</CardTitle></CardHeader>
