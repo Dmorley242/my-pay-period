@@ -36,6 +36,27 @@ const emptyForm = (): FormState => {
   return { name: d.name, start: d.start, end: d.end, income_source: "", account_id: "none", net_pay: "", notes: "" };
 };
 
+const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) => void; accounts: { id: string; name: string; bank_name: string | null }[] }) => (
+  <div className="grid gap-3 md:grid-cols-2">
+    <div className="md:col-span-2"><Label>Pay Period Name</Label><Input value={s.name} onChange={e => set({ ...s, name: e.target.value })} /></div>
+    <div><Label>From Date</Label><Input type="date" value={s.start} onChange={e => set({ ...s, start: e.target.value })} /></div>
+    <div><Label>To Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
+    <div><Label>Income Source</Label><Input value={s.income_source} onChange={e => set({ ...s, income_source: e.target.value })} placeholder="e.g. Fidelity Salary" /></div>
+    <div>
+      <Label>Paycheck Account</Label>
+      <Select value={s.account_id} onValueChange={v => set({ ...s, account_id: v })}>
+        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">None</SelectItem>
+          {accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="md:col-span-2"><Label>Net Pay Amount</Label><Input type="number" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00 (leave blank to skip income)" /></div>
+    <div className="md:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
+  </div>
+);
+
 export default function PayPeriods() {
   const { user } = useAuth();
   const qc = useQueryClient();
