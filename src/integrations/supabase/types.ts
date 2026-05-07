@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      account_holds: {
-        Row: {
-          account_id: string
-          amount: number
-          created_at: string
-          hold_name: string
-          id: string
-          notes: string | null
-          released_at: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          account_id: string
-          amount: number
-          created_at?: string
-          hold_name: string
-          id?: string
-          notes?: string | null
-          released_at?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          account_id?: string
-          amount?: number
-          created_at?: string
-          hold_name?: string
-          id?: string
-          notes?: string | null
-          released_at?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       accounts: {
         Row: {
           account_type: string | null
