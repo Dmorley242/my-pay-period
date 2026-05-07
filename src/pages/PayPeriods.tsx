@@ -38,12 +38,11 @@ const emptyForm = (): FormState => {
 
 const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) => void; accounts: { id: string; name: string; bank_name: string | null }[] }) => (
   <div className="grid gap-3 md:grid-cols-2">
-    <div className="md:col-span-2"><Label>Pay Period Name</Label><Input value={s.name} onChange={e => set({ ...s, name: e.target.value })} /></div>
     <div><Label>From Date</Label><Input type="date" value={s.start} onChange={e => set({ ...s, start: e.target.value })} /></div>
-    <div><Label>To Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
+    <div><Label>Until Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
     <div><Label>Income Source</Label><Input value={s.income_source} onChange={e => set({ ...s, income_source: e.target.value })} placeholder="e.g. Fidelity Salary" /></div>
     <div>
-      <Label>Paycheck Account</Label>
+      <Label>Account</Label>
       <Select value={s.account_id} onValueChange={v => set({ ...s, account_id: v })}>
         <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
         <SelectContent>
@@ -52,7 +51,7 @@ const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) =>
         </SelectContent>
       </Select>
     </div>
-    <div className="md:col-span-2"><Label>Net Pay Amount</Label><Input type="number" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00 (leave blank to skip income)" /></div>
+    <div><Label>Pay Amount</Label><Input type="number" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00" /></div>
     <div className="md:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
   </div>
 );
@@ -210,13 +209,20 @@ export default function PayPeriods() {
         <CardContent>
           {periods.length === 0 && <p className="text-sm text-muted-foreground">No pay periods yet.</p>}
           <div className="divide-y">
-            {periods.map(p => (
-              <div key={p.id} className="flex items-center justify-between py-3 gap-3">
+            {periods.map(p => {
+              const acc = accounts.find(a => a.id === p.paycheck_account_id);
+              return (
+              <div key={p.id} className={`flex items-center justify-between py-3 gap-3 ${p.is_active ? "bg-primary/5 rounded-lg px-2" : ""}`}>
                 <div className="min-w-0">
-                  <div className="font-medium flex items-center gap-2 flex-wrap">{p.name}{p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}</div>
-                  <div className="text-xs text-muted-foreground">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
-                  {p.net_pay_amount != null && p.paycheck_account_id && (
-                    <div className="text-xs text-income mt-0.5">Paycheck: +{money(p.net_pay_amount)} · {p.income_source || "Income"}</div>
+                  <div className="font-medium flex items-center gap-2 flex-wrap">
+                    {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
+                    {p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {p.income_source || "—"}{acc ? ` · ${accLabel(acc)}` : ""}
+                  </div>
+                  {p.net_pay_amount != null && (
+                    <div className="text-xs text-income mt-0.5">+{money(p.net_pay_amount)}</div>
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -225,7 +231,8 @@ export default function PayPeriods() {
                   <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => del(p)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
