@@ -1,47 +1,179 @@
 import { useState } from "react";
-import { usePayPeriods } from "@/hooks/useFinanceData";
+import { useAccounts, usePayPeriods, type PayPeriod } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, CheckCircle2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Trash2, Plus, CheckCircle2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, money } from "@/lib/format";
 
-// Helper: next pay period starting on the 27th
 const defaultNext = () => {
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 27);
-  if (today.getDate() >= 27) start.setMonth(start.getMonth() + 1);
-  // adjust: start = previous month's 27 if today < 27
   if (today.getDate() < 27) start.setMonth(start.getMonth() - 1);
   const end = new Date(start.getFullYear(), start.getMonth() + 1, 26);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   return { start: fmt(start), end: fmt(end), name: start.toLocaleDateString("en-US", { month: "long", year: "numeric" }) };
 };
 
+const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
+
+type FormState = {
+  name: string; start: string; end: string;
+  income_source: string; account_id: string; net_pay: string; notes: string;
+};
+
+const emptyForm = (): FormState => {
+  const d = defaultNext();
+  return { name: d.name, start: d.start, end: d.end, income_source: "", account_id: "none", net_pay: "", notes: "" };
+};
+
+const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) => void; accounts: { id: string; name: string; bank_name: string | null }[] }) => (
+  <div className="grid gap-3 md:grid-cols-2">
+    <div className="md:col-span-2"><Label>Pay Period Name</Label><Input value={s.name} onChange={e => set({ ...s, name: e.target.value })} /></div>
+    <div><Label>From Date</Label><Input type="date" value={s.start} onChange={e => set({ ...s, start: e.target.value })} /></div>
+    <div><Label>To Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
+    <div><Label>Income Source</Label><Input value={s.income_source} onChange={e => set({ ...s, income_source: e.target.value })} placeholder="e.g. Fidelity Salary" /></div>
+    <div>
+      <Label>Paycheck Account</Label>
+      <Select value={s.account_id} onValueChange={v => set({ ...s, account_id: v })}>
+        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">None</SelectItem>
+          {accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="md:col-span-2"><Label>Net Pay Amount</Label><Input type="number" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00 (leave blank to skip income)" /></div>
+    <div className="md:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
+  </div>
+);
+
 export default function PayPeriods() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: periods = [] } = usePayPeriods();
-  const init = defaultNext();
-  const [name, setName] = useState(init.name);
-  const [start, setStart] = useState(init.start);
-  const [end, setEnd] = useState(init.end);
+  const { data: accounts = [] } = useAccounts();
+  const [form, setForm] = useState<FormState>(emptyForm());
+  const [editing, setEditing] = useState<PayPeriod | null>(null);
+  const [editForm, setEditForm] = useState<FormState>(emptyForm());
+
+  const upsertPaycheckTx = async (
+    period: { id: string; start_date: string },
+    existingTxId: string | null,
+    accountId: string | null,
+    amount: number | null,
+    incomeSource: string | null,
+    notes: string | null,
+    date: string,
+  ): Promise<string | null> => {
+    if (!user) return null;
+    const hasIncome = accountId && amount && amount > 0;
+
+    if (existingTxId && !hasIncome) {
+      // Remove existing tx → balance will revert via trigger
+      await supabase.from("transactions").delete().eq("id", existingTxId);
+      return null;
+    }
+    if (existingTxId && hasIncome) {
+      // Update in place. If account changed, trigger on update won't move balances,
+      // so we delete+reinsert to leverage existing balance triggers.
+      const { data: existing } = await supabase.from("transactions").select("account_id, amount").eq("id", existingTxId).maybeSingle();
+      const accountChanged = existing && existing.account_id !== accountId;
+      const amountChanged = existing && Number(existing.amount) !== amount;
+      if (accountChanged || amountChanged) {
+        await supabase.from("transactions").delete().eq("id", existingTxId);
+        const { data: ins, error } = await supabase.from("transactions").insert({
+          user_id: user.id, transaction_type: "income", date, account_id: accountId!,
+          pay_period_id: period.id, amount, notes: incomeSource || notes || "Paycheck",
+        }).select("id").single();
+        if (error) { toast.error(error.message); return existingTxId; }
+        return ins.id;
+      } else {
+        await supabase.from("transactions").update({
+          date, notes: incomeSource || notes || "Paycheck", pay_period_id: period.id,
+        }).eq("id", existingTxId);
+        return existingTxId;
+      }
+    }
+    if (!existingTxId && hasIncome) {
+      const { data: ins, error } = await supabase.from("transactions").insert({
+        user_id: user.id, transaction_type: "income", date, account_id: accountId!,
+        pay_period_id: period.id, amount, notes: incomeSource || notes || "Paycheck",
+      }).select("id").single();
+      if (error) { toast.error(error.message); return null; }
+      return ins.id;
+    }
+    return null;
+  };
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const { error } = await supabase.from("pay_periods").insert({
-      user_id: user.id, name, start_date: start, end_date: end, is_active: periods.length === 0,
-    });
+    const amt = form.net_pay ? parseFloat(form.net_pay) : null;
+    const accountId = form.account_id === "none" ? null : form.account_id;
+    const { data: created, error } = await supabase.from("pay_periods").insert({
+      user_id: user.id, name: form.name, start_date: form.start, end_date: form.end,
+      is_active: periods.length === 0,
+      income_source: form.income_source || null,
+      paycheck_account_id: accountId,
+      net_pay_amount: amt,
+      notes: form.notes || null,
+    }).select("*").single();
     if (error) return toast.error(error.message);
+
+    const txId = await upsertPaycheckTx(created, null, accountId, amt, form.income_source, form.notes, form.start);
+    if (txId) await supabase.from("pay_periods").update({ paycheck_transaction_id: txId }).eq("id", created.id);
+
     toast.success("Pay period added");
-    qc.invalidateQueries({ queryKey: ["pay_periods"] });
+    setForm(emptyForm());
+    qc.invalidateQueries();
+  };
+
+  const openEdit = (p: PayPeriod) => {
+    setEditing(p);
+    setEditForm({
+      name: p.name, start: p.start_date, end: p.end_date,
+      income_source: p.income_source || "",
+      account_id: p.paycheck_account_id || "none",
+      net_pay: p.net_pay_amount != null ? String(p.net_pay_amount) : "",
+      notes: p.notes || "",
+    });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    const amt = editForm.net_pay ? parseFloat(editForm.net_pay) : null;
+    const accountId = editForm.account_id === "none" ? null : editForm.account_id;
+
+    const newTxId = await upsertPaycheckTx(
+      { id: editing.id, start_date: editForm.start },
+      editing.paycheck_transaction_id,
+      accountId, amt, editForm.income_source, editForm.notes, editForm.start,
+    );
+
+    const { error } = await supabase.from("pay_periods").update({
+      name: editForm.name, start_date: editForm.start, end_date: editForm.end,
+      income_source: editForm.income_source || null,
+      paycheck_account_id: accountId,
+      net_pay_amount: amt,
+      notes: editForm.notes || null,
+      paycheck_transaction_id: newTxId,
+    }).eq("id", editing.id);
+    if (error) return toast.error(error.message);
+
+    toast.success("Pay period updated");
+    setEditing(null);
+    qc.invalidateQueries();
   };
 
   const setActive = async (id: string) => {
@@ -52,24 +184,23 @@ export default function PayPeriods() {
     qc.invalidateQueries({ queryKey: ["pay_periods"] });
   };
 
-  const del = async (id: string) => {
-    const { error } = await supabase.from("pay_periods").delete().eq("id", id);
+  const del = async (p: PayPeriod) => {
+    if (p.paycheck_transaction_id) await supabase.from("transactions").delete().eq("id", p.paycheck_transaction_id);
+    const { error } = await supabase.from("pay_periods").delete().eq("id", p.id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["pay_periods"] });
+    qc.invalidateQueries();
   };
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold">Pay Periods</h1><p className="text-muted-foreground mt-1">Your pay period starts on the 27th. Track income & expenses by cycle.</p></div>
+      <div><h1 className="text-3xl font-bold">Pay Periods</h1><p className="text-muted-foreground mt-1">Create a pay period and optionally record your paycheck income at the same time.</p></div>
 
       <Card>
         <CardHeader><CardTitle>New Pay Period</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={add} className="grid gap-3 md:grid-cols-4 items-end">
-            <div className="md:col-span-2"><Label>Name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label>Start</Label><Input type="date" value={start} onChange={e => setStart(e.target.value)} /></div>
-            <div><Label>End</Label><Input type="date" value={end} onChange={e => setEnd(e.target.value)} /></div>
-            <Button type="submit" className="md:col-span-4 md:w-auto"><Plus className="h-4 w-4 mr-1" />Add Period</Button>
+          <form onSubmit={add} className="space-y-4">
+            <FormFields s={form} set={setForm} accounts={accounts} />
+            <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Period</Button>
           </form>
         </CardContent>
       </Card>
@@ -81,19 +212,33 @@ export default function PayPeriods() {
           <div className="divide-y">
             {periods.map(p => (
               <div key={p.id} className="flex items-center justify-between py-3 gap-3">
-                <div>
-                  <div className="font-medium flex items-center gap-2">{p.name}{p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}</div>
+                <div className="min-w-0">
+                  <div className="font-medium flex items-center gap-2 flex-wrap">{p.name}{p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}</div>
                   <div className="text-xs text-muted-foreground">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
+                  {p.net_pay_amount != null && p.paycheck_account_id && (
+                    <div className="text-xs text-income mt-0.5">Paycheck: +{money(p.net_pay_amount)} · {p.income_source || "Income"}</div>
+                  )}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   {!p.is_active && <Button variant="outline" size="sm" onClick={() => setActive(p.id)}><CheckCircle2 className="h-4 w-4 mr-1" />Set active</Button>}
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => del(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => del(p)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Edit Pay Period</DialogTitle></DialogHeader>
+          <form onSubmit={saveEdit} className="space-y-4">
+            <FormFields s={editForm} set={setEditForm} accounts={accounts} />
+            <DialogFooter><Button type="submit">Save</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
