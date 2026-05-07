@@ -23,6 +23,7 @@ export default function Dashboard() {
   const { data: transfers = [] } = useTransfers();
   const { data: holds = [] } = useAccountHolds();
   const { data: cats = [] } = useCategories();
+  const { data: periods = [] } = usePayPeriods();
   const active = useActivePayPeriod();
   const [idx, setIdx] = useState(0);
   const touchStart = useRef<number | null>(null);
