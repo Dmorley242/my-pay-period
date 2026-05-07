@@ -209,13 +209,20 @@ export default function PayPeriods() {
         <CardContent>
           {periods.length === 0 && <p className="text-sm text-muted-foreground">No pay periods yet.</p>}
           <div className="divide-y">
-            {periods.map(p => (
-              <div key={p.id} className="flex items-center justify-between py-3 gap-3">
+            {periods.map(p => {
+              const acc = accounts.find(a => a.id === p.paycheck_account_id);
+              return (
+              <div key={p.id} className={`flex items-center justify-between py-3 gap-3 ${p.is_active ? "bg-primary/5 rounded-lg px-2" : ""}`}>
                 <div className="min-w-0">
-                  <div className="font-medium flex items-center gap-2 flex-wrap">{p.name}{p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}</div>
-                  <div className="text-xs text-muted-foreground">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
-                  {p.net_pay_amount != null && p.paycheck_account_id && (
-                    <div className="text-xs text-income mt-0.5">Paycheck: +{money(p.net_pay_amount)} · {p.income_source || "Income"}</div>
+                  <div className="font-medium flex items-center gap-2 flex-wrap">
+                    {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
+                    {p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {p.income_source || "—"}{acc ? ` · ${accLabel(acc)}` : ""}
+                  </div>
+                  {p.net_pay_amount != null && (
+                    <div className="text-xs text-income mt-0.5">+{money(p.net_pay_amount)}</div>
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -224,7 +231,8 @@ export default function PayPeriods() {
                   <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => del(p)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
