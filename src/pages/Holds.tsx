@@ -33,6 +33,7 @@ export default function Holds() {
   const [showInactive, setShowInactive] = useState(false);
   const [increaseId, setIncreaseId] = useState<string | null>(null);
   const [increaseAmt, setIncreaseAmt] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
 
   const accName = (id: string) => {
     const a = accounts.find(x => x.id === id);
