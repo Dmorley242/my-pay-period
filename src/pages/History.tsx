@@ -12,45 +12,57 @@ import { Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 
-type Row = { id: string; date: string; kind: "tx" | "transfer"; type: string; account: string; category: string; amount: number; notes: string; signed: number; };
+type Row = { id: string; date: string; kind: "tx" | "transfer"; type: string; category: string; amount: number; notes: string; signed: number; };
+
+const accLabel = (a: { bank_name: string | null; name: string }) =>
+  a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
 export default function History() {
   const qc = useQueryClient();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: txs = [] } = useTransactions();
   const { data: transfers = [] } = useTransfers();
   const { data: accounts = [] } = useAccounts();
   const { data: cats = [] } = useCategories();
   const { data: periods = [] } = usePayPeriods();
 
+  const [account, setAccount] = useState<string>("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [period, setPeriod] = useState("all");
-  const [account, setAccount] = useState("all");
   const [category, setCategory] = useState("all");
   const [type, setType] = useState("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const accountFromUrl = searchParams.get("account");
-    if (accountFromUrl) setAccount(accountFromUrl);
-  }, [searchParams]);
+    const fromUrl = searchParams.get("account");
+    if (fromUrl) setAccount(fromUrl);
+    else if (!account && accounts.length > 0) setAccount(accounts[0].id);
+  }, [searchParams, accounts]);
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "—";
+  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
 
   const rows: Row[] = useMemo(() => {
-    const txRows: Row[] = txs.map(t => ({
+    if (!account) return [];
+    const txRows: Row[] = txs.filter(t => t.account_id === account).map(t => ({
       id: t.id, date: t.date, kind: "tx", type: t.transaction_type,
-      account: accName(t.account_id), category: catName(t.category_id),
+      category: catName(t.category_id),
       amount: Number(t.amount), notes: t.notes ?? "",
       signed: ["income","deposit"].includes(t.transaction_type) ? Number(t.amount) : -Number(t.amount),
     }));
-    const trRows: Row[] = transfers.map(t => ({
-      id: t.id, date: t.date, kind: "transfer", type: "transfer",
-      account: `${accName(t.from_account_id)} → ${accName(t.to_account_id)}`,
-      category: "—", amount: Number(t.amount), notes: t.notes ?? "", signed: Number(t.amount),
-    }));
+    const trRows: Row[] = transfers
+      .filter(t => t.from_account_id === account || t.to_account_id === account)
+      .map(t => {
+        const isIn = t.to_account_id === account;
+        return {
+          id: t.id, date: t.date, kind: "transfer",
+          type: isIn ? "transfer in" : "transfer out",
+          category: isIn ? `From ${accName(t.from_account_id)}` : `To ${accName(t.to_account_id)}`,
+          amount: Number(t.amount), notes: t.notes ?? "",
+          signed: isIn ? Number(t.amount) : -Number(t.amount),
+        };
+      });
     let all = [...txRows, ...trRows];
     if (from) all = all.filter(r => r.date >= from);
     if (to) all = all.filter(r => r.date <= to);
@@ -61,11 +73,6 @@ export default function History() {
       ]);
       all = all.filter(r => ids.has(r.id));
     }
-    if (account !== "all") {
-      const txIds = new Set(txs.filter(t => t.account_id === account).map(t => t.id));
-      const trIds = new Set(transfers.filter(t => t.from_account_id === account || t.to_account_id === account).map(t => t.id));
-      all = all.filter(r => (r.kind === "tx" && txIds.has(r.id)) || (r.kind === "transfer" && trIds.has(r.id)));
-    }
     if (category !== "all") {
       const ids = new Set(txs.filter(t => t.category_id === category).map(t => t.id));
       all = all.filter(r => r.kind === "tx" && ids.has(r.id));
@@ -73,7 +80,7 @@ export default function History() {
     if (type !== "all") all = all.filter(r => r.type === type);
     if (search) all = all.filter(r => r.notes.toLowerCase().includes(search.toLowerCase()));
     return all.sort((a, b) => (a.date < b.date ? 1 : -1));
-  }, [txs, transfers, accounts, cats, from, to, period, account, category, type, search]);
+  }, [account, txs, transfers, accounts, cats, from, to, period, category, type, search]);
 
   const del = async (kind: string, id: string) => {
     const table = kind === "tx" ? "transactions" : "transfers";
@@ -83,71 +90,92 @@ export default function History() {
     qc.invalidateQueries();
   };
 
-  const reset = () => { setFrom(""); setTo(""); setPeriod("all"); setAccount("all"); setCategory("all"); setType("all"); setSearch(""); };
+  const reset = () => { setFrom(""); setTo(""); setPeriod("all"); setCategory("all"); setType("all"); setSearch(""); };
+
+  const selectedAcc = accounts.find(a => a.id === account);
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold">Transaction History</h1><p className="text-muted-foreground mt-1">All transactions and transfers. Account links from the dashboard auto-filter this page.</p></div>
+      <div>
+        <h1 className="text-3xl font-bold">Account History</h1>
+        <p className="text-muted-foreground mt-1">Select an account to view its movements.</p>
+      </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-4">
-          <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
-          <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-          <div><Label>Pay Period</Label>
-            <Select value={period} onValueChange={setPeriod}><SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All</SelectItem>{periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Account</Label>
-            <Select value={account} onValueChange={setAccount}><SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All</SelectItem>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Category</Label>
-            <Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All</SelectItem>{cats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Type</Label>
-            <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger>
+        <CardHeader><CardTitle className="text-base">Account</CardTitle></CardHeader>
+        <CardContent>
+          {accounts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No accounts yet.</p>
+          ) : (
+            <Select value={account} onValueChange={(v) => { setAccount(v); setSearchParams({ account: v }); }}>
+              <SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="expense">Expense</SelectItem>
-                <SelectItem value="deposit">Deposit</SelectItem>
-                <SelectItem value="withdrawal">Withdrawal</SelectItem>
-                <SelectItem value="transfer">Transfer</SelectItem>
+                {accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
-          <div className="md:col-span-2"><Label>Search notes</Label>
-            <div className="relative"><Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." /></div>
-          </div>
-          <div className="md:col-span-4"><Button variant="outline" size="sm" onClick={reset}>Reset filters</Button></div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">{rows.length} {rows.length === 1 ? "result" : "results"}</CardTitle></CardHeader>
-        <CardContent>
-          {rows.length === 0 && <p className="text-sm text-muted-foreground">No transactions match your filters.</p>}
-          <div className="divide-y">
-            {rows.map(r => (
-              <div key={r.kind + r.id} className="py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium truncate">{r.notes || r.category} <span className="text-xs uppercase ml-2 text-muted-foreground">{r.type}</span></div>
-                  <div className="text-xs text-muted-foreground truncate">{fmtDate(r.date)} · {r.account}</div>
-                </div>
-                <div className={`font-semibold tabular-nums ${r.kind === "transfer" ? "text-transfer" : r.signed >= 0 ? "text-income" : "text-expense"}`}>
-                  {r.signed >= 0 ? "+" : "-"}{money(Math.abs(r.amount))}
-                </div>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => del(r.kind, r.id)}><Trash2 className="h-4 w-4" /></Button>
+      {selectedAcc && (
+        <>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-4">
+              <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
+              <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
+              <div><Label>Pay Period</Label>
+                <Select value={period} onValueChange={setPeriod}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="all">All</SelectItem>{periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div><Label>Category</Label>
+                <Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="all">All</SelectItem>{cats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Type</Label>
+                <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="income">Income</SelectItem>
+                    <SelectItem value="expense">Expense</SelectItem>
+                    <SelectItem value="deposit">Deposit</SelectItem>
+                    <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                    <SelectItem value="transfer in">Transfer In</SelectItem>
+                    <SelectItem value="transfer out">Transfer Out</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2"><Label>Search notes</Label>
+                <div className="relative"><Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." /></div>
+              </div>
+              <div className="md:col-span-4"><Button variant="outline" size="sm" onClick={reset}>Reset filters</Button></div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">{rows.length} {rows.length === 1 ? "result" : "results"}</CardTitle></CardHeader>
+            <CardContent>
+              {rows.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
+              <div className="divide-y">
+                {rows.map(r => (
+                  <div key={r.kind + r.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{r.notes || r.category} <span className="text-xs uppercase ml-2 text-muted-foreground">{r.type}</span></div>
+                      <div className="text-xs text-muted-foreground truncate">{fmtDate(r.date)} · {r.category}</div>
+                    </div>
+                    <div className={`font-semibold tabular-nums ${r.kind === "transfer" ? "text-transfer" : r.signed >= 0 ? "text-income" : "text-expense"}`}>
+                      {r.signed >= 0 ? "+" : "-"}{money(Math.abs(r.amount))}
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => del(r.kind, r.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

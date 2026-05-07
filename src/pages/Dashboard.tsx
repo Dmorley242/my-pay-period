@@ -108,8 +108,8 @@ export default function Dashboard() {
                 <Button onClick={prev} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronLeft className="h-5 w-5" /></Button>
                 <div className="min-w-0 flex-1 text-center">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur"><Wallet className="h-3.5 w-3.5" /> Account {safeIdx + 1} of {accounts.length}</div>
-                  <h2 className="mt-3 text-lg md:text-xl font-semibold tracking-tight truncate">{[current.bank_name, current.name].filter(Boolean).join(" ")}</h2>
-                  {current.account_type && <div className="text-xs opacity-80 mt-0.5">{current.account_type}</div>}
+                  {current.bank_name && <div className="mt-3 text-base md:text-lg font-semibold tracking-tight truncate">{current.bank_name}</div>}
+                  <div className={`${current.bank_name ? "text-sm opacity-90" : "mt-3 text-lg md:text-xl font-semibold"} truncate`}>{current.name}</div>
                 </div>
                 <Button onClick={next} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronRight className="h-5 w-5" /></Button>
               </div>
@@ -176,18 +176,9 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        <Button asChild variant="outline" size="sm"><Link to="/add?type=income"><Plus className="h-4 w-4 mr-1" />Income</Link></Button>
-        <Button asChild variant="outline" size="sm"><Link to="/add?type=expense"><TrendingDown className="h-4 w-4 mr-1" />Expense</Link></Button>
-        <Button asChild variant="outline" size="sm"><Link to="/transfers"><ArrowLeftRight className="h-4 w-4 mr-1" />Transfer</Link></Button>
-        <Button asChild size="sm"><Link to="/accounts"><PlusCircle className="h-4 w-4 mr-1" />Account</Link></Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Wallet} label="Total balance" value={money(total)} color="text-foreground" />
-        <StatCard icon={TrendingUp} label="Income this period" value={money(income)} color="text-income" />
-        <StatCard icon={TrendingDown} label="Spent this period" value={money(expense)} color="text-expense" />
-        <StatCard icon={ArrowLeftRight} label="Transfers" value={money(transfersTotal)} color="text-transfer" />
+      <div className="grid grid-cols-2 gap-2">
+        <Button asChild size="sm"><Link to="/add"><PlusCircle className="h-4 w-4 mr-1" />Add Transaction</Link></Button>
+        <Button asChild variant="outline" size="sm"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
