@@ -90,44 +90,51 @@ export default function Holds() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Lock className="h-6 w-6" />Holds</h1>
-        <p className="text-sm text-muted-foreground">Reserve money or save toward goals without changing real balances.</p>
-      </div>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Lock className="h-6 w-6" />Holds</h1>
+          <p className="text-sm text-muted-foreground">Reserve money or save toward goals without changing real balances.</p>
+        </div>
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogTrigger asChild>
+            <Button><Plus className="h-4 w-4 mr-1" />New Hold</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>New Hold</DialogTitle></DialogHeader>
+            <form onSubmit={submit} className="space-y-4">
+              <Tabs value={holdType} onValueChange={(v) => setHoldType(v as HoldType)}>
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="reserve_hold"><Lock className="h-4 w-4 mr-1" />Reserve Hold</TabsTrigger>
+                  <TabsTrigger value="savings_goal"><Target className="h-4 w-4 mr-1" />Savings Goal</TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="h-4 w-4" />New Hold</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-4">
-            <Tabs value={holdType} onValueChange={(v) => setHoldType(v as HoldType)}>
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="reserve_hold"><Lock className="h-4 w-4 mr-1" />Reserve Hold</TabsTrigger>
-                <TabsTrigger value="savings_goal"><Target className="h-4 w-4 mr-1" />Savings Goal</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <div><Label>Hold name</Label><Input value={hold_name} onChange={e => setHoldName(e.target.value)} placeholder={holdType === "savings_goal" ? "Home Gym" : "Radiator Pump"} required /></div>
-              <div><Label>Account</Label>
-                <Select value={account_id} onValueChange={setAccountId}>
-                  <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
-                  <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{[a.bank_name, a.name].filter(Boolean).join(" - ")}</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2"><Label>Hold name</Label><Input value={hold_name} onChange={e => setHoldName(e.target.value)} placeholder={holdType === "savings_goal" ? "Home Gym" : "Radiator Pump"} required /></div>
+                <div className="md:col-span-2"><Label>Account</Label>
+                  <Select value={account_id} onValueChange={setAccountId}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{[a.bank_name, a.name].filter(Boolean).join(" - ")}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                {holdType === "reserve_hold" ? (
+                  <div className="md:col-span-2"><Label>Amount</Label><Input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
+                ) : (
+                  <>
+                    <div><Label>Goal Amount</Label><Input type="number" step="0.01" min="0" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} required /></div>
+                    <div><Label>Starting Hold Amount</Label><Input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+                  </>
+                )}
+                <div className="md:col-span-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
               </div>
-              {holdType === "reserve_hold" ? (
-                <div className="md:col-span-2"><Label>Amount</Label><Input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
-              ) : (
-                <>
-                  <div><Label>Goal Amount</Label><Input type="number" step="0.01" min="0" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} required /></div>
-                  <div><Label>Starting Hold Amount</Label><Input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
-                </>
-              )}
-              <div className="md:col-span-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
-            </div>
-            <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add {holdType === "savings_goal" ? "Goal" : "Hold"}</Button>
-          </form>
-        </CardContent>
-      </Card>
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setFormOpen(false)}>Cancel</Button>
+                <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add {holdType === "savings_goal" ? "Goal" : "Hold"}</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Active Holds ({active.length})</CardTitle></CardHeader>
