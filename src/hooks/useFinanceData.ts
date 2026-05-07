@@ -44,7 +44,7 @@ export const useTransactions = () => useQuery({
   },
 });
 
-export type AccountHold = { id: string; account_id: string; hold_name: string; amount: number; status: "active" | "released" | "cancelled"; notes: string | null; created_at: string; released_at: string | null; };
+export type AccountHold = { id: string; account_id: string; hold_name: string; amount: number; status: "active" | "released" | "cancelled"; notes: string | null; created_at: string; released_at: string | null; hold_type: "reserve_hold" | "savings_goal"; goal_amount: number | null; };
 
 export const useAccountHolds = () => useQuery({
   queryKey: ["account_holds"],
