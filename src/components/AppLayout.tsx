@@ -64,15 +64,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex bg-background">
       <aside className="hidden lg:block w-64 shrink-0 border-r border-sidebar-border">{sidebar}</aside>
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden flex items-center justify-between px-4 h-14 border-b bg-card">
-          <div className="flex items-center gap-2">
+        <header className="lg:hidden grid grid-cols-3 items-center px-4 h-14 border-b bg-card">
+          <div className="flex items-center gap-2 justify-self-start">
             <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
               <Wallet className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold">Money Tracker</span>
           </div>
+          <span className="font-semibold justify-self-center">Money Tracker</span>
           <Sheet>
-            <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
+            <SheetTrigger asChild><Button variant="ghost" size="icon" className="justify-self-end"><Menu className="h-5 w-5" /></Button></SheetTrigger>
             <SheetContent side="left" className="p-0 w-64 bg-sidebar border-sidebar-border">{sidebar}</SheetContent>
           </Sheet>
         </header>
