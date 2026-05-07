@@ -13,12 +13,18 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-const TYPES = [
+type TxType = "income" | "expense" | "deposit" | "withdrawal" | "transfer";
+
+const TYPES: { value: TxType; label: string; desc: string }[] = [
   { value: "income", label: "Income", desc: "Money in (e.g. salary)" },
   { value: "expense", label: "Expense", desc: "Money spent" },
   { value: "deposit", label: "Deposit", desc: "Increase account balance" },
   { value: "withdrawal", label: "Withdrawal", desc: "Decrease account balance" },
+  { value: "transfer", label: "Transfer", desc: "Move money between accounts" },
 ];
+
+const accLabel = (a: { bank_name: string | null; name: string }) =>
+  a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
 export default function AddTransaction() {
   const { user } = useAuth();
@@ -31,13 +37,14 @@ export default function AddTransaction() {
   const active = useActivePayPeriod();
 
   const initialType = searchParams.get("type");
-  const safeInitialType = ["income", "expense", "deposit", "withdrawal"].includes(initialType || "")
-    ? (initialType as "income" | "expense" | "deposit" | "withdrawal")
-    : "expense";
+  const safeInitialType: TxType = (["income", "expense", "deposit", "withdrawal", "transfer"].includes(initialType || "")
+    ? initialType
+    : "expense") as TxType;
 
-  const [type, setType] = useState<"income" | "expense" | "deposit" | "withdrawal">(safeInitialType);
+  const [type, setType] = useState<TxType>(safeInitialType);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [accountId, setAccountId] = useState("");
+  const [toAccountId, setToAccountId] = useState("");
   const [categoryId, setCategoryId] = useState<string>("none");
   const [periodId, setPeriodId] = useState<string>(active?.id || "none");
   const [amount, setAmount] = useState("");
@@ -55,28 +62,44 @@ export default function AddTransaction() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsedAmount = parseFloat(amount);
-    if (!user || !accountId || !amount) return toast.error("Account and amount required");
+    if (!user || !amount) return toast.error("Amount required");
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return toast.error("Enter an amount greater than 0");
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id, transaction_type: type, date, account_id: accountId,
-      category_id: categoryId === "none" ? null : categoryId,
-      pay_period_id: periodId === "none" ? null : periodId,
-      amount: parsedAmount, notes: notes || null,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Transaction added");
+
+    if (type === "transfer") {
+      if (!accountId || !toAccountId) return toast.error("From and To accounts required");
+      if (accountId === toAccountId) return toast.error("From and To must differ");
+      const { error } = await supabase.from("transfers").insert({
+        user_id: user.id, date, from_account_id: accountId, to_account_id: toAccountId,
+        pay_period_id: periodId === "none" ? null : periodId,
+        amount: parsedAmount, notes: notes || null,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Transfer added");
+    } else {
+      if (!accountId) return toast.error("Account required");
+      const { error } = await supabase.from("transactions").insert({
+        user_id: user.id, transaction_type: type, date, account_id: accountId,
+        category_id: categoryId === "none" ? null : categoryId,
+        pay_period_id: periodId === "none" ? null : periodId,
+        amount: parsedAmount, notes: notes || null,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Transaction added");
+    }
     qc.invalidateQueries();
     nav("/");
   };
 
+  const isTransfer = type === "transfer";
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div><h1 className="text-3xl font-bold">Add Transaction</h1><p className="text-muted-foreground mt-1">Record income, expenses, deposits, and withdrawals.</p></div>
+      <div><h1 className="text-3xl font-bold">Add Transaction</h1><p className="text-muted-foreground mt-1">Record income, expenses, deposits, withdrawals, and transfers.</p></div>
       <Card>
         <CardHeader><CardTitle>Transaction Type</CardTitle></CardHeader>
         <CardContent>
-          <Tabs value={type} onValueChange={v => { setType(v as any); setCategoryId("none"); }}>
-            <TabsList className="grid grid-cols-4 w-full">
+          <Tabs value={type} onValueChange={v => { setType(v as TxType); setCategoryId("none"); }}>
+            <TabsList className="grid grid-cols-5 w-full">
               {TYPES.map(t => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
             </TabsList>
           </Tabs>
@@ -91,23 +114,46 @@ export default function AddTransaction() {
               <div><Label>Date</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
               <div><Label>Amount *</Label><Input type="number" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
             </div>
-            <div>
-              <Label>Account *</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
-                <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {filteredCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+
+            {isTransfer ? (
+              <>
+                <div>
+                  <Label>From Account *</Label>
+                  <Select value={accountId} onValueChange={setAccountId}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>To Account *</Label>
+                  <Select value={toAccountId} onValueChange={setToAccountId}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.filter(a => a.id !== accountId).map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label>Account *</Label>
+                  <Select value={accountId} onValueChange={setAccountId}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select value={categoryId} onValueChange={setCategoryId}>
+                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {filteredCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
             <div>
               <Label>Pay Period</Label>
               <Select value={periodId} onValueChange={setPeriodId}>
@@ -119,7 +165,7 @@ export default function AddTransaction() {
               </Select>
             </div>
             <div><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional details" /></div>
-            <Button type="submit" className="w-full">Save Transaction</Button>
+            <Button type="submit" className="w-full">{isTransfer ? "Save Transfer" : "Save Transaction"}</Button>
           </form>
         </CardContent>
       </Card>
