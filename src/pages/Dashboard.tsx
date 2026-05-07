@@ -176,18 +176,9 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        <Button asChild variant="outline" size="sm"><Link to="/add?type=income"><Plus className="h-4 w-4 mr-1" />Income</Link></Button>
-        <Button asChild variant="outline" size="sm"><Link to="/add?type=expense"><TrendingDown className="h-4 w-4 mr-1" />Expense</Link></Button>
-        <Button asChild variant="outline" size="sm"><Link to="/transfers"><ArrowLeftRight className="h-4 w-4 mr-1" />Transfer</Link></Button>
-        <Button asChild size="sm"><Link to="/accounts"><PlusCircle className="h-4 w-4 mr-1" />Account</Link></Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Wallet} label="Total balance" value={money(total)} color="text-foreground" />
-        <StatCard icon={TrendingUp} label="Income this period" value={money(income)} color="text-income" />
-        <StatCard icon={TrendingDown} label="Spent this period" value={money(expense)} color="text-expense" />
-        <StatCard icon={ArrowLeftRight} label="Transfers" value={money(transfersTotal)} color="text-transfer" />
+      <div className="grid grid-cols-2 gap-2">
+        <Button asChild size="sm"><Link to="/add"><PlusCircle className="h-4 w-4 mr-1" />Add Transaction</Link></Button>
+        <Button asChild variant="outline" size="sm"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
