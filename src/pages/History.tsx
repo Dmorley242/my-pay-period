@@ -33,6 +33,7 @@ export default function History() {
   const [period, setPeriod] = useState("all");
   const [category, setCategory] = useState("all");
   const [type, setType] = useState("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
