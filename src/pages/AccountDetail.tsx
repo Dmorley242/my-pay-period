@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useAccounts, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
+import { useAccountHolds, useAccounts, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,11 @@ export default function AccountDetail() {
   const { data: transfers = [] } = useTransfers();
   const { data: cats = [] } = useCategories();
   const { data: periods = [] } = usePayPeriods();
+  const { data: holds = [] } = useAccountHolds();
+  const qc2 = qc;
+  const accountHolds = holds.filter(h => h.account_id === accountId);
+  const activeHolds = accountHolds.filter(h => h.status === "active");
+  const activeHoldsTotal = activeHolds.reduce((s, h) => s + Number(h.amount), 0);
 
   const account = accounts.find(a => a.id === accountId);
 
@@ -141,13 +146,36 @@ export default function AccountDetail() {
         <div className="p-6 md:p-8 text-primary-foreground" style={{ background: "var(--gradient-hero)" }}>
           <div className="text-xs opacity-80">{account.account_type || "Account"}</div>
           <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">{[account.bank_name, account.name].filter(Boolean).join(" ")}</h1>
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="rounded-xl bg-white/15 p-3"><div className="text-[11px] opacity-80">Current balance</div><div className="text-xl font-bold tabular-nums">{money(account.current_balance)}</div></div>
+            <div className="rounded-xl bg-white/15 p-3"><div className="text-[11px] opacity-80">Active holds</div><div className="text-xl font-bold tabular-nums">{money(activeHoldsTotal)}</div></div>
+            <div className="rounded-xl bg-white/15 p-3"><div className="text-[11px] opacity-80">Available</div><div className="text-xl font-bold tabular-nums">{money(Number(account.current_balance) - activeHoldsTotal)}</div></div>
             <div className="rounded-xl bg-white/15 p-3"><div className="text-[11px] opacity-80">Starting balance</div><div className="text-xl font-bold tabular-nums">{money(account.starting_balance)}</div></div>
-            <div className="rounded-xl bg-white/15 p-3 col-span-2 md:col-span-1"><div className="text-[11px] opacity-80">Change</div><div className="text-xl font-bold tabular-nums">{change >= 0 ? "+" : "-"}{money(Math.abs(change))}</div></div>
           </div>
         </div>
       </Card>
+
+      {activeHolds.length > 0 && (
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="text-base">Active Holds</CardTitle>
+            <Button asChild variant="ghost" size="sm"><Link to="/holds">Manage</Link></Button>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y">
+              {activeHolds.map(h => (
+                <div key={h.id} className="py-2 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate">{h.hold_name}</div>
+                    {h.notes && <div className="text-xs text-muted-foreground truncate">{h.notes}</div>}
+                  </div>
+                  <div className="font-semibold tabular-nums shrink-0">{money(h.amount)}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>

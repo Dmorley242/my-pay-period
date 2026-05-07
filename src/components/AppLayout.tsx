@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, ArrowLeftRight, Tags, CalendarRange, History, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, Wallet, PlusCircle, ArrowLeftRight, Tags, CalendarRange, History, LogOut, Menu, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const links = [
   { to: "/accounts", icon: Wallet, label: "Accounts" },
   { to: "/add", icon: PlusCircle, label: "Add Transaction" },
   { to: "/transfers", icon: ArrowLeftRight, label: "Transfers" },
+  { to: "/holds", icon: Lock, label: "Holds" },
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
   { to: "/history", icon: History, label: "History" },

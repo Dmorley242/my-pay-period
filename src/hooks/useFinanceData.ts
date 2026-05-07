@@ -44,6 +44,16 @@ export const useTransactions = () => useQuery({
   },
 });
 
+export type AccountHold = { id: string; account_id: string; hold_name: string; amount: number; status: "active" | "released" | "cancelled"; notes: string | null; created_at: string; released_at: string | null; };
+
+export const useAccountHolds = () => useQuery({
+  queryKey: ["account_holds"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("account_holds").select("*").order("created_at", { ascending: false });
+    if (error) throw error; return (data || []) as AccountHold[];
+  },
+});
+
 export const useTransfers = () => useQuery({
   queryKey: ["transfers"],
   queryFn: async () => {

@@ -14,6 +14,7 @@ import Transfers from "./pages/Transfers";
 import Categories from "./pages/Categories";
 import PayPeriods from "./pages/PayPeriods";
 import History from "./pages/History";
+import Holds from "./pages/Holds";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/categories" element={<Protected el={<Categories />} />} />
             <Route path="/pay-periods" element={<Protected el={<PayPeriods />} />} />
             <Route path="/history" element={<Protected el={<History />} />} />
+            <Route path="/holds" element={<Protected el={<Holds />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
