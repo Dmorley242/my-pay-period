@@ -10,7 +10,7 @@ const links = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/accounts", icon: Wallet, label: "Accounts" },
   { to: "/add", icon: PlusCircle, label: "Add Transaction" },
-  { to: "/transfers", icon: ArrowLeftRight, label: "Transfers" },
+  
   { to: "/holds", icon: Lock, label: "Holds" },
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
