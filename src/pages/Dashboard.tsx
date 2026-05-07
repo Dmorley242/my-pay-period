@@ -184,22 +184,38 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="shadow-[var(--shadow-sm)]">
-          <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><CalendarRange className="h-4 w-4" />This Pay Period</CardTitle></CardHeader>
+          <CardHeader className="pb-3 flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base"><CalendarRange className="h-4 w-4" />Pay Periods</CardTitle>
+            <Button asChild variant="ghost" size="sm"><Link to="/pay-periods">See more</Link></Button>
+          </CardHeader>
           <CardContent>
-            {active ? (
-              <>
-                <div className="font-semibold">{active.name}</div>
-                <div className="text-sm text-muted-foreground">{fmtDate(active.start_date)} – {fmtDate(active.end_date)}</div>
-                <div className="mt-4 grid grid-cols-1 gap-2 text-sm">
-                  <PeriodRow label="Income" value={money(income)} className="text-income" />
-                  <PeriodRow label="Spent" value={money(expense)} className="text-expense" />
-                  <PeriodRow label="Transfers" value={money(transfersTotal)} className="text-transfer" />
-                  <PeriodRow label="Net" value={money(netFlow)} className={netFlow >= 0 ? "text-income" : "text-expense"} />
+            {periods.length === 0 ? (
+              <Empty msg="No pay periods yet." to="/pay-periods" cta="Create One" />
+            ) : (() => {
+              const activeIdx = periods.findIndex(p => p.is_active);
+              const list = activeIdx >= 0
+                ? [periods[activeIdx], ...periods.filter((_, i) => i !== activeIdx)].slice(0, 5)
+                : periods.slice(0, 5);
+              return (
+                <div className="space-y-2">
+                  {list.map(p => {
+                    const acc = accounts.find(a => a.id === p.paycheck_account_id);
+                    return (
+                      <div key={p.id} className={`rounded-xl px-3 py-2 border ${p.is_active ? "border-income/40 bg-income/10 shadow-sm" : "border-border bg-accent/40"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-medium truncate">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
+                          {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                          <div className="text-xs text-muted-foreground truncate">{acc ? (acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name) : "No account"}</div>
+                          <div className="text-xs font-semibold tabular-nums shrink-0">{p.net_pay_amount != null ? money(p.net_pay_amount) : "—"}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </>
-            ) : (
-              <Empty msg="No active pay period." to="/pay-periods" cta="Create One" />
-            )}
+              );
+            })()}
           </CardContent>
         </Card>
 
