@@ -61,6 +61,7 @@ export default function Holds() {
     if (error) return toast.error(error.message);
     toast.success(holdType === "savings_goal" ? "Savings goal created" : "Hold created");
     setHoldName(""); setAmount(""); setGoalAmount(""); setNotes("");
+    setFormOpen(false);
     qc.invalidateQueries({ queryKey: ["account_holds"] });
   };
 
