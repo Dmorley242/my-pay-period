@@ -24,9 +24,8 @@ export default function Budget() {
   const { data: txs = [] } = useTransactions();
 
   const periodItems = useMemo(() => active ? items.filter(i => i.pay_period_id === active.id) : [], [items, active]);
-  const [view, setView] = useState<"form" | "active">("active");
-  const showForm = view === "form" || (view === "active" && periodItems.length === 0);
 
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [name, setName] = useState("");
   const [accountId, setAccountId] = useState("");
   const [amount, setAmount] = useState("");
@@ -42,9 +41,11 @@ export default function Budget() {
     return m;
   }, [txs]);
 
+  const payAmount = Number(active?.net_pay_amount ?? 0);
   const totalBudgeted = periodItems.reduce((s, i) => s + Number(i.budget_amount), 0);
   const totalSpent = periodItems.reduce((s, i) => s + (spentByItem.get(i.id) || 0), 0);
   const totalRemaining = totalBudgeted - totalSpent;
+  const remainingToAssign = payAmount - totalBudgeted;
   const depositAccount = accounts.find(a => a.id === active?.paycheck_account_id);
 
   const reset = () => { setName(""); setAccountId(""); setAmount(""); };
@@ -110,54 +111,35 @@ export default function Budget() {
             </CardContent>
           </Card>
 
-          {showForm ? (
-            <Card>
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="text-base">Add Budget Items</CardTitle>
-                {periodItems.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={() => setView("active")}>View Active Budget</Button>
-                )}
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={addItem} className="space-y-3">
-                  <div><Label>Budget Item Name *</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Groceries" /></div>
-                  <div>
-                    <Label>Account *</Label>
-                    <Select value={accountId} onValueChange={setAccountId}>
-                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
-                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
-                  <div className="flex gap-2 justify-end">
-                    <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
-                    <Button type="button" variant="outline" onClick={() => { reset(); setView("active"); }} disabled={periodItems.length === 0}>Done</Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <Card>
-                <CardHeader className="flex-row items-center justify-between">
-                  <CardTitle className="text-base">Active Budget</CardTitle>
-                  <Button size="sm" onClick={() => setView("form")}><Plus className="h-4 w-4 mr-1" />Add Items</Button>
-                </CardHeader>
-                <CardContent className="grid grid-cols-3 gap-2 text-sm">
-                  <Cell label="Total Budgeted" value={money(totalBudgeted)} />
-                  <Cell label="Total Spent" value={money(totalSpent)} cls="text-expense" />
-                  <Cell label="Total Remaining" value={money(totalRemaining)} cls={totalRemaining < 0 ? "text-destructive" : "text-income"} />
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle className="text-base">Active Budget</CardTitle>
+              <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>
+                <Plus className="h-4 w-4 mr-1" />Add Items
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
+                <Cell label="Pay Amount" value={money(payAmount)} />
+                <Cell label="Total Budgeted" value={money(totalBudgeted)} />
+                <Cell label="Total Spent" value={money(totalSpent)} cls="text-expense" />
+                <Cell label="Total Remaining" value={money(totalRemaining)} cls={totalRemaining < 0 ? "text-destructive" : "text-income"} />
+                <Cell label="Remaining to Assign" value={money(remainingToAssign)} cls={remainingToAssign < 0 ? "text-destructive" : "text-income"} />
+              </div>
+              {remainingToAssign < 0 && (
+                <div className="text-xs text-destructive font-medium text-center">Over budget by {money(Math.abs(remainingToAssign))}</div>
+              )}
 
-              <div className="space-y-2">
-                {periodItems.map(i => {
-                  const acc = accounts.find(a => a.id === i.account_id);
-                  const spent = spentByItem.get(i.id) || 0;
-                  const remaining = Number(i.budget_amount) - spent;
-                  return (
-                    <Card key={i.id}>
-                      <CardContent className="p-3 space-y-2">
+              {periodItems.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-6">No budget items yet. Click Add Items to start.</div>
+              ) : (
+                <div className="space-y-2">
+                  {periodItems.map(i => {
+                    const acc = accounts.find(a => a.id === i.account_id);
+                    const spent = spentByItem.get(i.id) || 0;
+                    const remaining = Number(i.budget_amount) - spent;
+                    return (
+                      <div key={i.id} className="rounded-md border p-3 space-y-2">
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
                             <span className="font-semibold truncate">{i.name}</span>
@@ -173,15 +155,40 @@ export default function Budget() {
                           <Cell label="Spent" value={money(spent)} cls="text-expense" />
                           <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </>
-          )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
+
+      <Dialog open={builderOpen} onOpenChange={o => { if (!o) reset(); setBuilderOpen(o); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Budget Items</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <Cell label="Pay Amount" value={money(payAmount)} />
+            <Cell label="Remaining to Assign" value={money(remainingToAssign)} cls={remainingToAssign < 0 ? "text-destructive" : "text-income"} />
+          </div>
+          <form onSubmit={addItem} className="space-y-3">
+            <div><Label>Budget Item Name *</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Groceries" /></div>
+            <div>
+              <Label>Account *</Label>
+              <Select value={accountId} onValueChange={setAccountId}>
+                <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+            <div className="flex gap-2 justify-end">
+              <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
+              <Button type="button" variant="outline" onClick={() => { reset(); setBuilderOpen(false); }}>Done</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
         <DialogContent>
