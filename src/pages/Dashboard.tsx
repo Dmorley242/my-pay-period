@@ -185,91 +185,87 @@ export default function Dashboard() {
 
       {active && (() => {
         const items = budgetItems.filter(b => b.pay_period_id === active.id);
-        if (items.length === 0) return null;
+        const spentMap = new Map<string, number>();
+        txs.forEach(t => {
+          const bid = (t as any).budget_item_id as string | null | undefined;
+          if (bid && t.transaction_type === "expense") spentMap.set(bid, (spentMap.get(bid) || 0) + Number(t.amount));
+        });
         const budgeted = items.reduce((s, b) => s + Number(b.budget_amount), 0);
-        const spent = txs.filter(t => t.transaction_type === "expense" && (t as any).budget_item_id && items.some(i => i.id === (t as any).budget_item_id)).reduce((s, t) => s + Number(t.amount), 0);
+        const spent = items.reduce((s, b) => s + (spentMap.get(b.id) || 0), 0);
         const remaining = budgeted - spent;
+        const top = items.slice(0, 5);
         return (
           <Card className="shadow-[var(--shadow-sm)]">
             <CardHeader className="pb-3 flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><PieChart className="h-4 w-4" />Active Budget</CardTitle>
-              <Button asChild variant="ghost" size="sm"><Link to="/budget">Open</Link></Button>
+              <Button asChild variant="ghost" size="sm"><Link to="/budget">See More</Link></Button>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2 text-sm">
-              <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Budgeted</div><div className="font-semibold tabular-nums">{money(budgeted)}</div></div>
-              <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Spent</div><div className="font-semibold tabular-nums text-expense">{money(spent)}</div></div>
-              <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Remaining</div><div className={`font-semibold tabular-nums ${remaining < 0 ? "text-destructive" : "text-income"}`}>{money(remaining)}</div></div>
-            </CardContent>
-          </Card>
-        );
-      })()}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="shadow-[var(--shadow-sm)]">
-          <CardHeader className="pb-3 flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base"><CalendarRange className="h-4 w-4" />Pay Periods</CardTitle>
-            <Button asChild variant="ghost" size="sm"><Link to="/pay-periods">See more</Link></Button>
-          </CardHeader>
-          <CardContent>
-            {periods.length === 0 ? (
-              <Empty msg="No pay periods yet." to="/pay-periods" cta="Create One" />
-            ) : (() => {
-              const activeIdx = periods.findIndex(p => p.is_active);
-              const list = activeIdx >= 0
-                ? [periods[activeIdx], ...periods.filter((_, i) => i !== activeIdx)].slice(0, 5)
-                : periods.slice(0, 5);
-              return (
-                <div className="space-y-2">
-                  {list.map(p => {
-                    const acc = accounts.find(a => a.id === p.paycheck_account_id);
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Budgeted</div><div className="font-semibold tabular-nums">{money(budgeted)}</div></div>
+                <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Spent</div><div className="font-semibold tabular-nums text-expense">{money(spent)}</div></div>
+                <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Remaining</div><div className={`font-semibold tabular-nums ${remaining < 0 ? "text-destructive" : "text-income"}`}>{money(remaining)}</div></div>
+              </div>
+              {top.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">No budget items yet. <Link to="/budget" className="underline">Create one</Link>.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {top.map(b => {
+                    const s = spentMap.get(b.id) || 0;
+                    const r = Number(b.budget_amount) - s;
                     return (
-                      <div key={p.id} className={`rounded-xl px-3 py-2 border ${p.is_active ? "border-income/40 bg-income/10 shadow-sm" : "border-border bg-accent/40"}`}>
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-sm font-medium truncate">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
-                          {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
-                          <div className="text-xs text-muted-foreground truncate">{acc ? (acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name) : "No account"}</div>
-                          <div className="text-xs font-semibold tabular-nums shrink-0">{p.net_pay_amount != null ? money(p.net_pay_amount) : "—"}</div>
+                      <div key={b.id} className="rounded-md border px-3 py-2">
+                        <div className="text-sm font-medium truncate">{b.name}</div>
+                        <div className="grid grid-cols-3 gap-2 mt-1 text-xs">
+                          <div className="text-center"><div className="text-[10px] uppercase text-muted-foreground">Budget</div><div className="font-semibold tabular-nums">{money(b.budget_amount)}</div></div>
+                          <div className="text-center"><div className="text-[10px] uppercase text-muted-foreground">Spent</div><div className="font-semibold tabular-nums text-expense">{money(s)}</div></div>
+                          <div className="text-center"><div className="text-[10px] uppercase text-muted-foreground">Remaining</div><div className={`font-semibold tabular-nums ${r < 0 ? "text-destructive" : "text-income"}`}>{money(r)}</div></div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
-        <Card className="lg:col-span-2 shadow-[var(--shadow-sm)]">
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base"><History className="h-4 w-4" />Recent Activity</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Latest movements across all accounts.</p>
-            </div>
-            <Button asChild variant="ghost" size="sm"><Link to="/history">View all</Link></Button>
-          </CardHeader>
-          <CardContent>
-            {recent.length === 0 && <div className="text-sm text-muted-foreground">No activity yet.</div>}
-            <div className="divide-y">
-              {recent.map(r => (
-                <div key={r.kind + r.id} className="flex items-center justify-between gap-4 py-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <TypeIcon direction={r.direction} />
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{r.title}</div>
-                      <div className="text-xs text-muted-foreground truncate">{r.subtitle}</div>
+      <Card className="shadow-[var(--shadow-sm)]">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base"><CalendarRange className="h-4 w-4" />Pay Periods</CardTitle>
+          <Button asChild variant="ghost" size="sm"><Link to="/pay-periods">See more</Link></Button>
+        </CardHeader>
+        <CardContent>
+          {periods.length === 0 ? (
+            <Empty msg="No pay periods yet." to="/pay-periods" cta="Create One" />
+          ) : (() => {
+            const activeIdx = periods.findIndex(p => p.is_active);
+            const list = activeIdx >= 0
+              ? [periods[activeIdx], ...periods.filter((_, i) => i !== activeIdx)].slice(0, 5)
+              : periods.slice(0, 5);
+            return (
+              <div className="space-y-2">
+                {list.map(p => {
+                  const acc = accounts.find(a => a.id === p.paycheck_account_id);
+                  return (
+                    <div key={p.id} className={`rounded-xl px-3 py-2 border ${p.is_active ? "border-income/40 bg-income/10 shadow-sm" : "border-border bg-accent/40"}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-medium truncate">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
+                        {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <div className="text-xs text-muted-foreground truncate">{acc ? (acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name) : "No account"}</div>
+                        <div className="text-xs font-semibold tabular-nums shrink-0">{p.net_pay_amount != null ? money(p.net_pay_amount) : "—"}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className={`font-semibold tabular-nums shrink-0 ${r.direction === "transfer" ? "text-transfer" : r.direction === "in" ? "text-income" : "text-expense"}`}>
-                    {r.direction === "out" ? "-" : "+"}{money(r.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
     </div>
   );
 }
