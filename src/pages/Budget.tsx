@@ -59,8 +59,6 @@ export default function Budget() {
   const [csAmount, setCsAmount] = useState("");
 
   const draftsTotal = drafts.reduce((s, d) => s + d.budget_amount, 0);
-  const liveTotalBudgeted = totalBudgeted + draftsTotal;
-  const liveRemainingToAssign = payAmount - liveTotalBudgeted;
 
   const resetFullBuilder = () => {
     setDrafts([]); setDraftExpanded({});
