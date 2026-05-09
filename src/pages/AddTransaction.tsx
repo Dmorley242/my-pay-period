@@ -35,6 +35,7 @@ export default function AddTransaction() {
   const { data: categories = [] } = useCategories();
   const { data: periods = [] } = usePayPeriods();
   const active = useActivePayPeriod();
+  const { data: budgetItems = [] } = useBudgetItems();
 
   const initialType = searchParams.get("type");
   const safeInitialType: TxType = (["income", "expense", "deposit", "withdrawal", "transfer"].includes(initialType || "")
