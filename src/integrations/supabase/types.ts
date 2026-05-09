@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_items: {
+        Row: {
+          account_id: string
+          budget_amount: number
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          pay_period_id: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          budget_amount?: number
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          pay_period_id: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          budget_amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          pay_period_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           category_type: string
@@ -183,6 +216,7 @@ export type Database = {
         Row: {
           account_id: string
           amount: number
+          budget_item_id: string | null
           category_id: string | null
           created_at: string
           date: string
@@ -195,6 +229,7 @@ export type Database = {
         Insert: {
           account_id: string
           amount: number
+          budget_item_id?: string | null
           category_id?: string | null
           created_at?: string
           date?: string
@@ -207,6 +242,7 @@ export type Database = {
         Update: {
           account_id?: string
           amount?: number
+          budget_item_id?: string | null
           category_id?: string | null
           created_at?: string
           date?: string

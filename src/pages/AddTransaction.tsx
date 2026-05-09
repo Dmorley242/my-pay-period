@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAccounts, useCategories, usePayPeriods, useActivePayPeriod } from "@/hooks/useFinanceData";
+import { useAccounts, useCategories, usePayPeriods, useActivePayPeriod, useBudgetItems } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,6 +35,7 @@ export default function AddTransaction() {
   const { data: categories = [] } = useCategories();
   const { data: periods = [] } = usePayPeriods();
   const active = useActivePayPeriod();
+  const { data: budgetItems = [] } = useBudgetItems();
 
   const initialType = searchParams.get("type");
   const safeInitialType: TxType = (["income", "expense", "deposit", "withdrawal", "transfer"].includes(initialType || "")
@@ -49,6 +50,9 @@ export default function AddTransaction() {
   const [periodId, setPeriodId] = useState<string>(active?.id || "none");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
+  const [budgetItemId, setBudgetItemId] = useState<string>("none");
+
+  const activeBudgetItems = active ? budgetItems.filter(b => b.pay_period_id === active.id) : [];
 
   useEffect(() => {
     if (active?.id && periodId === "none") setPeriodId(active.id);
@@ -82,7 +86,8 @@ export default function AddTransaction() {
         category_id: categoryId === "none" ? null : categoryId,
         pay_period_id: periodId === "none" ? null : periodId,
         amount: parsedAmount, notes: notes || null,
-      });
+        ...(type === "expense" && budgetItemId !== "none" ? { budget_item_id: budgetItemId } : {}),
+      } as any);
       if (error) return toast.error(error.message);
       toast.success("Transaction added");
     }
@@ -151,6 +156,22 @@ export default function AddTransaction() {
                     </SelectContent>
                   </Select>
                 </div>
+                {type === "expense" && (
+                  <div>
+                    <Label>Subtract From Budget</Label>
+                    <Select value={budgetItemId} onValueChange={setBudgetItemId}>
+                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {activeBudgetItems.map(b => {
+                          const acc = accounts.find(a => a.id === b.account_id);
+                          return <SelectItem key={b.id} value={b.id}>{b.name}{acc ? ` - ${accLabel(acc)}` : ""}</SelectItem>;
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {activeBudgetItems.length === 0 && <p className="text-xs text-muted-foreground mt-1">No budget items in active pay period.</p>}
+                  </div>
+                )}
               </>
             )}
 
