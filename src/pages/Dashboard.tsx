@@ -308,6 +308,13 @@ const Empty = ({ msg, to, cta }: { msg: string; to: string; cta: string }) => (
   </div>
 );
 
+const DashCell = ({ label, value, cls }: { label: string; value: string; cls?: string }) => (
+  <div className="rounded-md bg-accent/40 px-2 py-1.5 text-center">
+    <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+    <div className={`font-semibold tabular-nums ${cls || ""}`}>{value}</div>
+  </div>
+);
+
 const TypeIcon = ({ direction }: { direction: "in" | "out" | "transfer" }) => {
   const cls = "h-9 w-9 rounded-full flex items-center justify-center shrink-0";
   if (direction === "transfer") return <div className={`${cls} bg-transfer/10 text-transfer`}><ArrowLeftRight className="h-4 w-4" /></div>;
