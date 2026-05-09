@@ -22,6 +22,7 @@ export default function Budget() {
   const { data: accounts = [] } = useAccounts();
   const { data: items = [] } = useBudgetItems();
   const { data: txs = [] } = useTransactions();
+  const { data: subItems = [] } = useBudgetSubItems();
 
   const periodItems = useMemo(() => active ? items.filter(i => i.pay_period_id === active.id) : [], [items, active]);
 
@@ -29,6 +30,7 @@ export default function Budget() {
   const [name, setName] = useState("");
   const [accountId, setAccountId] = useState("");
   const [amount, setAmount] = useState("");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
