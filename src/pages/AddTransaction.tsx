@@ -50,6 +50,9 @@ export default function AddTransaction() {
   const [periodId, setPeriodId] = useState<string>(active?.id || "none");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
+  const [budgetItemId, setBudgetItemId] = useState<string>("none");
+
+  const activeBudgetItems = active ? budgetItems.filter(b => b.pay_period_id === active.id) : [];
 
   useEffect(() => {
     if (active?.id && periodId === "none") setPeriodId(active.id);
