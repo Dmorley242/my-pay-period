@@ -31,6 +31,9 @@ export default function Budget() {
   const [accountId, setAccountId] = useState("");
   const [amount, setAmount] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const [templateNameOpen, setTemplateNameOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
