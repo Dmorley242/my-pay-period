@@ -99,3 +99,13 @@ export const useBudgetSubItems = () => useQuery({
     if (error) throw error; return (data || []) as BudgetSubItem[];
   },
 });
+
+export type BudgetTemplateSubItem = { id: string; user_id: string; template_item_id: string; name: string; amount: number; created_at: string; updated_at: string; };
+
+export const useBudgetTemplateSubItems = () => useQuery({
+  queryKey: ["budget_template_sub_items"],
+  queryFn: async () => {
+    const { data, error } = await (supabase as any).from("budget_template_sub_items").select("*").order("created_at", { ascending: true });
+    if (error) throw error; return (data || []) as BudgetTemplateSubItem[];
+  },
+});
