@@ -6,13 +6,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, AlertTriangle, Wallet } from "lucide-react";
+import { Plus, Trash2, Pencil, Wallet } from "lucide-react";
 
 const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
@@ -24,36 +23,33 @@ export default function Budget() {
   const { data: items = [] } = useBudgetItems();
   const { data: txs = [] } = useTransactions();
 
-  const [open, setOpen] = useState(false);
+  const periodItems = useMemo(() => active ? items.filter(i => i.pay_period_id === active.id) : [], [items, active]);
+  const [view, setView] = useState<"form" | "active">("active");
+  const showForm = view === "form" || (view === "active" && periodItems.length === 0);
+
   const [name, setName] = useState("");
   const [accountId, setAccountId] = useState("");
   const [amount, setAmount] = useState("");
-  const [notes, setNotes] = useState("");
 
-  const periodItems = useMemo(() => active ? items.filter(i => i.pay_period_id === active.id) : [], [items, active]);
+  const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
   const spentByItem = useMemo(() => {
-    const map = new Map<string, number>();
+    const m = new Map<string, number>();
     txs.forEach(t => {
       const bid = (t as any).budget_item_id as string | null | undefined;
-      if (bid && t.transaction_type === "expense") {
-        map.set(bid, (map.get(bid) || 0) + Number(t.amount));
-      }
+      if (bid && t.transaction_type === "expense") m.set(bid, (m.get(bid) || 0) + Number(t.amount));
     });
-    return map;
+    return m;
   }, [txs]);
 
   const totalBudgeted = periodItems.reduce((s, i) => s + Number(i.budget_amount), 0);
   const totalSpent = periodItems.reduce((s, i) => s + (spentByItem.get(i.id) || 0), 0);
-  const payAmount = Number(active?.net_pay_amount || 0);
-  const remainingUnassigned = payAmount - totalBudgeted;
-  const overBudget = totalBudgeted > payAmount && payAmount > 0;
-
+  const totalRemaining = totalBudgeted - totalSpent;
   const depositAccount = accounts.find(a => a.id === active?.paycheck_account_id);
 
-  const reset = () => { setName(""); setAccountId(""); setAmount(""); setNotes(""); };
+  const reset = () => { setName(""); setAccountId(""); setAmount(""); };
 
-  const submit = async (e: React.FormEvent) => {
+  const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !active) return toast.error("No active pay period");
     if (!name || !accountId || !amount) return toast.error("Name, account, amount required");
@@ -61,15 +57,17 @@ export default function Budget() {
     if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
     const { error } = await (supabase as any).from("budget_items").insert({
       user_id: user.id, pay_period_id: active.id, account_id: accountId,
-      name, budget_amount: amt, notes: notes || null,
+      name, budget_amount: amt,
     });
     if (error) return toast.error(error.message);
     toast.success("Budget item added");
     qc.invalidateQueries({ queryKey: ["budget_items"] });
-    reset(); setOpen(false);
+    reset();
   };
 
   const remove = async (id: string) => {
+    const linked = txs.some(t => (t as any).budget_item_id === id);
+    if (linked) return toast.error("Cannot delete: this budget item has linked transactions.");
     if (!confirm("Delete this budget item?")) return;
     const { error } = await (supabase as any).from("budget_items").delete().eq("id", id);
     if (error) return toast.error(error.message);
@@ -77,37 +75,24 @@ export default function Budget() {
     qc.invalidateQueries({ queryKey: ["budget_items"] });
   };
 
+  const saveEdit = async () => {
+    if (!editing) return;
+    const amt = parseFloat(editing.budget_amount);
+    if (!editing.name || !editing.account_id || !Number.isFinite(amt) || amt <= 0) return toast.error("Fill all fields");
+    const { error } = await (supabase as any).from("budget_items").update({
+      name: editing.name, account_id: editing.account_id, budget_amount: amt,
+    }).eq("id", editing.id);
+    if (error) return toast.error(error.message);
+    toast.success("Updated");
+    qc.invalidateQueries({ queryKey: ["budget_items"] });
+    setEditing(null);
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Budget</h1>
-          <p className="text-muted-foreground mt-1">Plan how the active pay period money is spent.</p>
-        </div>
-        {active && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />New Item</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>New Budget Item</DialogTitle></DialogHeader>
-              <form onSubmit={submit} className="space-y-3">
-                <div><Label>Budget Item Name *</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Groceries" /></div>
-                <div>
-                  <Label>Account *</Label>
-                  <Select value={accountId} onValueChange={setAccountId}>
-                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
-                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
-                <div><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional" /></div>
-                <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => { reset(); setOpen(false); }}>Cancel</Button>
-                  <Button type="submit">Add</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
+      <div>
+        <h1 className="text-3xl font-bold">Budget</h1>
+        <p className="text-muted-foreground mt-1">Plan how the active pay period money is spent.</p>
       </div>
 
       {!active ? (
@@ -125,64 +110,109 @@ export default function Budget() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base">Budget Summary</CardTitle></CardHeader>
-            <CardContent className="grid gap-2 sm:grid-cols-2 text-sm">
-              <Row label="Pay Amount" value={money(payAmount)} />
-              <Row label="Total Budgeted" value={money(totalBudgeted)} />
-              <Row label="Total Spent From Budget" value={money(totalSpent)} />
-              <Row label="Remaining Unassigned" value={money(remainingUnassigned)} className={remainingUnassigned < 0 ? "text-destructive" : ""} />
-              {overBudget && (
-                <div className="sm:col-span-2 flex items-center gap-2 rounded-md bg-destructive/10 text-destructive px-3 py-2 text-xs">
-                  <AlertTriangle className="h-4 w-4" />Total Budgeted exceeds Pay Amount.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {showForm ? (
+            <Card>
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle className="text-base">Add Budget Items</CardTitle>
+                {periodItems.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => setView("active")}>View Active Budget</Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={addItem} className="space-y-3">
+                  <div><Label>Budget Item Name *</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Groceries" /></div>
+                  <div>
+                    <Label>Account *</Label>
+                    <Select value={accountId} onValueChange={setAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+                  <div className="flex gap-2 justify-end">
+                    <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
+                    <Button type="button" variant="outline" onClick={() => { reset(); setView("active"); }} disabled={periodItems.length === 0}>Done</Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="flex-row items-center justify-between">
+                  <CardTitle className="text-base">Active Budget</CardTitle>
+                  <Button size="sm" onClick={() => setView("form")}><Plus className="h-4 w-4 mr-1" />Add Items</Button>
+                </CardHeader>
+                <CardContent className="grid grid-cols-3 gap-2 text-sm">
+                  <Cell label="Total Budgeted" value={money(totalBudgeted)} />
+                  <Cell label="Total Spent" value={money(totalSpent)} cls="text-expense" />
+                  <Cell label="Total Remaining" value={money(totalRemaining)} cls={totalRemaining < 0 ? "text-destructive" : "text-income"} />
+                </CardContent>
+              </Card>
 
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Budget Items</h2>
-            {periodItems.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No budget items yet.</CardContent></Card>
-            ) : periodItems.map(i => {
-              const acc = accounts.find(a => a.id === i.account_id);
-              const spent = spentByItem.get(i.id) || 0;
-              const remaining = Number(i.budget_amount) - spent;
-              const pct = i.budget_amount > 0 ? Math.min(100, (spent / Number(i.budget_amount)) * 100) : 0;
-              return (
-                <Card key={i.id}>
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="font-semibold truncate">{i.name}</div>
-                        <div className="text-xs text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</div>
-                        {i.notes && <div className="text-xs text-muted-foreground mt-1">{i.notes}</div>}
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={() => remove(i.id)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <Cell label="Budget" value={money(i.budget_amount)} />
-                      <Cell label="Spent" value={money(spent)} />
-                      <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
-                    </div>
-                    <div className="h-1.5 rounded bg-accent overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+              <div className="space-y-2">
+                {periodItems.map(i => {
+                  const acc = accounts.find(a => a.id === i.account_id);
+                  const spent = spentByItem.get(i.id) || 0;
+                  const remaining = Number(i.budget_amount) - spent;
+                  return (
+                    <Card key={i.id}>
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
+                            <span className="font-semibold truncate">{i.name}</span>
+                            <span className="text-xs text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
+                          </div>
+                          <div className="flex shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing({ id: i.id, name: i.name, account_id: i.account_id, budget_amount: String(i.budget_amount) })}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <Cell label="Budget" value={money(i.budget_amount)} />
+                          <Cell label="Spent" value={money(spent)} cls="text-expense" />
+                          <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </>
       )}
+
+      <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Budget Item</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div><Label>Budget Item Name *</Label><Input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} /></div>
+              <div>
+                <Label>Account *</Label>
+                <Select value={editing.account_id} onValueChange={v => setEditing({ ...editing, account_id: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={editing.budget_amount} onChange={e => setEditing({ ...editing, budget_amount: e.target.value })} /></div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+                <Button onClick={saveEdit}>Save</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-const Row = ({ label, value, className }: { label: string; value: string; className?: string }) => (
+const Row = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-center justify-between rounded-md bg-accent/40 px-3 py-2">
     <span className="text-muted-foreground">{label}</span>
-    <span className={`font-semibold tabular-nums ${className || ""}`}>{value}</span>
+    <span className="font-semibold tabular-nums">{value}</span>
   </div>
 );
 
