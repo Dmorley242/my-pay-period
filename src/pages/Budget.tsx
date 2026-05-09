@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useAccounts, useActivePayPeriod, useBudgetItems, useTransactions } from "@/hooks/useFinanceData";
+import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useTransactions } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, Wallet } from "lucide-react";
+import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree } from "lucide-react";
 
 const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
@@ -22,6 +22,7 @@ export default function Budget() {
   const { data: accounts = [] } = useAccounts();
   const { data: items = [] } = useBudgetItems();
   const { data: txs = [] } = useTransactions();
+  const { data: subItems = [] } = useBudgetSubItems();
 
   const periodItems = useMemo(() => active ? items.filter(i => i.pay_period_id === active.id) : [], [items, active]);
 
@@ -29,6 +30,7 @@ export default function Budget() {
   const [name, setName] = useState("");
   const [accountId, setAccountId] = useState("");
   const [amount, setAmount] = useState("");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
@@ -146,6 +148,9 @@ export default function Budget() {
                             <span className="text-xs text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
                           </div>
                           <div className="flex shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpanded(s => ({ ...s, [i.id]: !s[i.id] }))} title="Sub-items">
+                              {expanded[i.id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ListTree className="h-3.5 w-3.5" />}
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing({ id: i.id, name: i.name, account_id: i.account_id, budget_amount: String(i.budget_amount) })}><Pencil className="h-3.5 w-3.5" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                           </div>
@@ -155,6 +160,14 @@ export default function Budget() {
                           <Cell label="Spent" value={money(spent)} cls="text-expense" />
                           <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
                         </div>
+                        {expanded[i.id] && (
+                          <SubItems
+                            budgetItemId={i.id}
+                            parentAmount={Number(i.budget_amount)}
+                            subItems={subItems.filter(s => s.budget_item_id === i.id)}
+                            userId={user?.id}
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -229,3 +242,69 @@ const Cell = ({ label, value, cls }: { label: string; value: string; cls?: strin
     <div className={`font-semibold tabular-nums ${cls || ""}`}>{value}</div>
   </div>
 );
+
+function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
+  budgetItemId: string;
+  parentAmount: number;
+  subItems: { id: string; name: string; amount: number }[];
+  userId?: string;
+}) {
+  const qc = useQueryClient();
+  const [n, setN] = useState("");
+  const [a, setA] = useState("");
+  const total = subItems.reduce((s, x) => s + Number(x.amount), 0);
+
+  const add = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    if (!n || !a) return toast.error("Name and amount required");
+    const amt = parseFloat(a);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    const { error } = await (supabase as any).from("budget_sub_items").insert({
+      user_id: userId, budget_item_id: budgetItemId, name: n, amount: amt,
+    });
+    if (error) return toast.error(error.message);
+    setN(""); setA("");
+    qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("Delete this sub-item?")) return;
+    const { error } = await (supabase as any).from("budget_sub_items").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+  };
+
+  const matches = Math.abs(total - parentAmount) < 0.005;
+
+  return (
+    <div className="border-t pt-2 mt-1 space-y-2">
+      <div className="text-xs font-medium text-muted-foreground">Sub-items (planning breakdown)</div>
+      {subItems.length > 0 && (
+        <div className="space-y-1">
+          {subItems.map(s => (
+            <div key={s.id} className="flex items-center justify-between gap-2 rounded-md bg-accent/30 px-2 py-1.5">
+              <span className="text-xs truncate">{s.name}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-semibold tabular-nums">{money(s.amount)}</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => del(s.id)}><Trash2 className="h-3 w-3" /></Button>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center justify-between text-xs px-2">
+            <span className="text-muted-foreground">Sub-items total</span>
+            <span className="font-semibold tabular-nums">{money(total)}</span>
+          </div>
+          {!matches && (
+            <div className="text-[11px] text-muted-foreground italic px-2">Sub-items total does not match budget amount.</div>
+          )}
+        </div>
+      )}
+      <form onSubmit={add} className="flex gap-2">
+        <Input className="h-8 text-xs" placeholder="Sub-item name" value={n} onChange={e => setN(e.target.value)} />
+        <Input className="h-8 text-xs w-24" type="number" step="0.01" placeholder="0.00" value={a} onChange={e => setA(e.target.value)} />
+        <Button type="submit" size="sm" className="h-8"><Plus className="h-3.5 w-3.5" /></Button>
+      </form>
+    </div>
+  );
+}

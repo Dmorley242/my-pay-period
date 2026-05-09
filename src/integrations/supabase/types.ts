@@ -128,6 +128,44 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_sub_items: {
+        Row: {
+          amount: number
+          budget_item_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          budget_item_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          budget_item_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_sub_items_budget_item_id_fkey"
+            columns: ["budget_item_id"]
+            isOneToOne: false
+            referencedRelation: "budget_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_template_items: {
         Row: {
           account_id: string
