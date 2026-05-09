@@ -190,10 +190,16 @@ export default function Dashboard() {
           const bid = (t as any).budget_item_id as string | null | undefined;
           if (bid && t.transaction_type === "expense") spentMap.set(bid, (spentMap.get(bid) || 0) + Number(t.amount));
         });
+        const payAmount = Number(active.net_pay_amount ?? 0);
         const budgeted = items.reduce((s, b) => s + Number(b.budget_amount), 0);
         const spent = items.reduce((s, b) => s + (spentMap.get(b.id) || 0), 0);
         const remaining = budgeted - spent;
+        const toAssign = payAmount - budgeted;
         const top = items.slice(0, 5);
+        const accLbl = (id: string) => {
+          const a = accounts.find(x => x.id === id);
+          return a ? (a.bank_name ? `${a.bank_name} - ${a.name}` : a.name) : "—";
+        };
         return (
           <Card className="shadow-[var(--shadow-sm)]">
             <CardHeader className="pb-3 flex-row items-center justify-between">
@@ -201,11 +207,16 @@ export default function Dashboard() {
               <Button asChild variant="ghost" size="sm"><Link to="/budget">See More</Link></Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Budgeted</div><div className="font-semibold tabular-nums">{money(budgeted)}</div></div>
-                <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Spent</div><div className="font-semibold tabular-nums text-expense">{money(spent)}</div></div>
-                <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Remaining</div><div className={`font-semibold tabular-nums ${remaining < 0 ? "text-destructive" : "text-income"}`}>{money(remaining)}</div></div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
+                <DashCell label="Pay Amount" value={money(payAmount)} />
+                <DashCell label="Total Budgeted" value={money(budgeted)} />
+                <DashCell label="Total Spent" value={money(spent)} cls="text-expense" />
+                <DashCell label="Total Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
+                <DashCell label="Remaining to Assign" value={money(toAssign)} cls={toAssign < 0 ? "text-destructive" : "text-income"} />
               </div>
+              {toAssign < 0 && (
+                <div className="text-xs text-destructive font-medium text-center">Over budget by {money(Math.abs(toAssign))}</div>
+              )}
               {top.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-2">No budget items yet. <Link to="/budget" className="underline">Create one</Link>.</p>
               ) : (
@@ -215,11 +226,14 @@ export default function Dashboard() {
                     const r = Number(b.budget_amount) - s;
                     return (
                       <div key={b.id} className="rounded-md border px-3 py-2">
-                        <div className="text-sm font-medium truncate">{b.name}</div>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className="text-sm font-medium truncate">{b.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{accLbl(b.account_id)}</span>
+                        </div>
                         <div className="grid grid-cols-3 gap-2 mt-1 text-xs">
-                          <div className="text-center"><div className="text-[10px] uppercase text-muted-foreground">Budget</div><div className="font-semibold tabular-nums">{money(b.budget_amount)}</div></div>
-                          <div className="text-center"><div className="text-[10px] uppercase text-muted-foreground">Spent</div><div className="font-semibold tabular-nums text-expense">{money(s)}</div></div>
-                          <div className="text-center"><div className="text-[10px] uppercase text-muted-foreground">Remaining</div><div className={`font-semibold tabular-nums ${r < 0 ? "text-destructive" : "text-income"}`}>{money(r)}</div></div>
+                          <DashCell label="Budget" value={money(b.budget_amount)} />
+                          <DashCell label="Spent" value={money(s)} cls="text-expense" />
+                          <DashCell label="Remaining" value={money(r)} cls={r < 0 ? "text-destructive" : "text-income"} />
                         </div>
                       </div>
                     );
@@ -291,6 +305,13 @@ const Empty = ({ msg, to, cta }: { msg: string; to: string; cta: string }) => (
   <div className="text-center py-6">
     <p className="text-sm text-muted-foreground mb-3">{msg}</p>
     <Button asChild size="sm"><Link to={to}>{cta}</Link></Button>
+  </div>
+);
+
+const DashCell = ({ label, value, cls }: { label: string; value: string; cls?: string }) => (
+  <div className="rounded-md bg-accent/40 px-2 py-1.5 text-center">
+    <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+    <div className={`font-semibold tabular-nums ${cls || ""}`}>{value}</div>
   </div>
 );
 
