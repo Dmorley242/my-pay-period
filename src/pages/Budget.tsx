@@ -19,6 +19,7 @@ const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name 
 export default function Budget() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const active = useActivePayPeriod();
   const { data: accounts = [] } = useAccounts();
   const { data: items = [] } = useBudgetItems();
