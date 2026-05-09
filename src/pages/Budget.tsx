@@ -150,7 +150,7 @@ export default function Budget() {
               </div>
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => navigate("/budget-templates")}>Add Template</Button>
-                <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>Build Budget</Button>
+                <Button size="sm" onClick={() => setFullBuilderOpen(true)}>Build Budget</Button>
               </div>
             </CardContent>
           </Card>
