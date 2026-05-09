@@ -132,10 +132,51 @@ export default function Budget() {
       toast.success("Budget published");
       qc.invalidateQueries({ queryKey: ["budget_items"] });
       qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+      // Keep snapshot for optional template save, then close builder and prompt
+      setPublishedDrafts(drafts);
       resetFullBuilder();
       setFullBuilderOpen(false);
+      setPostPublishPromptOpen(true);
     } finally {
       setPublishing(false);
+    }
+  };
+
+  const saveBudgetAsTemplate = async () => {
+    if (!user) return;
+    const tname = postPublishTplName.trim();
+    if (!tname) return toast.error("Template name required");
+    if (publishedDrafts.length === 0) return toast.error("Nothing to save");
+    setSavingTpl(true);
+    try {
+      const { data: existing } = await (supabase as any).from("budget_templates").select("id").eq("user_id", user.id).eq("name", tname).maybeSingle();
+      if (existing) return toast.error("A template with this name already exists");
+      const { data: tpl, error: tErr } = await (supabase as any).from("budget_templates").insert({ user_id: user.id, name: tname, notes: null }).select().single();
+      if (tErr) return toast.error(tErr.message);
+      const itemRows = publishedDrafts.map(d => ({
+        user_id: user.id, template_id: tpl.id, account_id: d.account_id, name: d.name, budget_amount: d.budget_amount,
+      }));
+      const { data: insertedItems, error: iErr } = await (supabase as any).from("budget_template_items").insert(itemRows).select();
+      if (iErr) return toast.error(iErr.message);
+      const subRows: any[] = [];
+      publishedDrafts.forEach((d, idx) => {
+        const tid = insertedItems?.[idx]?.id;
+        if (!tid) return;
+        d.subs.forEach(s => subRows.push({ user_id: user.id, template_item_id: tid, name: s.name, amount: s.amount }));
+      });
+      if (subRows.length > 0) {
+        const { error: sErr } = await (supabase as any).from("budget_template_sub_items").insert(subRows);
+        if (sErr) return toast.error(sErr.message);
+      }
+      toast.success("Template saved");
+      qc.invalidateQueries({ queryKey: ["budget_templates"] });
+      qc.invalidateQueries({ queryKey: ["budget_template_items"] });
+      qc.invalidateQueries({ queryKey: ["budget_template_sub_items"] });
+      setPostPublishTplName("");
+      setPostPublishTplOpen(false);
+      setPublishedDrafts([]);
+    } finally {
+      setSavingTpl(false);
     }
   };
 
