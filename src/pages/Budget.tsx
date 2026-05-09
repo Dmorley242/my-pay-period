@@ -259,6 +259,31 @@ export default function Budget() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={publishConfirmOpen} onOpenChange={setPublishConfirmOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Publish Budget</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Do you want to save this budget as a template?</p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setPublishConfirmOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={justPublish}>No, Just Publish Budget</Button>
+            <Button onClick={() => { setPublishConfirmOpen(false); setTemplateName(""); setTemplateNameOpen(true); }}>Yes, Save as Template</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={templateNameOpen} onOpenChange={o => { if (!o) setTemplateName(""); setTemplateNameOpen(o); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Save as Template</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Template Name *</Label><Input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Regular Paycheck Budget" autoFocus /></div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setTemplateName(""); setTemplateNameOpen(false); }}>Cancel</Button>
+              <Button onClick={saveAsTemplate}>Save Template & Publish</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
