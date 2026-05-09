@@ -86,7 +86,8 @@ export default function AddTransaction() {
         category_id: categoryId === "none" ? null : categoryId,
         pay_period_id: periodId === "none" ? null : periodId,
         amount: parsedAmount, notes: notes || null,
-      });
+        ...(type === "expense" && budgetItemId !== "none" ? { budget_item_id: budgetItemId } : {}),
+      } as any);
       if (error) return toast.error(error.message);
       toast.success("Transaction added");
     }
