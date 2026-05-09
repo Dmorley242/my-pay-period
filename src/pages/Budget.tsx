@@ -146,6 +146,9 @@ export default function Budget() {
                             <span className="text-xs text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
                           </div>
                           <div className="flex shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpanded(s => ({ ...s, [i.id]: !s[i.id] }))} title="Sub-items">
+                              {expanded[i.id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ListTree className="h-3.5 w-3.5" />}
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing({ id: i.id, name: i.name, account_id: i.account_id, budget_amount: String(i.budget_amount) })}><Pencil className="h-3.5 w-3.5" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                           </div>
@@ -155,6 +158,14 @@ export default function Budget() {
                           <Cell label="Spent" value={money(spent)} cls="text-expense" />
                           <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
                         </div>
+                        {expanded[i.id] && (
+                          <SubItems
+                            budgetItemId={i.id}
+                            parentAmount={Number(i.budget_amount)}
+                            subItems={subItems.filter(s => s.budget_item_id === i.id)}
+                            userId={user?.id}
+                          />
+                        )}
                       </div>
                     );
                   })}
