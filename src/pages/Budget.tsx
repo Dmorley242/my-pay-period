@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useAccounts, useActivePayPeriod, useBudgetItems, useTransactions } from "@/hooks/useFinanceData";
+import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useTransactions } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, Wallet } from "lucide-react";
+import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree } from "lucide-react";
 
 const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
