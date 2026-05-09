@@ -22,6 +22,7 @@ export default function BudgetTemplates() {
   const { data: accounts = [] } = useAccounts();
   const { data: templates = [] } = useBudgetTemplates();
   const { data: tItems = [] } = useBudgetTemplateItems();
+  const { data: tSubItems = [] } = useBudgetTemplateSubItems();
   const { data: periods = [] } = usePayPeriods();
   const { data: budgetItems = [] } = useBudgetItems();
   const active = useActivePayPeriod();
