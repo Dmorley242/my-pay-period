@@ -231,7 +231,7 @@ export default function Budget() {
             <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
             <div className="flex gap-2 justify-end">
               <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
-              <Button type="button" variant="outline" onClick={() => { reset(); setBuilderOpen(false); }}>Done</Button>
+              <Button type="button" variant="outline" onClick={() => setPublishConfirmOpen(true)}>Publish Budget</Button>
             </div>
           </form>
         </DialogContent>
