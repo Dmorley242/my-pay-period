@@ -149,6 +149,8 @@ export default function Budget() {
   const totalRemaining = totalBudgeted - totalSpent;
   const remainingToAssign = payAmount - totalBudgeted;
   const depositAccount = accounts.find(a => a.id === active?.paycheck_account_id);
+  const liveTotalBudgeted = totalBudgeted + draftsTotal;
+  const liveRemainingToAssign = payAmount - liveTotalBudgeted;
 
   const reset = () => { setName(""); setAccountId(""); setAmount(""); };
 
