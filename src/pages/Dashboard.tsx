@@ -183,6 +183,27 @@ export default function Dashboard() {
         <Button asChild variant="outline" size="sm"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
+      {active && (() => {
+        const items = budgetItems.filter(b => b.pay_period_id === active.id);
+        if (items.length === 0) return null;
+        const budgeted = items.reduce((s, b) => s + Number(b.budget_amount), 0);
+        const spent = txs.filter(t => t.transaction_type === "expense" && (t as any).budget_item_id && items.some(i => i.id === (t as any).budget_item_id)).reduce((s, t) => s + Number(t.amount), 0);
+        const remaining = budgeted - spent;
+        return (
+          <Card className="shadow-[var(--shadow-sm)]">
+            <CardHeader className="pb-3 flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><PieChart className="h-4 w-4" />Active Budget</CardTitle>
+              <Button asChild variant="ghost" size="sm"><Link to="/budget">Open</Link></Button>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-2 text-sm">
+              <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Budgeted</div><div className="font-semibold tabular-nums">{money(budgeted)}</div></div>
+              <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Spent</div><div className="font-semibold tabular-nums text-expense">{money(spent)}</div></div>
+              <div className="rounded-md bg-accent/40 px-2 py-2 text-center"><div className="text-[10px] uppercase text-muted-foreground">Remaining</div><div className={`font-semibold tabular-nums ${remaining < 0 ? "text-destructive" : "text-income"}`}>{money(remaining)}</div></div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="shadow-[var(--shadow-sm)]">
           <CardHeader className="pb-3 flex-row items-center justify-between">
