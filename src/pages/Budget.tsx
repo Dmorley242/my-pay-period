@@ -94,6 +94,37 @@ export default function Budget() {
     setEditing(null);
   };
 
+  const justPublish = () => {
+    setPublishConfirmOpen(false);
+    reset();
+    setBuilderOpen(false);
+    toast.success("Budget published");
+  };
+
+  const saveAsTemplate = async () => {
+    if (!user) return;
+    const tname = templateName.trim();
+    if (!tname) return toast.error("Template name required");
+    // Check duplicate
+    const { data: existing } = await (supabase as any).from("budget_templates").select("id").eq("user_id", user.id).eq("name", tname).maybeSingle();
+    if (existing) return toast.error("A template with this name already exists");
+    if (periodItems.length === 0) return toast.error("No budget items to save");
+    const { data: tpl, error: tErr } = await (supabase as any).from("budget_templates").insert({ user_id: user.id, name: tname, notes: null }).select().single();
+    if (tErr) return toast.error(tErr.message);
+    const rows = periodItems.map(i => ({
+      user_id: user.id, template_id: tpl.id, account_id: i.account_id, name: i.name, budget_amount: Number(i.budget_amount),
+    }));
+    const { error: iErr } = await (supabase as any).from("budget_template_items").insert(rows);
+    if (iErr) return toast.error(iErr.message);
+    toast.success("Template saved");
+    qc.invalidateQueries({ queryKey: ["budget_templates"] });
+    qc.invalidateQueries({ queryKey: ["budget_template_items"] });
+    setTemplateName("");
+    setTemplateNameOpen(false);
+    reset();
+    setBuilderOpen(false);
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
