@@ -46,6 +46,11 @@ export default function Budget() {
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const [draftExpanded, setDraftExpanded] = useState<Record<string, boolean>>({});
   const [publishing, setPublishing] = useState(false);
+  const [postPublishPromptOpen, setPostPublishPromptOpen] = useState(false);
+  const [postPublishTplOpen, setPostPublishTplOpen] = useState(false);
+  const [postPublishTplName, setPostPublishTplName] = useState("");
+  const [savingTpl, setSavingTpl] = useState(false);
+  const [publishedDrafts, setPublishedDrafts] = useState<DraftItem[]>([]);
   // Simple item form
   const [siName, setSiName] = useState("");
   const [siAccount, setSiAccount] = useState("");
