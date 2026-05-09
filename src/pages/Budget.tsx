@@ -389,6 +389,134 @@ export default function Budget() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Full Build Budget workflow */}
+      <Dialog open={fullBuilderOpen} onOpenChange={o => { if (!o) resetFullBuilder(); setFullBuilderOpen(o); }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Build Budget</DialogTitle></DialogHeader>
+
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <Cell label="Pay Amount" value={money(payAmount)} />
+            <Cell label="Total Budgeted" value={money(liveTotalBudgeted)} />
+            <Cell label="Remaining to Assign" value={money(liveRemainingToAssign)} cls={liveRemainingToAssign < 0 ? "text-destructive" : "text-income"} />
+          </div>
+          {liveRemainingToAssign < 0 && (
+            <div className="text-xs text-destructive font-medium text-center">Over budget by {money(Math.abs(liveRemainingToAssign))}</div>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Add Item */}
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Add Item</CardTitle></CardHeader>
+              <CardContent>
+                <form onSubmit={addSimpleDraft} className="space-y-2">
+                  <div><Label className="text-xs">Name *</Label><Input value={siName} onChange={e => setSiName(e.target.value)} placeholder="Medical Fees" /></div>
+                  <div>
+                    <Label className="text-xs">Account *</Label>
+                    <Select value={siAccount} onValueChange={setSiAccount}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="text-xs">Budget Amount *</Label><Input type="number" step="0.01" value={siAmount} onChange={e => setSiAmount(e.target.value)} placeholder="0.00" /></div>
+                  <Button type="submit" size="sm" className="w-full"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Add Category Item */}
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Add Category Item</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                <div><Label className="text-xs">Category Name *</Label><Input value={catName} onChange={e => setCatName(e.target.value)} placeholder="AI" /></div>
+                <div>
+                  <Label className="text-xs">Account *</Label>
+                  <Select value={catAccount} onValueChange={setCatAccount}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <form onSubmit={addCatSub} className="flex gap-2 items-end">
+                  <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
+                  <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                  <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
+                </form>
+                {catSubs.length > 0 && (
+                  <div className="space-y-1">
+                    {catSubs.map(s => (
+                      <div key={s.id} className="flex items-center justify-between rounded bg-accent/40 px-2 py-1 text-xs">
+                        <span className="truncate">{s.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="tabular-nums font-semibold">{money(s.amount)}</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCatSubs(x => x.filter(y => y.id !== s.id))}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-xs px-2"><span className="text-muted-foreground">Sub-items total</span><span className="font-semibold tabular-nums">{money(catSubsTotal)}</span></div>
+                  </div>
+                )}
+                <div>
+                  <Label className="text-xs">Parent Amount (optional override)</Label>
+                  <Input type="number" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
+                  {catMismatch && <div className="text-[11px] text-destructive mt-1">Manual amount does not match sub-items total ({money(catSubsTotal)}).</div>}
+                </div>
+                <Button type="button" size="sm" className="w-full" onClick={addCategoryDraft}><Plus className="h-4 w-4 mr-1" />Add Category Item</Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Drafts list */}
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Items to Publish ({drafts.length})</div>
+            {drafts.length === 0 ? (
+              <div className="text-xs text-muted-foreground text-center py-3">No items added yet.</div>
+            ) : (
+              <div className="space-y-1.5">
+                {drafts.map(d => {
+                  const acc = accounts.find(a => a.id === d.account_id);
+                  return (
+                    <div key={d.id} className="rounded-md border p-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
+                          <span className="font-semibold text-sm truncate">{d.name}</span>
+                          <span className="text-[11px] text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
+                          {d.subs.length > 0 && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Category</span>}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-semibold tabular-nums text-sm">{money(d.budget_amount)}</span>
+                          {d.subs.length > 0 && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDraftExpanded(s => ({ ...s, [d.id]: !s[d.id] }))}>
+                              {draftExpanded[d.id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeDraft(d.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </div>
+                      {d.subs.length > 0 && draftExpanded[d.id] && (
+                        <div className="mt-2 pl-3 border-l space-y-1">
+                          {d.subs.map(s => (
+                            <div key={s.id} className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">{s.name}</span>
+                              <span className="tabular-nums">{money(s.amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => { resetFullBuilder(); setFullBuilderOpen(false); }}>Cancel</Button>
+            <Button onClick={publishFullBudget} disabled={publishing || drafts.length === 0}>
+              {publishing ? "Publishing..." : "Publish Budget"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
