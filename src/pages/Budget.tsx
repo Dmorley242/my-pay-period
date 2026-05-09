@@ -39,6 +39,101 @@ export default function Budget() {
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
+  // ---- Full Build Budget workflow ----
+  type DraftSub = { id: string; name: string; amount: number };
+  type DraftItem = { id: string; name: string; account_id: string; budget_amount: number; subs: DraftSub[] };
+  const [fullBuilderOpen, setFullBuilderOpen] = useState(false);
+  const [drafts, setDrafts] = useState<DraftItem[]>([]);
+  const [draftExpanded, setDraftExpanded] = useState<Record<string, boolean>>({});
+  const [publishing, setPublishing] = useState(false);
+  // Simple item form
+  const [siName, setSiName] = useState("");
+  const [siAccount, setSiAccount] = useState("");
+  const [siAmount, setSiAmount] = useState("");
+  // Category form
+  const [catName, setCatName] = useState("");
+  const [catAccount, setCatAccount] = useState("");
+  const [catAmountManual, setCatAmountManual] = useState("");
+  const [catSubs, setCatSubs] = useState<DraftSub[]>([]);
+  const [csName, setCsName] = useState("");
+  const [csAmount, setCsAmount] = useState("");
+
+  const draftsTotal = drafts.reduce((s, d) => s + d.budget_amount, 0);
+
+  const resetFullBuilder = () => {
+    setDrafts([]); setDraftExpanded({});
+    setSiName(""); setSiAccount(""); setSiAmount("");
+    setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]); setCsName(""); setCsAmount("");
+  };
+
+  const addSimpleDraft = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!siName || !siAccount || !siAmount) return toast.error("Name, account, amount required");
+    const amt = parseFloat(siAmount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    setDrafts(d => [...d, { id: crypto.randomUUID(), name: siName, account_id: siAccount, budget_amount: amt, subs: [] }]);
+    setSiName(""); setSiAccount(""); setSiAmount("");
+  };
+
+  const addCatSub = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!csName || !csAmount) return toast.error("Sub-item name and amount required");
+    const amt = parseFloat(csAmount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    setCatSubs(s => [...s, { id: crypto.randomUUID(), name: csName, amount: amt }]);
+    setCsName(""); setCsAmount("");
+  };
+
+  const catSubsTotal = catSubs.reduce((s, x) => s + x.amount, 0);
+  const catParentAmount = catAmountManual !== "" ? parseFloat(catAmountManual) || 0 : catSubsTotal;
+  const catMismatch = catAmountManual !== "" && Math.abs(catParentAmount - catSubsTotal) > 0.005;
+
+  const addCategoryDraft = () => {
+    if (!catName || !catAccount) return toast.error("Category name and account required");
+    if (catSubs.length === 0) return toast.error("Add at least one sub-item");
+    if (catParentAmount <= 0) return toast.error("Parent amount must be > 0");
+    setDrafts(d => [...d, {
+      id: crypto.randomUUID(), name: catName, account_id: catAccount,
+      budget_amount: catParentAmount, subs: catSubs,
+    }]);
+    setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]); setCsName(""); setCsAmount("");
+  };
+
+  const removeDraft = (id: string) => setDrafts(d => d.filter(x => x.id !== id));
+
+  const publishFullBudget = async () => {
+    if (!user || !active) return toast.error("No active pay period");
+    if (drafts.length === 0) { setFullBuilderOpen(false); return; }
+    setPublishing(true);
+    try {
+      const itemRows = drafts.map(d => ({
+        user_id: user.id, pay_period_id: active.id, account_id: d.account_id,
+        name: d.name, budget_amount: d.budget_amount,
+      }));
+      const { data: inserted, error } = await (supabase as any).from("budget_items").insert(itemRows).select();
+      if (error) return toast.error(error.message);
+      const subRows: any[] = [];
+      drafts.forEach((d, idx) => {
+        const insertedId = inserted?.[idx]?.id;
+        if (!insertedId) return;
+        d.subs.forEach(s => subRows.push({
+          user_id: user.id, budget_item_id: insertedId, name: s.name, amount: s.amount,
+        }));
+      });
+      if (subRows.length > 0) {
+        const { error: sErr } = await (supabase as any).from("budget_sub_items").insert(subRows);
+        if (sErr) return toast.error(sErr.message);
+      }
+      toast.success("Budget published");
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+      resetFullBuilder();
+      setFullBuilderOpen(false);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const spentByItem = useMemo(() => {
     const m = new Map<string, number>();
     txs.forEach(t => {
@@ -54,6 +149,8 @@ export default function Budget() {
   const totalRemaining = totalBudgeted - totalSpent;
   const remainingToAssign = payAmount - totalBudgeted;
   const depositAccount = accounts.find(a => a.id === active?.paycheck_account_id);
+  const liveTotalBudgeted = totalBudgeted + draftsTotal;
+  const liveRemainingToAssign = payAmount - liveTotalBudgeted;
 
   const reset = () => { setName(""); setAccountId(""); setAmount(""); };
 
@@ -150,7 +247,7 @@ export default function Budget() {
               </div>
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => navigate("/budget-templates")}>Add Template</Button>
-                <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>Build Budget</Button>
+                <Button size="sm" onClick={() => setFullBuilderOpen(true)}>Build Budget</Button>
               </div>
             </CardContent>
           </Card>
@@ -289,6 +386,134 @@ export default function Budget() {
               <Button variant="outline" onClick={() => { setTemplateName(""); setTemplateNameOpen(false); }}>Cancel</Button>
               <Button onClick={saveAsTemplate}>Save Template & Publish</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Full Build Budget workflow */}
+      <Dialog open={fullBuilderOpen} onOpenChange={o => { if (!o) resetFullBuilder(); setFullBuilderOpen(o); }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Build Budget</DialogTitle></DialogHeader>
+
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <Cell label="Pay Amount" value={money(payAmount)} />
+            <Cell label="Total Budgeted" value={money(liveTotalBudgeted)} />
+            <Cell label="Remaining to Assign" value={money(liveRemainingToAssign)} cls={liveRemainingToAssign < 0 ? "text-destructive" : "text-income"} />
+          </div>
+          {liveRemainingToAssign < 0 && (
+            <div className="text-xs text-destructive font-medium text-center">Over budget by {money(Math.abs(liveRemainingToAssign))}</div>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Add Item */}
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Add Item</CardTitle></CardHeader>
+              <CardContent>
+                <form onSubmit={addSimpleDraft} className="space-y-2">
+                  <div><Label className="text-xs">Name *</Label><Input value={siName} onChange={e => setSiName(e.target.value)} placeholder="Medical Fees" /></div>
+                  <div>
+                    <Label className="text-xs">Account *</Label>
+                    <Select value={siAccount} onValueChange={setSiAccount}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="text-xs">Budget Amount *</Label><Input type="number" step="0.01" value={siAmount} onChange={e => setSiAmount(e.target.value)} placeholder="0.00" /></div>
+                  <Button type="submit" size="sm" className="w-full"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Add Category Item */}
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Add Category Item</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                <div><Label className="text-xs">Category Name *</Label><Input value={catName} onChange={e => setCatName(e.target.value)} placeholder="AI" /></div>
+                <div>
+                  <Label className="text-xs">Account *</Label>
+                  <Select value={catAccount} onValueChange={setCatAccount}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <form onSubmit={addCatSub} className="flex gap-2 items-end">
+                  <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
+                  <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                  <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
+                </form>
+                {catSubs.length > 0 && (
+                  <div className="space-y-1">
+                    {catSubs.map(s => (
+                      <div key={s.id} className="flex items-center justify-between rounded bg-accent/40 px-2 py-1 text-xs">
+                        <span className="truncate">{s.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="tabular-nums font-semibold">{money(s.amount)}</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCatSubs(x => x.filter(y => y.id !== s.id))}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-xs px-2"><span className="text-muted-foreground">Sub-items total</span><span className="font-semibold tabular-nums">{money(catSubsTotal)}</span></div>
+                  </div>
+                )}
+                <div>
+                  <Label className="text-xs">Parent Amount (optional override)</Label>
+                  <Input type="number" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
+                  {catMismatch && <div className="text-[11px] text-destructive mt-1">Manual amount does not match sub-items total ({money(catSubsTotal)}).</div>}
+                </div>
+                <Button type="button" size="sm" className="w-full" onClick={addCategoryDraft}><Plus className="h-4 w-4 mr-1" />Add Category Item</Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Drafts list */}
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Items to Publish ({drafts.length})</div>
+            {drafts.length === 0 ? (
+              <div className="text-xs text-muted-foreground text-center py-3">No items added yet.</div>
+            ) : (
+              <div className="space-y-1.5">
+                {drafts.map(d => {
+                  const acc = accounts.find(a => a.id === d.account_id);
+                  return (
+                    <div key={d.id} className="rounded-md border p-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
+                          <span className="font-semibold text-sm truncate">{d.name}</span>
+                          <span className="text-[11px] text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
+                          {d.subs.length > 0 && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Category</span>}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-semibold tabular-nums text-sm">{money(d.budget_amount)}</span>
+                          {d.subs.length > 0 && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDraftExpanded(s => ({ ...s, [d.id]: !s[d.id] }))}>
+                              {draftExpanded[d.id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeDraft(d.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </div>
+                      {d.subs.length > 0 && draftExpanded[d.id] && (
+                        <div className="mt-2 pl-3 border-l space-y-1">
+                          {d.subs.map(s => (
+                            <div key={s.id} className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">{s.name}</span>
+                              <span className="tabular-nums">{money(s.amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => { resetFullBuilder(); setFullBuilderOpen(false); }}>Cancel</Button>
+            <Button onClick={publishFullBudget} disabled={publishing || drafts.length === 0}>
+              {publishing ? "Publishing..." : "Publish Budget"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
