@@ -15,6 +15,7 @@ import Categories from "./pages/Categories";
 import PayPeriods from "./pages/PayPeriods";
 import History from "./pages/History";
 import Holds from "./pages/Holds";
+import Budget from "./pages/Budget";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
