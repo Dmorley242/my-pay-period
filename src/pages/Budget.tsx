@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useTransactions } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +19,7 @@ const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name 
 export default function Budget() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const active = useActivePayPeriod();
   const { data: accounts = [] } = useAccounts();
   const { data: items = [] } = useBudgetItems();
@@ -138,12 +140,18 @@ export default function Budget() {
         <>
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Wallet className="h-4 w-4" />Active Pay Period</CardTitle></CardHeader>
-            <CardContent className="grid gap-2 sm:grid-cols-2 text-sm">
-              <Row label="From Date" value={fmtDate(active.start_date)} />
-              <Row label="Until Date" value={fmtDate(active.end_date)} />
-              <Row label="Income Source" value={active.income_source || "—"} />
-              <Row label="Deposit Account" value={depositAccount ? accLabel(depositAccount) : "—"} />
-              <Row label="Pay Amount" value={active.net_pay_amount != null ? money(active.net_pay_amount) : "—"} />
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-2 text-sm">
+                <Row label="From Date" value={fmtDate(active.start_date)} />
+                <Row label="Until Date" value={fmtDate(active.end_date)} />
+                <Row label="Income Source" value={active.income_source || "—"} />
+                <Row label="Deposit Account" value={depositAccount ? accLabel(depositAccount) : "—"} />
+                <Row label="Pay Amount" value={active.net_pay_amount != null ? money(active.net_pay_amount) : "—"} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="outline" onClick={() => navigate("/budget-templates")}>Add Template</Button>
+                <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>Build Budget</Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -230,8 +238,8 @@ export default function Budget() {
             </div>
             <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
             <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => { reset(); setBuilderOpen(false); }}>Cancel</Button>
               <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
-              <Button type="button" variant="outline" onClick={() => setPublishConfirmOpen(true)}>Publish Budget</Button>
             </div>
           </form>
         </DialogContent>
