@@ -563,6 +563,33 @@ export default function Budget() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Post-publish: prompt to save as template */}
+      <Dialog open={postPublishPromptOpen} onOpenChange={setPostPublishPromptOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Budget Published</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Do you want to save this budget as a template you can reuse for future pay periods?</p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setPostPublishPromptOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => { setPostPublishPromptOpen(false); setPublishedDrafts([]); }}>No, Just Finish</Button>
+            <Button onClick={() => { setPostPublishPromptOpen(false); setPostPublishTplName(""); setPostPublishTplOpen(true); }}>Yes, Save as Template</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={postPublishTplOpen} onOpenChange={o => { if (!o) { setPostPublishTplName(""); setPublishedDrafts([]); } setPostPublishTplOpen(o); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Save as Template</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Template Name *</Label><Input value={postPublishTplName} onChange={e => setPostPublishTplName(e.target.value)} placeholder="Regular Paycheck Budget" autoFocus /></div>
+            <div className="text-xs text-muted-foreground">Saving {publishedDrafts.length} item{publishedDrafts.length === 1 ? "" : "s"} (including any sub-items).</div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setPostPublishTplName(""); setPublishedDrafts([]); setPostPublishTplOpen(false); }}>Cancel</Button>
+              <Button onClick={saveBudgetAsTemplate} disabled={savingTpl}>{savingTpl ? "Saving..." : "Save Template"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
