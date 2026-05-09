@@ -210,8 +210,8 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
                 <DashCell label="Pay Amount" value={money(payAmount)} />
                 <DashCell label="Total Budgeted" value={money(budgeted)} />
-                <DashCell label="Total Spent" value={money(spent)} cls="text-expense" />
-                <DashCell label="Total Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
+                <DashCell label="Total Budget Spent" value={money(spent)} cls="text-expense" />
+                <DashCell label="Total Budget Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
                 <DashCell label="Remaining to Assign" value={money(toAssign)} cls={toAssign < 0 ? "text-destructive" : "text-income"} />
               </div>
               {toAssign < 0 && (
