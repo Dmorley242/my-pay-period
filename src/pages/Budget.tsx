@@ -140,12 +140,18 @@ export default function Budget() {
         <>
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Wallet className="h-4 w-4" />Active Pay Period</CardTitle></CardHeader>
-            <CardContent className="grid gap-2 sm:grid-cols-2 text-sm">
-              <Row label="From Date" value={fmtDate(active.start_date)} />
-              <Row label="Until Date" value={fmtDate(active.end_date)} />
-              <Row label="Income Source" value={active.income_source || "—"} />
-              <Row label="Deposit Account" value={depositAccount ? accLabel(depositAccount) : "—"} />
-              <Row label="Pay Amount" value={active.net_pay_amount != null ? money(active.net_pay_amount) : "—"} />
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-2 text-sm">
+                <Row label="From Date" value={fmtDate(active.start_date)} />
+                <Row label="Until Date" value={fmtDate(active.end_date)} />
+                <Row label="Income Source" value={active.income_source || "—"} />
+                <Row label="Deposit Account" value={depositAccount ? accLabel(depositAccount) : "—"} />
+                <Row label="Pay Amount" value={active.net_pay_amount != null ? money(active.net_pay_amount) : "—"} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="outline" onClick={() => navigate("/budget-templates")}>Add Template</Button>
+                <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>Build Budget</Button>
+              </div>
             </CardContent>
           </Card>
 
