@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export type Account = { id: string; name: string; bank_name: string | null; account_type: string | null; starting_balance: number; current_balance: number; notes: string | null; created_at: string; };
 export type PayPeriod = { id: string; name: string; start_date: string; end_date: string; is_active: boolean; income_source: string | null; net_pay_amount: number | null; paycheck_account_id: string | null; paycheck_transaction_id: string | null; notes: string | null; };
 export type Category = { id: string; name: string; category_type: "income" | "expense" | "transfer" | "both"; };
-export type Transaction = { id: string; date: string; transaction_type: "income" | "expense" | "deposit" | "withdrawal"; account_id: string; category_id: string | null; pay_period_id: string | null; amount: number; notes: string | null; };
+export type Transaction = { id: string; date: string; transaction_type: "income" | "expense" | "deposit" | "withdrawal"; account_id: string; category_id: string | null; pay_period_id: string | null; amount: number; notes: string | null; budget_item_id?: string | null; };
+export type BudgetItem = { id: string; user_id: string; pay_period_id: string; account_id: string; name: string; budget_amount: number; notes: string | null; created_at: string; };
 export type Transfer = { id: string; date: string; from_account_id: string; to_account_id: string; pay_period_id: string | null; amount: number; notes: string | null; };
 
 export const useAccounts = () => useQuery({
