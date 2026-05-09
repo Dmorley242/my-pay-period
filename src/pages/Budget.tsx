@@ -39,6 +39,103 @@ export default function Budget() {
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
+  // ---- Full Build Budget workflow ----
+  type DraftSub = { id: string; name: string; amount: number };
+  type DraftItem = { id: string; name: string; account_id: string; budget_amount: number; subs: DraftSub[] };
+  const [fullBuilderOpen, setFullBuilderOpen] = useState(false);
+  const [drafts, setDrafts] = useState<DraftItem[]>([]);
+  const [draftExpanded, setDraftExpanded] = useState<Record<string, boolean>>({});
+  const [publishing, setPublishing] = useState(false);
+  // Simple item form
+  const [siName, setSiName] = useState("");
+  const [siAccount, setSiAccount] = useState("");
+  const [siAmount, setSiAmount] = useState("");
+  // Category form
+  const [catName, setCatName] = useState("");
+  const [catAccount, setCatAccount] = useState("");
+  const [catAmountManual, setCatAmountManual] = useState("");
+  const [catSubs, setCatSubs] = useState<DraftSub[]>([]);
+  const [csName, setCsName] = useState("");
+  const [csAmount, setCsAmount] = useState("");
+
+  const draftsTotal = drafts.reduce((s, d) => s + d.budget_amount, 0);
+  const liveTotalBudgeted = totalBudgeted + draftsTotal;
+  const liveRemainingToAssign = payAmount - liveTotalBudgeted;
+
+  const resetFullBuilder = () => {
+    setDrafts([]); setDraftExpanded({});
+    setSiName(""); setSiAccount(""); setSiAmount("");
+    setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]); setCsName(""); setCsAmount("");
+  };
+
+  const addSimpleDraft = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!siName || !siAccount || !siAmount) return toast.error("Name, account, amount required");
+    const amt = parseFloat(siAmount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    setDrafts(d => [...d, { id: crypto.randomUUID(), name: siName, account_id: siAccount, budget_amount: amt, subs: [] }]);
+    setSiName(""); setSiAccount(""); setSiAmount("");
+  };
+
+  const addCatSub = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!csName || !csAmount) return toast.error("Sub-item name and amount required");
+    const amt = parseFloat(csAmount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    setCatSubs(s => [...s, { id: crypto.randomUUID(), name: csName, amount: amt }]);
+    setCsName(""); setCsAmount("");
+  };
+
+  const catSubsTotal = catSubs.reduce((s, x) => s + x.amount, 0);
+  const catParentAmount = catAmountManual !== "" ? parseFloat(catAmountManual) || 0 : catSubsTotal;
+  const catMismatch = catAmountManual !== "" && Math.abs(catParentAmount - catSubsTotal) > 0.005;
+
+  const addCategoryDraft = () => {
+    if (!catName || !catAccount) return toast.error("Category name and account required");
+    if (catSubs.length === 0) return toast.error("Add at least one sub-item");
+    if (catParentAmount <= 0) return toast.error("Parent amount must be > 0");
+    setDrafts(d => [...d, {
+      id: crypto.randomUUID(), name: catName, account_id: catAccount,
+      budget_amount: catParentAmount, subs: catSubs,
+    }]);
+    setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]); setCsName(""); setCsAmount("");
+  };
+
+  const removeDraft = (id: string) => setDrafts(d => d.filter(x => x.id !== id));
+
+  const publishFullBudget = async () => {
+    if (!user || !active) return toast.error("No active pay period");
+    if (drafts.length === 0) { setFullBuilderOpen(false); return; }
+    setPublishing(true);
+    try {
+      const itemRows = drafts.map(d => ({
+        user_id: user.id, pay_period_id: active.id, account_id: d.account_id,
+        name: d.name, budget_amount: d.budget_amount,
+      }));
+      const { data: inserted, error } = await (supabase as any).from("budget_items").insert(itemRows).select();
+      if (error) return toast.error(error.message);
+      const subRows: any[] = [];
+      drafts.forEach((d, idx) => {
+        const insertedId = inserted?.[idx]?.id;
+        if (!insertedId) return;
+        d.subs.forEach(s => subRows.push({
+          user_id: user.id, budget_item_id: insertedId, name: s.name, amount: s.amount,
+        }));
+      });
+      if (subRows.length > 0) {
+        const { error: sErr } = await (supabase as any).from("budget_sub_items").insert(subRows);
+        if (sErr) return toast.error(sErr.message);
+      }
+      toast.success("Budget published");
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+      resetFullBuilder();
+      setFullBuilderOpen(false);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const spentByItem = useMemo(() => {
     const m = new Map<string, number>();
     txs.forEach(t => {
