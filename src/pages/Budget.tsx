@@ -31,6 +31,9 @@ export default function Budget() {
   const [accountId, setAccountId] = useState("");
   const [amount, setAmount] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const [templateNameOpen, setTemplateNameOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
@@ -89,6 +92,37 @@ export default function Budget() {
     toast.success("Updated");
     qc.invalidateQueries({ queryKey: ["budget_items"] });
     setEditing(null);
+  };
+
+  const justPublish = () => {
+    setPublishConfirmOpen(false);
+    reset();
+    setBuilderOpen(false);
+    toast.success("Budget published");
+  };
+
+  const saveAsTemplate = async () => {
+    if (!user) return;
+    const tname = templateName.trim();
+    if (!tname) return toast.error("Template name required");
+    // Check duplicate
+    const { data: existing } = await (supabase as any).from("budget_templates").select("id").eq("user_id", user.id).eq("name", tname).maybeSingle();
+    if (existing) return toast.error("A template with this name already exists");
+    if (periodItems.length === 0) return toast.error("No budget items to save");
+    const { data: tpl, error: tErr } = await (supabase as any).from("budget_templates").insert({ user_id: user.id, name: tname, notes: null }).select().single();
+    if (tErr) return toast.error(tErr.message);
+    const rows = periodItems.map(i => ({
+      user_id: user.id, template_id: tpl.id, account_id: i.account_id, name: i.name, budget_amount: Number(i.budget_amount),
+    }));
+    const { error: iErr } = await (supabase as any).from("budget_template_items").insert(rows);
+    if (iErr) return toast.error(iErr.message);
+    toast.success("Template saved");
+    qc.invalidateQueries({ queryKey: ["budget_templates"] });
+    qc.invalidateQueries({ queryKey: ["budget_template_items"] });
+    setTemplateName("");
+    setTemplateNameOpen(false);
+    reset();
+    setBuilderOpen(false);
   };
 
   return (
@@ -197,7 +231,7 @@ export default function Budget() {
             <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
             <div className="flex gap-2 justify-end">
               <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
-              <Button type="button" variant="outline" onClick={() => { reset(); setBuilderOpen(false); }}>Done</Button>
+              <Button type="button" variant="outline" onClick={() => setPublishConfirmOpen(true)}>Publish Budget</Button>
             </div>
           </form>
         </DialogContent>
@@ -223,6 +257,31 @@ export default function Budget() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={publishConfirmOpen} onOpenChange={setPublishConfirmOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Publish Budget</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Do you want to save this budget as a template?</p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setPublishConfirmOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={justPublish}>No, Just Publish Budget</Button>
+            <Button onClick={() => { setPublishConfirmOpen(false); setTemplateName(""); setTemplateNameOpen(true); }}>Yes, Save as Template</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={templateNameOpen} onOpenChange={o => { if (!o) setTemplateName(""); setTemplateNameOpen(o); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Save as Template</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Template Name *</Label><Input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Regular Paycheck Budget" autoFocus /></div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setTemplateName(""); setTemplateNameOpen(false); }}>Cancel</Button>
+              <Button onClick={saveAsTemplate}>Save Template & Publish</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
