@@ -156,6 +156,22 @@ export default function AddTransaction() {
                     </SelectContent>
                   </Select>
                 </div>
+                {type === "expense" && (
+                  <div>
+                    <Label>Subtract From Budget</Label>
+                    <Select value={budgetItemId} onValueChange={setBudgetItemId}>
+                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {activeBudgetItems.map(b => {
+                          const acc = accounts.find(a => a.id === b.account_id);
+                          return <SelectItem key={b.id} value={b.id}>{b.name}{acc ? ` - ${accLabel(acc)}` : ""}</SelectItem>;
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {activeBudgetItems.length === 0 && <p className="text-xs text-muted-foreground mt-1">No budget items in active pay period.</p>}
+                  </div>
+                )}
               </>
             )}
 
