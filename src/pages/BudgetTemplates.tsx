@@ -125,7 +125,9 @@ export default function BudgetTemplates() {
     const items = itemsByTemplate.get(applyOpen.templateId) || [];
     if (items.length === 0) return toast.error("Template has no items");
     const already = budgetItems.some(b => (b as any).source_template_id === applyOpen.templateId && b.pay_period_id === applyOpen.payPeriodId);
-    if (already) return toast.error("This template was already applied to this pay period.");
+    if (already) {
+      if (!confirm("This template was already applied to this pay period. Apply again and create duplicates?")) return;
+    }
     const rows = items.map(i => ({
       user_id: user.id,
       pay_period_id: applyOpen.payPeriodId,
@@ -134,10 +136,24 @@ export default function BudgetTemplates() {
       budget_amount: Number(i.budget_amount),
       source_template_id: applyOpen.templateId,
     }));
-    const { error } = await (supabase as any).from("budget_items").insert(rows);
+    const { data: insertedItems, error } = await (supabase as any).from("budget_items").insert(rows).select();
     if (error) return toast.error(error.message);
+    // Apply sub-items
+    const subRows: any[] = [];
+    items.forEach((tpl, idx) => {
+      const newId = insertedItems?.[idx]?.id;
+      if (!newId) return;
+      tSubItems.filter(s => s.template_item_id === tpl.id).forEach(s => {
+        subRows.push({ user_id: user.id, budget_item_id: newId, name: s.name, amount: Number(s.amount) });
+      });
+    });
+    if (subRows.length > 0) {
+      const { error: sErr } = await (supabase as any).from("budget_sub_items").insert(subRows);
+      if (sErr) return toast.error(sErr.message);
+    }
     toast.success(`Applied ${rows.length} budget items`);
     qc.invalidateQueries({ queryKey: ["budget_items"] });
+    qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
     setApplyOpen(null);
   };
 
