@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetTemplates, useBudgetTemplateItems, usePayPeriods } from "@/hooks/useFinanceData";
+import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetTemplates, useBudgetTemplateItems, useBudgetTemplateSubItems, usePayPeriods } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
