@@ -62,3 +62,11 @@ export const useTransfers = () => useQuery({
     if (error) throw error; return (data || []) as Transfer[];
   },
 });
+
+export const useBudgetItems = () => useQuery({
+  queryKey: ["budget_items"],
+  queryFn: async () => {
+    const { data, error } = await (supabase as any).from("budget_items").select("*").order("created_at", { ascending: false });
+    if (error) throw error; return (data || []) as BudgetItem[];
+  },
+});
