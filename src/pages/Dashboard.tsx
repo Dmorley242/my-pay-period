@@ -25,6 +25,7 @@ export default function Dashboard() {
   const { data: cats = [] } = useCategories();
   const { data: periods = [] } = usePayPeriods();
   const active = useActivePayPeriod();
+  const { data: budgetItems = [] } = useBudgetItems();
   const [idx, setIdx] = useState(0);
   const touchStart = useRef<number | null>(null);
 
