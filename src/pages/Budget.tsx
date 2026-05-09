@@ -46,6 +46,11 @@ export default function Budget() {
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const [draftExpanded, setDraftExpanded] = useState<Record<string, boolean>>({});
   const [publishing, setPublishing] = useState(false);
+  const [postPublishPromptOpen, setPostPublishPromptOpen] = useState(false);
+  const [postPublishTplOpen, setPostPublishTplOpen] = useState(false);
+  const [postPublishTplName, setPostPublishTplName] = useState("");
+  const [savingTpl, setSavingTpl] = useState(false);
+  const [publishedDrafts, setPublishedDrafts] = useState<DraftItem[]>([]);
   // Simple item form
   const [siName, setSiName] = useState("");
   const [siAccount, setSiAccount] = useState("");
@@ -127,10 +132,51 @@ export default function Budget() {
       toast.success("Budget published");
       qc.invalidateQueries({ queryKey: ["budget_items"] });
       qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+      // Keep snapshot for optional template save, then close builder and prompt
+      setPublishedDrafts(drafts);
       resetFullBuilder();
       setFullBuilderOpen(false);
+      setPostPublishPromptOpen(true);
     } finally {
       setPublishing(false);
+    }
+  };
+
+  const saveBudgetAsTemplate = async () => {
+    if (!user) return;
+    const tname = postPublishTplName.trim();
+    if (!tname) return toast.error("Template name required");
+    if (publishedDrafts.length === 0) return toast.error("Nothing to save");
+    setSavingTpl(true);
+    try {
+      const { data: existing } = await (supabase as any).from("budget_templates").select("id").eq("user_id", user.id).eq("name", tname).maybeSingle();
+      if (existing) return toast.error("A template with this name already exists");
+      const { data: tpl, error: tErr } = await (supabase as any).from("budget_templates").insert({ user_id: user.id, name: tname, notes: null }).select().single();
+      if (tErr) return toast.error(tErr.message);
+      const itemRows = publishedDrafts.map(d => ({
+        user_id: user.id, template_id: tpl.id, account_id: d.account_id, name: d.name, budget_amount: d.budget_amount,
+      }));
+      const { data: insertedItems, error: iErr } = await (supabase as any).from("budget_template_items").insert(itemRows).select();
+      if (iErr) return toast.error(iErr.message);
+      const subRows: any[] = [];
+      publishedDrafts.forEach((d, idx) => {
+        const tid = insertedItems?.[idx]?.id;
+        if (!tid) return;
+        d.subs.forEach(s => subRows.push({ user_id: user.id, template_item_id: tid, name: s.name, amount: s.amount }));
+      });
+      if (subRows.length > 0) {
+        const { error: sErr } = await (supabase as any).from("budget_template_sub_items").insert(subRows);
+        if (sErr) return toast.error(sErr.message);
+      }
+      toast.success("Template saved");
+      qc.invalidateQueries({ queryKey: ["budget_templates"] });
+      qc.invalidateQueries({ queryKey: ["budget_template_items"] });
+      qc.invalidateQueries({ queryKey: ["budget_template_sub_items"] });
+      setPostPublishTplName("");
+      setPostPublishTplOpen(false);
+      setPublishedDrafts([]);
+    } finally {
+      setSavingTpl(false);
     }
   };
 
@@ -514,6 +560,33 @@ export default function Budget() {
             <Button onClick={publishFullBudget} disabled={publishing || drafts.length === 0}>
               {publishing ? "Publishing..." : "Publish Budget"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post-publish: prompt to save as template */}
+      <Dialog open={postPublishPromptOpen} onOpenChange={setPostPublishPromptOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Budget Published</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Do you want to save this budget as a template you can reuse for future pay periods?</p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setPostPublishPromptOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => { setPostPublishPromptOpen(false); setPublishedDrafts([]); }}>No, Just Finish</Button>
+            <Button onClick={() => { setPostPublishPromptOpen(false); setPostPublishTplName(""); setPostPublishTplOpen(true); }}>Yes, Save as Template</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={postPublishTplOpen} onOpenChange={o => { if (!o) { setPostPublishTplName(""); setPublishedDrafts([]); } setPostPublishTplOpen(o); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Save as Template</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Template Name *</Label><Input value={postPublishTplName} onChange={e => setPostPublishTplName(e.target.value)} placeholder="Regular Paycheck Budget" autoFocus /></div>
+            <div className="text-xs text-muted-foreground">Saving {publishedDrafts.length} item{publishedDrafts.length === 1 ? "" : "s"} (including any sub-items).</div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setPostPublishTplName(""); setPublishedDrafts([]); setPostPublishTplOpen(false); }}>Cancel</Button>
+              <Button onClick={saveBudgetAsTemplate} disabled={savingTpl}>{savingTpl ? "Saving..." : "Save Template"}</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

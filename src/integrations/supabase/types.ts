@@ -207,6 +207,36 @@ export type Database = {
           },
         ]
       }
+      budget_template_sub_items: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          name: string
+          template_item_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          name: string
+          template_item_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          template_item_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budget_templates: {
         Row: {
           created_at: string
