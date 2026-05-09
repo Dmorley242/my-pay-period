@@ -70,3 +70,22 @@ export const useBudgetItems = () => useQuery({
     if (error) throw error; return (data || []) as BudgetItem[];
   },
 });
+
+export type BudgetTemplate = { id: string; user_id: string; name: string; notes: string | null; created_at: string; updated_at: string; };
+export type BudgetTemplateItem = { id: string; user_id: string; template_id: string; account_id: string; name: string; budget_amount: number; created_at: string; updated_at: string; };
+
+export const useBudgetTemplates = () => useQuery({
+  queryKey: ["budget_templates"],
+  queryFn: async () => {
+    const { data, error } = await (supabase as any).from("budget_templates").select("*").order("created_at", { ascending: false });
+    if (error) throw error; return (data || []) as BudgetTemplate[];
+  },
+});
+
+export const useBudgetTemplateItems = () => useQuery({
+  queryKey: ["budget_template_items"],
+  queryFn: async () => {
+    const { data, error } = await (supabase as any).from("budget_template_items").select("*").order("created_at", { ascending: false });
+    if (error) throw error; return (data || []) as BudgetTemplateItem[];
+  },
+});

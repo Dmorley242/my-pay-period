@@ -101,6 +101,7 @@ export type Database = {
           name: string
           notes: string | null
           pay_period_id: string
+          source_template_id: string | null
           user_id: string
         }
         Insert: {
@@ -111,6 +112,7 @@ export type Database = {
           name: string
           notes?: string | null
           pay_period_id: string
+          source_template_id?: string | null
           user_id: string
         }
         Update: {
@@ -121,6 +123,75 @@ export type Database = {
           name?: string
           notes?: string | null
           pay_period_id?: string
+          source_template_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budget_template_items: {
+        Row: {
+          account_id: string
+          budget_amount: number
+          created_at: string
+          id: string
+          name: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          budget_amount?: number
+          created_at?: string
+          id?: string
+          name: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          budget_amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "budget_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_templates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
