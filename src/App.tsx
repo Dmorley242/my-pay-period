@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/pay-periods" element={<Protected el={<PayPeriods />} />} />
             <Route path="/history" element={<Protected el={<History />} />} />
             <Route path="/holds" element={<Protected el={<Holds />} />} />
+            <Route path="/budget" element={<Protected el={<Budget />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
