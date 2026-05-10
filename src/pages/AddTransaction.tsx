@@ -180,16 +180,29 @@ export default function AddTransaction() {
               </>
             )}
 
-            <div>
-              <Label>Pay Period</Label>
-              <Select value={periodId} onValueChange={setPeriodId}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.is_active ? " (active)" : ""}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {type === "income" ? (
+              active ? (
+                <div className="flex items-center gap-2 rounded-md border p-3">
+                  <Checkbox id="attach-active" checked={attachActive} onCheckedChange={v => setAttachActive(!!v)} />
+                  <Label htmlFor="attach-active" className="cursor-pointer">
+                    Attach to Active Pay Period <span className="text-muted-foreground font-normal">({active.name})</span>
+                  </Label>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No active pay period to attach this income to.</p>
+              )
+            ) : (
+              <div>
+                <Label>Pay Period</Label>
+                <Select value={periodId} onValueChange={setPeriodId}>
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.is_active ? " (active)" : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional details" /></div>
             <Button type="submit" className="w-full">{isTransfer ? "Save Transfer" : "Save Transaction"}</Button>
           </form>
