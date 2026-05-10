@@ -179,6 +179,11 @@ export default function Budget() {
       const itemRows = drafts.map(d => ({
         user_id: user.id, pay_period_id: active.id, account_id: d.account_id,
         name: d.name, budget_amount: d.budget_amount,
+        is_recurring: !!d.is_recurring,
+        recurring_name: d.recurring_name ?? null,
+        recurring_amount: d.recurring_amount ?? null,
+        recurring_date: d.recurring_date ?? null,
+        recurring_frequency: d.recurring_frequency ?? null,
       }));
       const { data: inserted, error } = await (supabase as any).from("budget_items").insert(itemRows).select();
       if (error) return toast.error(error.message);
@@ -188,6 +193,11 @@ export default function Budget() {
         if (!insertedId) return;
         d.subs.forEach(s => subRows.push({
           user_id: user.id, budget_item_id: insertedId, name: s.name, amount: s.amount,
+          is_recurring: !!s.is_recurring,
+          recurring_name: s.recurring_name ?? null,
+          recurring_amount: s.recurring_amount ?? null,
+          recurring_date: s.recurring_date ?? null,
+          recurring_frequency: s.recurring_frequency ?? null,
         }));
       });
       if (subRows.length > 0) {
