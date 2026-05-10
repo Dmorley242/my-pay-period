@@ -73,7 +73,7 @@ export const useBudgetItems = () => useQuery({
 });
 
 export type BudgetTemplate = { id: string; user_id: string; name: string; notes: string | null; created_at: string; updated_at: string; };
-export type BudgetTemplateItem = { id: string; user_id: string; template_id: string; account_id: string; name: string; budget_amount: number; created_at: string; updated_at: string; };
+export type BudgetTemplateItem = { id: string; user_id: string; template_id: string; account_id: string; name: string; budget_amount: number; created_at: string; updated_at: string; } & RecurringFields;
 
 export const useBudgetTemplates = () => useQuery({
   queryKey: ["budget_templates"],
