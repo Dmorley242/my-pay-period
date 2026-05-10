@@ -21,6 +21,40 @@ export default function Accounts() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+  const [editing, setEditing] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+
+  const openEdit = (a: any) => {
+    setEditing(a);
+    setEditForm({
+      name: a.name ?? "",
+      bank_name: a.bank_name ?? "",
+      account_type: a.account_type ?? "Checking",
+      starting_balance: String(a.starting_balance ?? "0"),
+      notes: a.notes ?? "",
+    });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    const newSb = parseFloat(editForm.starting_balance) || 0;
+    const oldSb = Number(editing.starting_balance) || 0;
+    const delta = newSb - oldSb;
+    const newCurrent = Number(editing.current_balance) + delta;
+    const { error } = await supabase.from("accounts").update({
+      name: editForm.name,
+      bank_name: editForm.bank_name || null,
+      account_type: editForm.account_type || null,
+      starting_balance: newSb,
+      current_balance: newCurrent,
+      notes: editForm.notes || null,
+    }).eq("id", editing.id);
+    if (error) return toast.error(error.message);
+    toast.success("Account updated");
+    setEditing(null);
+    qc.invalidateQueries({ queryKey: ["accounts"] });
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
