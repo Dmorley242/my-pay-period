@@ -754,9 +754,15 @@ export default function Budget() {
                     <div key={d.id} className="rounded-md border p-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
-                          <span className="font-semibold text-sm truncate">{d.name}</span>
+                          <span className="font-semibold text-sm truncate flex items-center gap-1">
+                            {d.name}
+                            {d.is_recurring && <Repeat className="h-3 w-3 text-primary" />}
+                          </span>
                           <span className="text-[11px] text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
                           {d.subs.length > 0 && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Category</span>}
+                          {d.is_recurring && d.recurring_frequency && (
+                            <span className="text-[10px] uppercase text-muted-foreground">{d.recurring_frequency}{d.recurring_date ? ` · ${d.recurring_date}` : ""}</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="font-semibold tabular-nums text-sm">{money(d.budget_amount)}</span>
