@@ -101,7 +101,17 @@ export const useBudgetSubItems = () => useQuery({
   },
 });
 
-export type BudgetTemplateSubItem = { id: string; user_id: string; template_item_id: string; name: string; amount: number; created_at: string; updated_at: string; };
+export type BudgetTemplateSubItem = { id: string; user_id: string; template_item_id: string; name: string; amount: number; created_at: string; updated_at: string; } & RecurringFields;
+
+export type RecurringExpenseApplication = { id: string; user_id: string; budget_item_id: string | null; budget_sub_item_id: string | null; pay_period_id: string; transaction_id: string | null; applied_at: string; };
+
+export const useRecurringApplications = () => useQuery({
+  queryKey: ["recurring_expense_applications"],
+  queryFn: async () => {
+    const { data, error } = await (supabase as any).from("recurring_expense_applications").select("*");
+    if (error) throw error; return (data || []) as RecurringExpenseApplication[];
+  },
+});
 
 export const useBudgetTemplateSubItems = () => useQuery({
   queryKey: ["budget_template_sub_items"],
