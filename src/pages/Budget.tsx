@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree, Repeat, Zap } from "lucide-react";
+import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree, Repeat } from "lucide-react";
 
 type Recurring = { is_recurring: boolean; recurring_name?: string; recurring_amount?: number; recurring_date?: number; recurring_frequency?: "Monthly" | "Weekly" | "Every Pay Period" };
 const FREQS: Recurring["recurring_frequency"][] = ["Monthly", "Weekly", "Every Pay Period"];
