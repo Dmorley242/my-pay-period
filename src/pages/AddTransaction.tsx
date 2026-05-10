@@ -147,7 +147,7 @@ export default function AddTransaction() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Category</Label>
+                  <Label>{type === "income" ? "Income Source" : "Category"}</Label>
                   <Select value={categoryId} onValueChange={setCategoryId}>
                     <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                     <SelectContent>
