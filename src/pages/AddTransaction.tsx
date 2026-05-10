@@ -87,11 +87,14 @@ export default function AddTransaction() {
       const effectivePeriodId = type === "income"
         ? (attachActive && active?.id ? active.id : null)
         : (periodId === "none" ? null : periodId);
+      const effectiveNotes = type === "income"
+        ? (incomeSource && notes ? `${incomeSource} — ${notes}` : (incomeSource || notes || null))
+        : (notes || null);
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id, transaction_type: type, date, account_id: accountId,
-        category_id: categoryId === "none" ? null : categoryId,
+        category_id: type === "income" ? null : (categoryId === "none" ? null : categoryId),
         pay_period_id: effectivePeriodId,
-        amount: parsedAmount, notes: notes || null,
+        amount: parsedAmount, notes: effectiveNotes,
         ...(type === "expense" && budgetItemId !== "none" ? { budget_item_id: budgetItemId } : {}),
       } as any);
       if (error) return toast.error(error.message);
