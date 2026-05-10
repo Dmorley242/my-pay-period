@@ -53,6 +53,7 @@ export default function AddTransaction() {
   const [notes, setNotes] = useState("");
   const [budgetItemId, setBudgetItemId] = useState<string>("none");
   const [attachActive, setAttachActive] = useState<boolean>(true);
+  const [incomeSource, setIncomeSource] = useState("");
 
   const activeBudgetItems = active ? budgetItems.filter(b => b.pay_period_id === active.id) : [];
 
