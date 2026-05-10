@@ -267,6 +267,83 @@ export default function Budget() {
     }
   };
 
+  const applyRecurringExpenses = async (force = false) => {
+    if (!user || !active) return toast.error("No active pay period");
+    setApplyingRecurring(true);
+    try {
+      const periodSubs = subItems.filter(s => periodItems.some(p => p.id === s.budget_item_id));
+      type Candidate = { kind: "item" | "sub"; itemId: string; subId: string | null; accountId: string; amount: number; name: string };
+      const candidates: Candidate[] = [];
+
+      periodItems.forEach(it => {
+        const itSubs = periodSubs.filter(s => s.budget_item_id === it.id);
+        if (it.is_recurring && isRecurringDue(it as any, active.start_date, active.end_date)) {
+          candidates.push({
+            kind: "item", itemId: it.id, subId: null, accountId: it.account_id,
+            amount: Number(it.recurring_amount ?? it.budget_amount),
+            name: it.recurring_name || it.name,
+          });
+        }
+        itSubs.forEach(s => {
+          if (s.is_recurring && isRecurringDue(s as any, active.start_date, active.end_date)) {
+            candidates.push({
+              kind: "sub", itemId: it.id, subId: s.id, accountId: it.account_id,
+              amount: Number(s.recurring_amount ?? s.amount),
+              name: s.recurring_name || `${it.name} · ${s.name}`,
+            });
+          }
+        });
+      });
+
+      if (candidates.length === 0) {
+        toast.info("No recurring expenses are due in this pay period");
+        return;
+      }
+
+      const alreadyApplied = (c: Candidate) => recurringApps.some(a =>
+        a.pay_period_id === active.id &&
+        (c.kind === "sub" ? a.budget_sub_item_id === c.subId : (a.budget_item_id === c.itemId && a.budget_sub_item_id === null))
+      );
+
+      const dupes = candidates.filter(alreadyApplied);
+      let applyDupes = false;
+      if (dupes.length > 0 && !force) {
+        applyDupes = confirm(`${dupes.length} recurring expense(s) were already applied to this pay period. Apply again and create duplicates?`);
+        if (!applyDupes) {
+          // Filter out duplicates and continue with the rest
+        }
+      }
+      const toApply = candidates.filter(c => !alreadyApplied(c) || applyDupes);
+      if (toApply.length === 0) {
+        toast.info("Nothing new to apply");
+        return;
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      let created = 0;
+      for (const c of toApply) {
+        const { data: tx, error: txErr } = await (supabase as any).from("transactions").insert({
+          user_id: user.id, transaction_type: "expense", date: today,
+          account_id: c.accountId, pay_period_id: active.id, budget_item_id: c.itemId,
+          amount: c.amount, notes: `Recurring: ${c.name}`,
+        }).select("id").single();
+        if (txErr) { toast.error(txErr.message); continue; }
+        const { error: appErr } = await (supabase as any).from("recurring_expense_applications").insert({
+          user_id: user.id, budget_item_id: c.kind === "item" ? c.itemId : null,
+          budget_sub_item_id: c.subId, pay_period_id: active.id, transaction_id: tx.id,
+        });
+        if (appErr) toast.error(appErr.message);
+        created++;
+      }
+      toast.success(`Applied ${created} recurring expense(s)`);
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["recurring_expense_applications"] });
+    } finally {
+      setApplyingRecurring(false);
+    }
+  };
+
   const spentByItem = useMemo(() => {
     const m = new Map<string, number>();
     txs.forEach(t => {
