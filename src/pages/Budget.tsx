@@ -108,6 +108,45 @@ export default function Budget() {
   const [csRecDate, setCsRecDate] = useState("");
   const [csRecFreq, setCsRecFreq] = useState<Recurring["recurring_frequency"]>("Monthly");
   const [applyingRecurring, setApplyingRecurring] = useState(false);
+  const [catBuilderOpen, setCatBuilderOpen] = useState(false);
+  const [savingCat, setSavingCat] = useState(false);
+
+  const resetCatForm = () => {
+    setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]);
+    setCsName(""); setCsAmount(""); setCsRecurring(false); setCsRecDate(""); setCsRecFreq("Monthly");
+  };
+
+  const saveCategoryItemToActive = async () => {
+    if (!user || !active) return toast.error("No active pay period");
+    if (!catName || !catAccount) return toast.error("Category name and account required");
+    if (catSubs.length === 0) return toast.error("Add at least one sub-item");
+    if (catParentAmount <= 0) return toast.error("Parent amount must be > 0");
+    setSavingCat(true);
+    try {
+      const { data: inserted, error } = await (supabase as any).from("budget_items").insert({
+        user_id: user.id, pay_period_id: active.id, account_id: catAccount,
+        name: catName, budget_amount: catParentAmount, is_recurring: false,
+      }).select().single();
+      if (error) return toast.error(error.message);
+      const subRows = catSubs.map(s => ({
+        user_id: user.id, budget_item_id: inserted.id, name: s.name, amount: s.amount,
+        is_recurring: !!s.is_recurring,
+        recurring_name: s.recurring_name ?? null,
+        recurring_amount: s.recurring_amount ?? null,
+        recurring_date: s.recurring_date ?? null,
+        recurring_frequency: s.recurring_frequency ?? null,
+      }));
+      const { error: sErr } = await (supabase as any).from("budget_sub_items").insert(subRows);
+      if (sErr) return toast.error(sErr.message);
+      toast.success("Category item added");
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+      resetCatForm();
+      setCatBuilderOpen(false);
+    } finally {
+      setSavingCat(false);
+    }
+  };
 
   const draftsTotal = drafts.reduce((s, d) => s + d.budget_amount, 0);
 
