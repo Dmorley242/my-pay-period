@@ -505,8 +505,8 @@ export default function Budget() {
             <CardHeader className="flex-row items-center justify-between gap-2 flex-wrap">
               <CardTitle className="text-base">Active Budget</CardTitle>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => applyRecurringExpenses(false)} disabled={applyingRecurring}>
-                  <Repeat className="h-4 w-4 mr-1" />{applyingRecurring ? "Applying..." : "Apply Recurring Expenses"}
+                <Button size="sm" variant="outline" onClick={() => { resetCatForm(); setCatBuilderOpen(true); }}>
+                  <ListTree className="h-4 w-4 mr-1" />Add Category Item
                 </Button>
                 <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>
                   <Plus className="h-4 w-4 mr-1" />Add Items
