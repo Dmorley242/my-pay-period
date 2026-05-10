@@ -778,7 +778,13 @@ export default function Budget() {
                         <div className="mt-2 pl-3 border-l space-y-1">
                           {d.subs.map(s => (
                             <div key={s.id} className="flex justify-between text-xs">
-                              <span className="text-muted-foreground">{s.name}</span>
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                {s.name}
+                                {s.is_recurring && <Repeat className="h-3 w-3 text-primary" />}
+                                {s.is_recurring && s.recurring_frequency && (
+                                  <span className="text-[10px] uppercase">{s.recurring_frequency}{s.recurring_date ? ` · ${s.recurring_date}` : ""}</span>
+                                )}
+                              </span>
                               <span className="tabular-nums">{money(s.amount)}</span>
                             </div>
                           ))}
