@@ -788,7 +788,7 @@ const Cell = ({ label, value, cls }: { label: string; value: string; cls?: strin
 function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
   budgetItemId: string;
   parentAmount: number;
-  subItems: { id: string; name: string; amount: number }[];
+  subItems: { id: string; name: string; amount: number; is_recurring?: boolean; recurring_frequency?: string | null; recurring_date?: number | null }[];
   userId?: string;
 }) {
   const qc = useQueryClient();
