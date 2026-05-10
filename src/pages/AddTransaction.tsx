@@ -155,16 +155,23 @@ export default function AddTransaction() {
                     <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>{type === "income" ? "Income Source" : "Category"}</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {filteredCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {type === "income" ? (
+                  <div>
+                    <Label>Income Source</Label>
+                    <Input value={incomeSource} onChange={e => setIncomeSource(e.target.value)} placeholder="e.g. Work Salary, Porch Job, Side Job, Refund, Gift" />
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Category</Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {filteredCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {type === "expense" && (
                   <div>
                     <Label>Subtract From Budget</Label>
