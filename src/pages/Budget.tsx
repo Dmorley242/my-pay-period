@@ -108,6 +108,45 @@ export default function Budget() {
   const [csRecDate, setCsRecDate] = useState("");
   const [csRecFreq, setCsRecFreq] = useState<Recurring["recurring_frequency"]>("Monthly");
   const [applyingRecurring, setApplyingRecurring] = useState(false);
+  const [catBuilderOpen, setCatBuilderOpen] = useState(false);
+  const [savingCat, setSavingCat] = useState(false);
+
+  const resetCatForm = () => {
+    setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]);
+    setCsName(""); setCsAmount(""); setCsRecurring(false); setCsRecDate(""); setCsRecFreq("Monthly");
+  };
+
+  const saveCategoryItemToActive = async () => {
+    if (!user || !active) return toast.error("No active pay period");
+    if (!catName || !catAccount) return toast.error("Category name and account required");
+    if (catSubs.length === 0) return toast.error("Add at least one sub-item");
+    if (catParentAmount <= 0) return toast.error("Parent amount must be > 0");
+    setSavingCat(true);
+    try {
+      const { data: inserted, error } = await (supabase as any).from("budget_items").insert({
+        user_id: user.id, pay_period_id: active.id, account_id: catAccount,
+        name: catName, budget_amount: catParentAmount, is_recurring: false,
+      }).select().single();
+      if (error) return toast.error(error.message);
+      const subRows = catSubs.map(s => ({
+        user_id: user.id, budget_item_id: inserted.id, name: s.name, amount: s.amount,
+        is_recurring: !!s.is_recurring,
+        recurring_name: s.recurring_name ?? null,
+        recurring_amount: s.recurring_amount ?? null,
+        recurring_date: s.recurring_date ?? null,
+        recurring_frequency: s.recurring_frequency ?? null,
+      }));
+      const { error: sErr } = await (supabase as any).from("budget_sub_items").insert(subRows);
+      if (sErr) return toast.error(sErr.message);
+      toast.success("Category item added");
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
+      resetCatForm();
+      setCatBuilderOpen(false);
+    } finally {
+      setSavingCat(false);
+    }
+  };
 
   const draftsTotal = drafts.reduce((s, d) => s + d.budget_amount, 0);
 
@@ -466,8 +505,8 @@ export default function Budget() {
             <CardHeader className="flex-row items-center justify-between gap-2 flex-wrap">
               <CardTitle className="text-base">Active Budget</CardTitle>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => applyRecurringExpenses(false)} disabled={applyingRecurring}>
-                  <Repeat className="h-4 w-4 mr-1" />{applyingRecurring ? "Applying..." : "Apply Recurring Expenses"}
+                <Button size="sm" variant="outline" onClick={() => { resetCatForm(); setCatBuilderOpen(true); }}>
+                  <ListTree className="h-4 w-4 mr-1" />Add Category Item
                 </Button>
                 <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>
                   <Plus className="h-4 w-4 mr-1" />Add Items
@@ -828,6 +867,53 @@ export default function Budget() {
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => { setPostPublishTplName(""); setPublishedDrafts([]); setPostPublishTplOpen(false); }}>Cancel</Button>
               <Button onClick={saveBudgetAsTemplate} disabled={savingTpl}>{savingTpl ? "Saving..." : "Save Template"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Category Item directly to active budget */}
+      <Dialog open={catBuilderOpen} onOpenChange={o => { if (!o) resetCatForm(); setCatBuilderOpen(o); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Add Category Item</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <div><Label className="text-xs">Category Name *</Label><Input value={catName} onChange={e => setCatName(e.target.value)} placeholder="AI" /></div>
+            <div>
+              <Label className="text-xs">Account *</Label>
+              <Select value={catAccount} onValueChange={setCatAccount}>
+                <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <form onSubmit={addCatSub} className="space-y-2">
+              <div className="flex gap-2 items-end">
+                <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
+                <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
+              </div>
+            </form>
+            {catSubs.length > 0 && (
+              <div className="space-y-1">
+                {catSubs.map(s => (
+                  <div key={s.id} className="flex items-center justify-between rounded bg-accent/40 px-2 py-1 text-xs">
+                    <span className="truncate">{s.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="tabular-nums font-semibold">{money(s.amount)}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCatSubs(x => x.filter(y => y.id !== s.id))}><Trash2 className="h-3 w-3" /></Button>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-between text-xs px-2"><span className="text-muted-foreground">Sub-items total</span><span className="font-semibold tabular-nums">{money(catSubsTotal)}</span></div>
+              </div>
+            )}
+            <div>
+              <Label className="text-xs">Parent Amount (optional override)</Label>
+              <Input type="number" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
+              {catMismatch && <div className="text-[11px] text-destructive mt-1">Manual amount does not match sub-items total ({money(catSubsTotal)}).</div>}
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => { resetCatForm(); setCatBuilderOpen(false); }}>Cancel</Button>
+              <Button onClick={saveCategoryItemToActive} disabled={savingCat}>{savingCat ? "Saving..." : "Add Category Item"}</Button>
             </div>
           </div>
         </DialogContent>
