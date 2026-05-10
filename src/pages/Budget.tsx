@@ -62,6 +62,7 @@ export default function Budget() {
   const { data: items = [] } = useBudgetItems();
   const { data: txs = [] } = useTransactions();
   const { data: subItems = [] } = useBudgetSubItems();
+  const { data: recurringApps = [] } = useRecurringApplications();
 
   const periodItems = useMemo(() => active ? items.filter(i => i.pay_period_id === active.id) : [], [items, active]);
 
