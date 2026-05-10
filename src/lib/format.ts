@@ -4,6 +4,13 @@ export const money = (n: number | string | null | undefined) => {
 };
 
 export const fmtDate = (d: string | Date) => {
-  const date = typeof d === "string" ? new Date(d) : d;
+  let date: Date;
+  if (typeof d === "string") {
+    // Parse YYYY-MM-DD as a local date to avoid UTC timezone shifting the day.
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d);
+    date = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(d);
+  } else {
+    date = d;
+  }
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 };

@@ -53,6 +53,7 @@ export default function AddTransaction() {
   const [notes, setNotes] = useState("");
   const [budgetItemId, setBudgetItemId] = useState<string>("none");
   const [attachActive, setAttachActive] = useState<boolean>(true);
+  const [incomeSource, setIncomeSource] = useState("");
 
   const activeBudgetItems = active ? budgetItems.filter(b => b.pay_period_id === active.id) : [];
 
@@ -86,11 +87,14 @@ export default function AddTransaction() {
       const effectivePeriodId = type === "income"
         ? (attachActive && active?.id ? active.id : null)
         : (periodId === "none" ? null : periodId);
+      const effectiveNotes = type === "income"
+        ? (incomeSource && notes ? `${incomeSource} — ${notes}` : (incomeSource || notes || null))
+        : (notes || null);
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id, transaction_type: type, date, account_id: accountId,
-        category_id: categoryId === "none" ? null : categoryId,
+        category_id: type === "income" ? null : (categoryId === "none" ? null : categoryId),
         pay_period_id: effectivePeriodId,
-        amount: parsedAmount, notes: notes || null,
+        amount: parsedAmount, notes: effectiveNotes,
         ...(type === "expense" && budgetItemId !== "none" ? { budget_item_id: budgetItemId } : {}),
       } as any);
       if (error) return toast.error(error.message);
@@ -151,16 +155,23 @@ export default function AddTransaction() {
                     <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>{type === "income" ? "Income Source" : "Category"}</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {filteredCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {type === "income" ? (
+                  <div>
+                    <Label>Income Source</Label>
+                    <Input value={incomeSource} onChange={e => setIncomeSource(e.target.value)} placeholder="e.g. Work Salary, Porch Job, Side Job, Refund, Gift" />
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Category</Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {filteredCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {type === "expense" && (
                   <div>
                     <Label>Subtract From Budget</Label>
