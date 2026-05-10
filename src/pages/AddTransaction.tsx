@@ -83,10 +83,13 @@ export default function AddTransaction() {
       toast.success("Transfer added");
     } else {
       if (!accountId) return toast.error("Account required");
+      const effectivePeriodId = type === "income"
+        ? (attachActive && active?.id ? active.id : null)
+        : (periodId === "none" ? null : periodId);
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id, transaction_type: type, date, account_id: accountId,
         category_id: categoryId === "none" ? null : categoryId,
-        pay_period_id: periodId === "none" ? null : periodId,
+        pay_period_id: effectivePeriodId,
         amount: parsedAmount, notes: notes || null,
         ...(type === "expense" && budgetItemId !== "none" ? { budget_item_id: budgetItemId } : {}),
       } as any);
