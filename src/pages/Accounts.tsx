@@ -126,13 +126,16 @@ export default function Accounts() {
                     <div className="text-xs text-muted-foreground">{[a.bank_name, a.account_type].filter(Boolean).join(" · ") || "—"}</div>
                   </div>
                 </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader><AlertDialogTitle>Delete {a.name}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
-                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader><AlertDialogTitle>Delete {a.name}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
+                      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
               <div className="mt-4">
                 <div className="text-2xl font-bold tabular-nums">{money(a.current_balance)}</div>
