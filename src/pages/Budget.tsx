@@ -498,8 +498,16 @@ export default function Budget() {
                       <div key={i.id} className="rounded-md border p-3 space-y-2">
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
-                            <span className="font-semibold truncate">{i.name}</span>
+                            <span className="font-semibold truncate flex items-center gap-1">
+                              {i.name}
+                              {i.is_recurring && <Repeat className="h-3 w-3 text-primary" aria-label="Recurring" />}
+                            </span>
                             <span className="text-xs text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</span>
+                            {i.is_recurring && i.recurring_frequency && (
+                              <span className="text-[10px] uppercase text-muted-foreground">
+                                {i.recurring_frequency}{i.recurring_date ? ` · day ${i.recurring_date}` : ""}
+                              </span>
+                            )}
                           </div>
                           <div className="flex shrink-0">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpanded(s => ({ ...s, [i.id]: !s[i.id] }))} title="Sub-items">
