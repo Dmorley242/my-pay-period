@@ -62,6 +62,7 @@ export default function PayPeriods() {
   const qc = useQueryClient();
   const { data: periods = [] } = usePayPeriods();
   const { data: accounts = [] } = useAccounts();
+  const { data: transactions = [] } = useTransactions();
   const [form, setForm] = useState<FormState>(emptyForm());
   const [editing, setEditing] = useState<PayPeriod | null>(null);
   const [editForm, setEditForm] = useState<FormState>(emptyForm());
