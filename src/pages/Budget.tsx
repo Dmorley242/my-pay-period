@@ -826,7 +826,15 @@ function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
         <div className="space-y-1">
           {subItems.map(s => (
             <div key={s.id} className="flex items-center justify-between gap-2 rounded-md bg-accent/30 px-2 py-1.5">
-              <span className="text-xs truncate">{s.name}</span>
+              <span className="text-xs truncate flex items-center gap-1">
+                {s.name}
+                {s.is_recurring && <Repeat className="h-3 w-3 text-primary" aria-label="Recurring" />}
+                {s.is_recurring && s.recurring_frequency && (
+                  <span className="text-[10px] uppercase text-muted-foreground">
+                    {s.recurring_frequency}{s.recurring_date ? ` · day ${s.recurring_date}` : ""}
+                  </span>
+                )}
+              </span>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs font-semibold tabular-nums">{money(s.amount)}</span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => del(s.id)}><Trash2 className="h-3 w-3" /></Button>
