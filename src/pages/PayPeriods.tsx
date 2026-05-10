@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAccounts, usePayPeriods, type PayPeriod } from "@/hooks/useFinanceData";
+import { useAccounts, usePayPeriods, useTransactions, type PayPeriod } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Plus, CheckCircle2, Pencil } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Trash2, Plus, CheckCircle2, Pencil, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { fmtDate, money } from "@/lib/format";
 
@@ -61,6 +62,7 @@ export default function PayPeriods() {
   const qc = useQueryClient();
   const { data: periods = [] } = usePayPeriods();
   const { data: accounts = [] } = useAccounts();
+  const { data: transactions = [] } = useTransactions();
   const [form, setForm] = useState<FormState>(emptyForm());
   const [editing, setEditing] = useState<PayPeriod | null>(null);
   const [editForm, setEditForm] = useState<FormState>(emptyForm());
@@ -211,25 +213,52 @@ export default function PayPeriods() {
           <div className="divide-y">
             {periods.map(p => {
               const acc = accounts.find(a => a.id === p.paycheck_account_id);
+              const incomes = transactions.filter(t => t.transaction_type === "income" && t.pay_period_id === p.id);
               return (
-              <div key={p.id} className={`flex items-center justify-between py-3 gap-3 ${p.is_active ? "bg-primary/5 rounded-lg px-2" : ""}`}>
-                <div className="min-w-0">
-                  <div className="font-medium flex items-center gap-2 flex-wrap">
-                    {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
-                    {p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}
+              <div key={p.id} className={`py-3 ${p.is_active ? "bg-primary/5 rounded-lg px-2" : ""}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-medium flex items-center gap-2 flex-wrap">
+                      {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
+                      {p.is_active && <Badge className="bg-primary text-primary-foreground">Active</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {p.income_source || "—"}{acc ? ` · ${accLabel(acc)}` : ""}
+                    </div>
+                    {p.net_pay_amount != null && (
+                      <div className="text-xs text-income mt-0.5">+{money(p.net_pay_amount)}</div>
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {p.income_source || "—"}{acc ? ` · ${accLabel(acc)}` : ""}
+                  <div className="flex gap-1 shrink-0">
+                    {!p.is_active && <Button variant="outline" size="sm" onClick={() => setActive(p.id)}><CheckCircle2 className="h-4 w-4 mr-1" />Set active</Button>}
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => del(p)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
-                  {p.net_pay_amount != null && (
-                    <div className="text-xs text-income mt-0.5">+{money(p.net_pay_amount)}</div>
-                  )}
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  {!p.is_active && <Button variant="outline" size="sm" onClick={() => setActive(p.id)}><CheckCircle2 className="h-4 w-4 mr-1" />Set active</Button>}
-                  <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => del(p)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
+                <Collapsible className="mt-2">
+                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+                    <ChevronDown className="h-3 w-3 transition-transform" />
+                    Income ({incomes.length})
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1">
+                    {incomes.length === 0 ? (
+                      <p className="text-xs text-muted-foreground pl-4">No income attached.</p>
+                    ) : incomes.map(t => {
+                      const ia = accounts.find(a => a.id === t.account_id);
+                      return (
+                        <div key={t.id} className="flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40">
+                          <div className="min-w-0 truncate">
+                            <span className="text-muted-foreground">{fmtDate(t.date)}</span>
+                            <span className="mx-1">·</span>
+                            <span className="font-medium">{t.notes || "Income"}</span>
+                            {ia && <><span className="mx-1">·</span><span className="text-muted-foreground">{accLabel(ia)}</span></>}
+                          </div>
+                          <div className="text-income font-medium tabular-nums shrink-0">+{money(t.amount)}</div>
+                        </div>
+                      );
+                    })}
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
               );
             })}
