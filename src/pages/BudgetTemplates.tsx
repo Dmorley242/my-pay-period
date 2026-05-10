@@ -288,7 +288,13 @@ export default function BudgetTemplates() {
                         <div className="pl-3 border-l space-y-1">
                           {subs.map(s => (
                             <div key={s.id} className="flex justify-between text-xs">
-                              <span className="text-muted-foreground">{s.name}</span>
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                {s.name}
+                                {(s as any).is_recurring && <Repeat className="h-3 w-3 text-primary" />}
+                                {(s as any).is_recurring && (s as any).recurring_frequency && (
+                                  <span className="text-[10px] uppercase">{(s as any).recurring_frequency}</span>
+                                )}
+                              </span>
                               <span className="tabular-nums">{money(s.amount)}</span>
                             </div>
                           ))}
