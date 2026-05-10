@@ -78,8 +78,8 @@ export default function Budget() {
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
   // ---- Full Build Budget workflow ----
-  type DraftSub = { id: string; name: string; amount: number };
-  type DraftItem = { id: string; name: string; account_id: string; budget_amount: number; subs: DraftSub[] };
+  type DraftSub = { id: string; name: string; amount: number } & Recurring;
+  type DraftItem = { id: string; name: string; account_id: string; budget_amount: number; subs: DraftSub[] } & Recurring;
   const [fullBuilderOpen, setFullBuilderOpen] = useState(false);
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const [draftExpanded, setDraftExpanded] = useState<Record<string, boolean>>({});
@@ -93,6 +93,10 @@ export default function Budget() {
   const [siName, setSiName] = useState("");
   const [siAccount, setSiAccount] = useState("");
   const [siAmount, setSiAmount] = useState("");
+  const [siRecurring, setSiRecurring] = useState(false);
+  const [siRecName, setSiRecName] = useState("");
+  const [siRecDate, setSiRecDate] = useState("");
+  const [siRecFreq, setSiRecFreq] = useState<Recurring["recurring_frequency"]>("Monthly");
   // Category form
   const [catName, setCatName] = useState("");
   const [catAccount, setCatAccount] = useState("");
@@ -100,6 +104,10 @@ export default function Budget() {
   const [catSubs, setCatSubs] = useState<DraftSub[]>([]);
   const [csName, setCsName] = useState("");
   const [csAmount, setCsAmount] = useState("");
+  const [csRecurring, setCsRecurring] = useState(false);
+  const [csRecDate, setCsRecDate] = useState("");
+  const [csRecFreq, setCsRecFreq] = useState<Recurring["recurring_frequency"]>("Monthly");
+  const [applyingRecurring, setApplyingRecurring] = useState(false);
 
   const draftsTotal = drafts.reduce((s, d) => s + d.budget_amount, 0);
 
