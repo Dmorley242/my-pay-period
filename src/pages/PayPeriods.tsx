@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAccounts, usePayPeriods, type PayPeriod } from "@/hooks/useFinanceData";
+import { useAccounts, usePayPeriods, useTransactions, type PayPeriod } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
