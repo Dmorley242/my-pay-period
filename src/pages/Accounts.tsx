@@ -54,10 +54,22 @@ export default function Accounts() {
           <DialogContent>
             <DialogHeader><DialogTitle>New Account</DialogTitle></DialogHeader>
             <form onSubmit={submit} className="space-y-3">
-              <div><Label>Account Name *</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Fidelity Checking" /></div>
+              <div><Label>Account Name *</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Groceries, Gas, Spending Money, Savings" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} placeholder="Fidelity" /></div>
-                <div><Label>Type</Label><Input value={form.account_type} onChange={e => setForm({ ...form, account_type: e.target.value })} placeholder="Checking / Savings / Cash" /></div>
+                <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} placeholder="e.g. Fidelity, CIBC, Commonwealth Bank, RBC" /></div>
+                <div>
+                  <Label>Account Type</Label>
+                  <Select value={form.account_type} onValueChange={v => setForm({ ...form, account_type: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Checking">Checking</SelectItem>
+                      <SelectItem value="Savings">Savings</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div><Label>Starting Balance</Label><Input type="number" step="0.01" value={form.starting_balance} onChange={e => setForm({ ...form, starting_balance: e.target.value })} /></div>
               <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
