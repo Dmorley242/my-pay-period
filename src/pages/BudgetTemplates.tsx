@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, LayoutTemplate, Send } from "lucide-react";
+import { Plus, Trash2, Pencil, LayoutTemplate, Send, Repeat } from "lucide-react";
 
 const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
