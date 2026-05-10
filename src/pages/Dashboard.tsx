@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate } from "@/lib/format";
 import { Link } from "react-router-dom";
-import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type Movement = {
   id: string;
