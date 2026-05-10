@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, LayoutTemplate, Send } from "lucide-react";
+import { Plus, Trash2, Pencil, LayoutTemplate, Send, Repeat } from "lucide-react";
 
 const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
@@ -135,6 +135,11 @@ export default function BudgetTemplates() {
       name: i.name,
       budget_amount: Number(i.budget_amount),
       source_template_id: applyOpen.templateId,
+      is_recurring: !!(i as any).is_recurring,
+      recurring_name: (i as any).recurring_name ?? null,
+      recurring_amount: (i as any).recurring_amount ?? null,
+      recurring_date: (i as any).recurring_date ?? null,
+      recurring_frequency: (i as any).recurring_frequency ?? null,
     }));
     const { data: insertedItems, error } = await (supabase as any).from("budget_items").insert(rows).select();
     if (error) return toast.error(error.message);
@@ -144,7 +149,14 @@ export default function BudgetTemplates() {
       const newId = insertedItems?.[idx]?.id;
       if (!newId) return;
       tSubItems.filter(s => s.template_item_id === tpl.id).forEach(s => {
-        subRows.push({ user_id: user.id, budget_item_id: newId, name: s.name, amount: Number(s.amount) });
+        subRows.push({
+          user_id: user.id, budget_item_id: newId, name: s.name, amount: Number(s.amount),
+          is_recurring: !!(s as any).is_recurring,
+          recurring_name: (s as any).recurring_name ?? null,
+          recurring_amount: (s as any).recurring_amount ?? null,
+          recurring_date: (s as any).recurring_date ?? null,
+          recurring_frequency: (s as any).recurring_frequency ?? null,
+        });
       });
     });
     if (subRows.length > 0) {
@@ -257,7 +269,13 @@ export default function BudgetTemplates() {
                     <div key={i.id} className="rounded-md border px-3 py-2 space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{i.name}</div>
+                          <div className="text-sm font-medium truncate flex items-center gap-1">
+                            {i.name}
+                            {(i as any).is_recurring && <Repeat className="h-3 w-3 text-primary" aria-label="Recurring" />}
+                            {(i as any).is_recurring && (i as any).recurring_frequency && (
+                              <span className="text-[10px] uppercase text-muted-foreground">{(i as any).recurring_frequency}</span>
+                            )}
+                          </div>
                           <div className="text-xs text-muted-foreground truncate">{acc ? accLabel(acc) : "—"}</div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -270,7 +288,13 @@ export default function BudgetTemplates() {
                         <div className="pl-3 border-l space-y-1">
                           {subs.map(s => (
                             <div key={s.id} className="flex justify-between text-xs">
-                              <span className="text-muted-foreground">{s.name}</span>
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                {s.name}
+                                {(s as any).is_recurring && <Repeat className="h-3 w-3 text-primary" />}
+                                {(s as any).is_recurring && (s as any).recurring_frequency && (
+                                  <span className="text-[10px] uppercase">{(s as any).recurring_frequency}</span>
+                                )}
+                              </span>
                               <span className="tabular-nums">{money(s.amount)}</span>
                             </div>
                           ))}

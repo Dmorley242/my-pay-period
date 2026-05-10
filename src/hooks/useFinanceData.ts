@@ -5,7 +5,8 @@ export type Account = { id: string; name: string; bank_name: string | null; acco
 export type PayPeriod = { id: string; name: string; start_date: string; end_date: string; is_active: boolean; income_source: string | null; net_pay_amount: number | null; paycheck_account_id: string | null; paycheck_transaction_id: string | null; notes: string | null; };
 export type Category = { id: string; name: string; category_type: "income" | "expense" | "transfer" | "both"; };
 export type Transaction = { id: string; date: string; transaction_type: "income" | "expense" | "deposit" | "withdrawal"; account_id: string; category_id: string | null; pay_period_id: string | null; amount: number; notes: string | null; budget_item_id?: string | null; };
-export type BudgetItem = { id: string; user_id: string; pay_period_id: string; account_id: string; name: string; budget_amount: number; notes: string | null; created_at: string; };
+export type RecurringFields = { is_recurring?: boolean; recurring_name?: string | null; recurring_amount?: number | null; recurring_date?: number | null; recurring_frequency?: string | null; };
+export type BudgetItem = { id: string; user_id: string; pay_period_id: string; account_id: string; name: string; budget_amount: number; notes: string | null; created_at: string; } & RecurringFields;
 export type Transfer = { id: string; date: string; from_account_id: string; to_account_id: string; pay_period_id: string | null; amount: number; notes: string | null; };
 
 export const useAccounts = () => useQuery({
@@ -72,7 +73,7 @@ export const useBudgetItems = () => useQuery({
 });
 
 export type BudgetTemplate = { id: string; user_id: string; name: string; notes: string | null; created_at: string; updated_at: string; };
-export type BudgetTemplateItem = { id: string; user_id: string; template_id: string; account_id: string; name: string; budget_amount: number; created_at: string; updated_at: string; };
+export type BudgetTemplateItem = { id: string; user_id: string; template_id: string; account_id: string; name: string; budget_amount: number; created_at: string; updated_at: string; } & RecurringFields;
 
 export const useBudgetTemplates = () => useQuery({
   queryKey: ["budget_templates"],
@@ -90,7 +91,7 @@ export const useBudgetTemplateItems = () => useQuery({
   },
 });
 
-export type BudgetSubItem = { id: string; user_id: string; budget_item_id: string; name: string; amount: number; created_at: string; updated_at: string; };
+export type BudgetSubItem = { id: string; user_id: string; budget_item_id: string; name: string; amount: number; created_at: string; updated_at: string; } & RecurringFields;
 
 export const useBudgetSubItems = () => useQuery({
   queryKey: ["budget_sub_items"],
@@ -100,7 +101,17 @@ export const useBudgetSubItems = () => useQuery({
   },
 });
 
-export type BudgetTemplateSubItem = { id: string; user_id: string; template_item_id: string; name: string; amount: number; created_at: string; updated_at: string; };
+export type BudgetTemplateSubItem = { id: string; user_id: string; template_item_id: string; name: string; amount: number; created_at: string; updated_at: string; } & RecurringFields;
+
+export type RecurringExpenseApplication = { id: string; user_id: string; budget_item_id: string | null; budget_sub_item_id: string | null; pay_period_id: string; transaction_id: string | null; applied_at: string; };
+
+export const useRecurringApplications = () => useQuery({
+  queryKey: ["recurring_expense_applications"],
+  queryFn: async () => {
+    const { data, error } = await (supabase as any).from("recurring_expense_applications").select("*");
+    if (error) throw error; return (data || []) as RecurringExpenseApplication[];
+  },
+});
 
 export const useBudgetTemplateSubItems = () => useQuery({
   queryKey: ["budget_template_sub_items"],
