@@ -114,7 +114,9 @@ export default function Budget() {
   const resetFullBuilder = () => {
     setDrafts([]); setDraftExpanded({});
     setSiName(""); setSiAccount(""); setSiAmount("");
+    setSiRecurring(false); setSiRecName(""); setSiRecDate(""); setSiRecFreq("Monthly");
     setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]); setCsName(""); setCsAmount("");
+    setCsRecurring(false); setCsRecDate(""); setCsRecFreq("Monthly");
   };
 
   const addSimpleDraft = (e: React.FormEvent) => {
@@ -122,8 +124,17 @@ export default function Budget() {
     if (!siName || !siAccount || !siAmount) return toast.error("Name, account, amount required");
     const amt = parseFloat(siAmount);
     if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
-    setDrafts(d => [...d, { id: crypto.randomUUID(), name: siName, account_id: siAccount, budget_amount: amt, subs: [] }]);
+    if (siRecurring && !siRecFreq) return toast.error("Select a recurring frequency");
+    setDrafts(d => [...d, {
+      id: crypto.randomUUID(), name: siName, account_id: siAccount, budget_amount: amt, subs: [],
+      is_recurring: siRecurring,
+      recurring_name: siRecurring ? (siRecName || siName) : undefined,
+      recurring_amount: siRecurring ? amt : undefined,
+      recurring_date: siRecurring && siRecDate ? parseInt(siRecDate, 10) : undefined,
+      recurring_frequency: siRecurring ? siRecFreq : undefined,
+    }]);
     setSiName(""); setSiAccount(""); setSiAmount("");
+    setSiRecurring(false); setSiRecName(""); setSiRecDate(""); setSiRecFreq("Monthly");
   };
 
   const addCatSub = (e: React.FormEvent) => {
@@ -131,8 +142,15 @@ export default function Budget() {
     if (!csName || !csAmount) return toast.error("Sub-item name and amount required");
     const amt = parseFloat(csAmount);
     if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
-    setCatSubs(s => [...s, { id: crypto.randomUUID(), name: csName, amount: amt }]);
-    setCsName(""); setCsAmount("");
+    setCatSubs(s => [...s, {
+      id: crypto.randomUUID(), name: csName, amount: amt,
+      is_recurring: csRecurring,
+      recurring_name: csRecurring ? csName : undefined,
+      recurring_amount: csRecurring ? amt : undefined,
+      recurring_date: csRecurring && csRecDate ? parseInt(csRecDate, 10) : undefined,
+      recurring_frequency: csRecurring ? csRecFreq : undefined,
+    }]);
+    setCsName(""); setCsAmount(""); setCsRecurring(false); setCsRecDate(""); setCsRecFreq("Monthly");
   };
 
   const catSubsTotal = catSubs.reduce((s, x) => s + x.amount, 0);
@@ -146,6 +164,7 @@ export default function Budget() {
     setDrafts(d => [...d, {
       id: crypto.randomUUID(), name: catName, account_id: catAccount,
       budget_amount: catParentAmount, subs: catSubs,
+      is_recurring: false,
     }]);
     setCatName(""); setCatAccount(""); setCatAmountManual(""); setCatSubs([]); setCsName(""); setCsAmount("");
   };
