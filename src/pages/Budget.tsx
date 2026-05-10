@@ -685,16 +685,43 @@ export default function Budget() {
                     <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <form onSubmit={addCatSub} className="flex gap-2 items-end">
-                  <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
-                  <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
-                  <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
+                <form onSubmit={addCatSub} className="space-y-2">
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
+                    <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                    <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="cs-rec" checked={csRecurring} onCheckedChange={v => setCsRecurring(!!v)} />
+                    <Label htmlFor="cs-rec" className="text-xs cursor-pointer flex items-center gap-1">
+                      <Repeat className="h-3 w-3" />Recurring sub-item
+                    </Label>
+                  </div>
+                  {csRecurring && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Frequency</Label>
+                        <Select value={csRecFreq} onValueChange={v => setCsRecFreq(v as any)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>{FREQS.map(f => <SelectItem key={f} value={f!}>{f}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">{csRecFreq === "Weekly" ? "Day of Week (0=Sun)" : csRecFreq === "Monthly" ? "Day of Month" : "Date (optional)"}</Label>
+                        <Input type="number" min="0" max="31" value={csRecDate} onChange={e => setCsRecDate(e.target.value)} placeholder={csRecFreq === "Monthly" ? "20" : ""} disabled={csRecFreq === "Every Pay Period"} />
+                      </div>
+                    </div>
+                  )}
                 </form>
                 {catSubs.length > 0 && (
                   <div className="space-y-1">
                     {catSubs.map(s => (
                       <div key={s.id} className="flex items-center justify-between rounded bg-accent/40 px-2 py-1 text-xs">
-                        <span className="truncate">{s.name}</span>
+                        <span className="truncate flex items-center gap-1">
+                          {s.name}
+                          {s.is_recurring && <Repeat className="h-3 w-3 text-primary" />}
+                          {s.is_recurring && s.recurring_frequency && <span className="text-[10px] uppercase text-muted-foreground">{s.recurring_frequency}</span>}
+                        </span>
                         <div className="flex items-center gap-2">
                           <span className="tabular-nums font-semibold">{money(s.amount)}</span>
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCatSubs(x => x.filter(y => y.id !== s.id))}><Trash2 className="h-3 w-3" /></Button>
