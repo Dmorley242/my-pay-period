@@ -263,6 +263,7 @@ export default function Dashboard() {
               <div className="space-y-2">
                 {list.map(p => {
                   const acc = accounts.find(a => a.id === p.paycheck_account_id);
+                  const incomes = txs.filter(t => t.transaction_type === "income" && t.pay_period_id === p.id);
                   return (
                     <div key={p.id} className={`rounded-xl px-3 py-2 border ${p.is_active ? "border-income/40 bg-income/10 shadow-sm" : "border-border bg-accent/40"}`}>
                       <div className="flex items-center justify-between gap-2">
@@ -270,9 +271,34 @@ export default function Dashboard() {
                         {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <div className="text-xs text-muted-foreground truncate">{acc ? (acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name) : "No account"}</div>
+                        <div className="text-xs text-muted-foreground truncate">{p.income_source || "—"}{acc ? ` · ${(acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name)}` : ""}</div>
                         <div className="text-xs font-semibold tabular-nums shrink-0">{p.net_pay_amount != null ? money(p.net_pay_amount) : "—"}</div>
                       </div>
+                      <Collapsible className="mt-2">
+                        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+                          <ChevronDown className="h-3 w-3 transition-transform" />
+                          Income ({incomes.length})
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2 space-y-1">
+                          {incomes.length === 0 ? (
+                            <p className="text-xs text-muted-foreground pl-4">No additional income recorded.</p>
+                          ) : incomes.map(t => {
+                            const ia = accounts.find(a => a.id === t.account_id);
+                            const iaLbl = ia ? (ia.bank_name ? `${ia.bank_name} - ${ia.name}` : ia.name) : "—";
+                            return (
+                              <div key={t.id} className="flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40">
+                                <div className="min-w-0 truncate">
+                                  <span className="text-muted-foreground">{fmtDate(t.date)}</span>
+                                  <span className="mx-1">·</span>
+                                  <span className="font-medium">{t.notes || "Income"}</span>
+                                  {ia && <><span className="mx-1">·</span><span className="text-muted-foreground">{iaLbl}</span></>}
+                                </div>
+                                <div className="text-income font-medium tabular-nums shrink-0">+{money(t.amount)}</div>
+                              </div>
+                            );
+                          })}
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                   );
                 })}
