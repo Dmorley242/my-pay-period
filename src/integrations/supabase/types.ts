@@ -98,9 +98,14 @@ export type Database = {
           budget_amount: number
           created_at: string
           id: string
+          is_recurring: boolean
           name: string
           notes: string | null
           pay_period_id: string
+          recurring_amount: number | null
+          recurring_date: number | null
+          recurring_frequency: string | null
+          recurring_name: string | null
           source_template_id: string | null
           user_id: string
         }
@@ -109,9 +114,14 @@ export type Database = {
           budget_amount?: number
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name: string
           notes?: string | null
           pay_period_id: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           source_template_id?: string | null
           user_id: string
         }
@@ -120,9 +130,14 @@ export type Database = {
           budget_amount?: number
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name?: string
           notes?: string | null
           pay_period_id?: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           source_template_id?: string | null
           user_id?: string
         }
@@ -134,7 +149,12 @@ export type Database = {
           budget_item_id: string
           created_at: string
           id: string
+          is_recurring: boolean
           name: string
+          recurring_amount: number | null
+          recurring_date: number | null
+          recurring_frequency: string | null
+          recurring_name: string | null
           updated_at: string
           user_id: string
         }
@@ -143,7 +163,12 @@ export type Database = {
           budget_item_id: string
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -152,7 +177,12 @@ export type Database = {
           budget_item_id?: string
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name?: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -172,7 +202,12 @@ export type Database = {
           budget_amount: number
           created_at: string
           id: string
+          is_recurring: boolean
           name: string
+          recurring_amount: number | null
+          recurring_date: number | null
+          recurring_frequency: string | null
+          recurring_name: string | null
           template_id: string
           updated_at: string
           user_id: string
@@ -182,7 +217,12 @@ export type Database = {
           budget_amount?: number
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           template_id: string
           updated_at?: string
           user_id: string
@@ -192,7 +232,12 @@ export type Database = {
           budget_amount?: number
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name?: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           template_id?: string
           updated_at?: string
           user_id?: string
@@ -212,7 +257,12 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          is_recurring: boolean
           name: string
+          recurring_amount: number | null
+          recurring_date: number | null
+          recurring_frequency: string | null
+          recurring_name: string | null
           template_item_id: string
           updated_at: string
           user_id: string
@@ -221,7 +271,12 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           template_item_id: string
           updated_at?: string
           user_id: string
@@ -230,7 +285,12 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          is_recurring?: boolean
           name?: string
+          recurring_amount?: number | null
+          recurring_date?: number | null
+          recurring_frequency?: string | null
+          recurring_name?: string | null
           template_item_id?: string
           updated_at?: string
           user_id?: string
@@ -348,6 +408,36 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      recurring_expense_applications: {
+        Row: {
+          applied_at: string
+          budget_item_id: string | null
+          budget_sub_item_id: string | null
+          id: string
+          pay_period_id: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          budget_item_id?: string | null
+          budget_sub_item_id?: string | null
+          id?: string
+          pay_period_id: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          budget_item_id?: string | null
+          budget_sub_item_id?: string | null
+          id?: string
+          pay_period_id?: string
+          transaction_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
