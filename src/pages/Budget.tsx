@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useTransactions } from "@/hooks/useFinanceData";
+import { useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useTransactions, useRecurringApplications } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,10 +9,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree } from "lucide-react";
+import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree, Repeat, Zap } from "lucide-react";
+
+type Recurring = { is_recurring: boolean; recurring_name?: string; recurring_amount?: number; recurring_date?: number; recurring_frequency?: "Monthly" | "Weekly" | "Every Pay Period" };
+const FREQS: Recurring["recurring_frequency"][] = ["Monthly", "Weekly", "Every Pay Period"];
+
+// Decide if a recurring item is "due" within a pay period [start, end]
+function isRecurringDue(rec: { recurring_frequency?: string | null; recurring_date?: number | null }, startDate: string, endDate: string): boolean {
+  const freq = rec.recurring_frequency;
+  if (!freq) return false;
+  if (freq === "Every Pay Period") return true;
+  const start = new Date(startDate + "T00:00:00");
+  const end = new Date(endDate + "T00:00:00");
+  if (freq === "Monthly") {
+    const day = rec.recurring_date ?? 1;
+    // Walk months in range looking for that day-of-month inside [start,end]
+    const cur = new Date(start);
+    while (cur <= end) {
+      const candidate = new Date(cur.getFullYear(), cur.getMonth(), Math.min(day, new Date(cur.getFullYear(), cur.getMonth() + 1, 0).getDate()));
+      if (candidate >= start && candidate <= end) return true;
+      cur.setMonth(cur.getMonth() + 1);
+      cur.setDate(1);
+    }
+    return false;
+  }
+  if (freq === "Weekly") {
+    // recurring_date treated as day of week 0=Sun..6=Sat. If unset, due if any day in range (always true).
+    const dow = rec.recurring_date;
+    if (dow == null) return true;
+    const cur = new Date(start);
+    while (cur <= end) {
+      if (cur.getDay() === dow) return true;
+      cur.setDate(cur.getDate() + 1);
+    }
+    return false;
+  }
+  return false;
+}
 
 const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
 
