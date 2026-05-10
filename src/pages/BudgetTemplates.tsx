@@ -135,6 +135,11 @@ export default function BudgetTemplates() {
       name: i.name,
       budget_amount: Number(i.budget_amount),
       source_template_id: applyOpen.templateId,
+      is_recurring: !!(i as any).is_recurring,
+      recurring_name: (i as any).recurring_name ?? null,
+      recurring_amount: (i as any).recurring_amount ?? null,
+      recurring_date: (i as any).recurring_date ?? null,
+      recurring_frequency: (i as any).recurring_frequency ?? null,
     }));
     const { data: insertedItems, error } = await (supabase as any).from("budget_items").insert(rows).select();
     if (error) return toast.error(error.message);
@@ -144,7 +149,14 @@ export default function BudgetTemplates() {
       const newId = insertedItems?.[idx]?.id;
       if (!newId) return;
       tSubItems.filter(s => s.template_item_id === tpl.id).forEach(s => {
-        subRows.push({ user_id: user.id, budget_item_id: newId, name: s.name, amount: Number(s.amount) });
+        subRows.push({
+          user_id: user.id, budget_item_id: newId, name: s.name, amount: Number(s.amount),
+          is_recurring: !!(s as any).is_recurring,
+          recurring_name: (s as any).recurring_name ?? null,
+          recurring_amount: (s as any).recurring_amount ?? null,
+          recurring_date: (s as any).recurring_date ?? null,
+          recurring_frequency: (s as any).recurring_frequency ?? null,
+        });
       });
     });
     if (subRows.length > 0) {
