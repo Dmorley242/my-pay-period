@@ -642,6 +642,32 @@ export default function Budget() {
                     </Select>
                   </div>
                   <div><Label className="text-xs">Budget Amount *</Label><Input type="number" step="0.01" value={siAmount} onChange={e => setSiAmount(e.target.value)} placeholder="0.00" /></div>
+                  <div className="rounded-md border p-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="si-rec" checked={siRecurring} onCheckedChange={v => setSiRecurring(!!v)} />
+                      <Label htmlFor="si-rec" className="text-xs cursor-pointer flex items-center gap-1">
+                        <Repeat className="h-3 w-3" />Recurring
+                      </Label>
+                    </div>
+                    {siRecurring && (
+                      <div className="space-y-2">
+                        <div><Label className="text-xs">Recurring Name</Label><Input value={siRecName} onChange={e => setSiRecName(e.target.value)} placeholder={siName || "ChatGPT"} /></div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs">Frequency</Label>
+                            <Select value={siRecFreq} onValueChange={v => setSiRecFreq(v as any)}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>{FREQS.map(f => <SelectItem key={f} value={f!}>{f}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs">{siRecFreq === "Weekly" ? "Day of Week (0=Sun)" : siRecFreq === "Monthly" ? "Day of Month" : "Date (optional)"}</Label>
+                            <Input type="number" min="0" max="31" value={siRecDate} onChange={e => setSiRecDate(e.target.value)} placeholder={siRecFreq === "Monthly" ? "20" : siRecFreq === "Weekly" ? "1" : ""} disabled={siRecFreq === "Every Pay Period"} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <Button type="submit" size="sm" className="w-full"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
                 </form>
               </CardContent>
