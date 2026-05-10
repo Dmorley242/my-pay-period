@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { money } from "@/lib/format";
-import { Plus, Trash2, Wallet } from "lucide-react";
+import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -21,6 +21,40 @@ export default function Accounts() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+  const [editing, setEditing] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+
+  const openEdit = (a: any) => {
+    setEditing(a);
+    setEditForm({
+      name: a.name ?? "",
+      bank_name: a.bank_name ?? "",
+      account_type: a.account_type ?? "Checking",
+      starting_balance: String(a.starting_balance ?? "0"),
+      notes: a.notes ?? "",
+    });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    const newSb = parseFloat(editForm.starting_balance) || 0;
+    const oldSb = Number(editing.starting_balance) || 0;
+    const delta = newSb - oldSb;
+    const newCurrent = Number(editing.current_balance) + delta;
+    const { error } = await supabase.from("accounts").update({
+      name: editForm.name,
+      bank_name: editForm.bank_name || null,
+      account_type: editForm.account_type || null,
+      starting_balance: newSb,
+      current_balance: newCurrent,
+      notes: editForm.notes || null,
+    }).eq("id", editing.id);
+    if (error) return toast.error(error.message);
+    toast.success("Account updated");
+    setEditing(null);
+    qc.invalidateQueries({ queryKey: ["accounts"] });
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,13 +126,16 @@ export default function Accounts() {
                     <div className="text-xs text-muted-foreground">{[a.bank_name, a.account_type].filter(Boolean).join(" · ") || "—"}</div>
                   </div>
                 </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader><AlertDialogTitle>Delete {a.name}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
-                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader><AlertDialogTitle>Delete {a.name}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
+                      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
               <div className="mt-4">
                 <div className="text-2xl font-bold tabular-nums">{money(a.current_balance)}</div>
@@ -109,6 +146,37 @@ export default function Accounts() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Account</DialogTitle></DialogHeader>
+          <form onSubmit={saveEdit} className="space-y-3">
+            <div><Label>Account Name *</Label><Input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Bank</Label><Input value={editForm.bank_name} onChange={e => setEditForm({ ...editForm, bank_name: e.target.value })} /></div>
+              <div>
+                <Label>Account Type</Label>
+                <Select value={editForm.account_type} onValueChange={v => setEditForm({ ...editForm, account_type: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Checking">Checking</SelectItem>
+                    <SelectItem value="Savings">Savings</SelectItem>
+                    <SelectItem value="Credit Card">Credit Card</SelectItem>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div><Label>Starting Balance</Label><Input type="number" step="0.01" value={editForm.starting_balance} onChange={e => setEditForm({ ...editForm, starting_balance: e.target.value })} /><p className="text-xs text-muted-foreground mt-1">Changing this will adjust the current balance by the same amount.</p></div>
+            <div><Label>Notes</Label><Textarea value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} /></div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button type="submit">Save</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
