@@ -463,11 +463,16 @@ export default function Budget() {
           </Card>
 
           <Card>
-            <CardHeader className="flex-row items-center justify-between">
+            <CardHeader className="flex-row items-center justify-between gap-2 flex-wrap">
               <CardTitle className="text-base">Active Budget</CardTitle>
-              <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>
-                <Plus className="h-4 w-4 mr-1" />Add Items
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => applyRecurringExpenses(false)} disabled={applyingRecurring}>
+                  <Repeat className="h-4 w-4 mr-1" />{applyingRecurring ? "Applying..." : "Apply Recurring Expenses"}
+                </Button>
+                <Button size="sm" onClick={() => { reset(); setBuilderOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-1" />Add Items
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
