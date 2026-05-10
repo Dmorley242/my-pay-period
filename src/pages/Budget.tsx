@@ -230,6 +230,11 @@ export default function Budget() {
       if (tErr) return toast.error(tErr.message);
       const itemRows = publishedDrafts.map(d => ({
         user_id: user.id, template_id: tpl.id, account_id: d.account_id, name: d.name, budget_amount: d.budget_amount,
+        is_recurring: !!d.is_recurring,
+        recurring_name: d.recurring_name ?? null,
+        recurring_amount: d.recurring_amount ?? null,
+        recurring_date: d.recurring_date ?? null,
+        recurring_frequency: d.recurring_frequency ?? null,
       }));
       const { data: insertedItems, error: iErr } = await (supabase as any).from("budget_template_items").insert(itemRows).select();
       if (iErr) return toast.error(iErr.message);
@@ -237,7 +242,14 @@ export default function Budget() {
       publishedDrafts.forEach((d, idx) => {
         const tid = insertedItems?.[idx]?.id;
         if (!tid) return;
-        d.subs.forEach(s => subRows.push({ user_id: user.id, template_item_id: tid, name: s.name, amount: s.amount }));
+        d.subs.forEach(s => subRows.push({
+          user_id: user.id, template_item_id: tid, name: s.name, amount: s.amount,
+          is_recurring: !!s.is_recurring,
+          recurring_name: s.recurring_name ?? null,
+          recurring_amount: s.recurring_amount ?? null,
+          recurring_date: s.recurring_date ?? null,
+          recurring_frequency: s.recurring_frequency ?? null,
+        }));
       });
       if (subRows.length > 0) {
         const { error: sErr } = await (supabase as any).from("budget_template_sub_items").insert(subRows);
