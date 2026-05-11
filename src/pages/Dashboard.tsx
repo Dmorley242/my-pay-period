@@ -208,16 +208,22 @@ export default function Dashboard() {
               <Button asChild variant="ghost" size="sm"><Link to="/budget">See More</Link></Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
-                <DashCell label="Pay Amount" value={money(payAmount)} />
-                <DashCell label="Total Budgeted" value={money(budgeted)} />
-                <DashCell label="Total Budget Spent" value={money(spent)} cls="text-expense" />
-                <DashCell label="Total Budget Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
-                <DashCell label="Remaining to Assign" value={money(toAssign)} cls={toAssign < 0 ? "text-destructive" : "text-income"} />
+              <div className={`rounded-lg border-2 px-4 py-3 flex items-center justify-between ${toAssign < 0 ? "border-destructive/40 bg-destructive/5" : "border-income/40 bg-income/5"}`}>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Remaining to Budget</div>
+                  <div className="text-[11px] text-muted-foreground">Pay Amount − Total Budgeted</div>
+                </div>
+                <div className={`text-2xl md:text-3xl font-bold tabular-nums ${toAssign < 0 ? "text-destructive" : "text-income"}`}>{money(toAssign)}</div>
               </div>
               {toAssign < 0 && (
                 <div className="text-xs text-destructive font-medium text-center">Over budget by {money(Math.abs(toAssign))}</div>
               )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                <DashCell label="Pay Amount" value={money(payAmount)} />
+                <DashCell label="Total Budgeted" value={money(budgeted)} />
+                <DashCell label="Total Budget Spent" value={money(spent)} cls="text-expense" />
+                <DashCell label="Total Budget Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
+              </div>
               {top.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-2">No budget items yet. <Link to="/budget" className="underline">Create one</Link>.</p>
               ) : (
