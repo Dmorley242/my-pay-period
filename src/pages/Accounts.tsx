@@ -15,24 +15,129 @@ import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
+type AcctType = "Bank Account" | "Credit Card" | "Cash" | "Other";
+const ACCT_TYPES: AcctType[] = ["Cash", "Credit Card", "Bank Account", "Other"];
+
+type FormState = {
+  account_type: AcctType;
+  bank_name: string;   // bank/issuer
+  alias: string;       // nickname
+  other_name: string;  // for "Other"
+  starting_balance: string;
+  notes: string;
+};
+
+const blank: FormState = { account_type: "Bank Account", bank_name: "", alias: "", other_name: "", starting_balance: "0", notes: "" };
+
+const computeDisplayName = (f: FormState): string => {
+  const alias = f.alias.trim();
+  switch (f.account_type) {
+    case "Bank Account": {
+      const bn = f.bank_name.trim();
+      return alias ? `${bn} - ${alias}` : bn;
+    }
+    case "Credit Card": {
+      const bn = f.bank_name.trim();
+      const base = "Credit Card";
+      if (alias && bn) return `${base} - ${bn} - ${alias}`;
+      if (alias) return `${base} - ${alias}`;
+      if (bn) return `${base} - ${bn}`;
+      return base;
+    }
+    case "Cash":
+      return alias ? `Cash - ${alias}` : "Cash";
+    case "Other":
+      return f.other_name.trim() || alias || "Account";
+  }
+};
+
+// Best-effort parse of an existing account back into the new form fields.
+const parseAccount = (a: any): FormState => {
+  const type = (ACCT_TYPES.includes(a.account_type) ? a.account_type : (a.account_type === "Checking" || a.account_type === "Savings" ? "Bank Account" : (a.account_type === "Credit Card" ? "Credit Card" : (a.account_type === "Cash" ? "Cash" : "Other")))) as AcctType;
+  const bank = a.bank_name ?? "";
+  const name = a.name ?? "";
+  let alias = "";
+  let other_name = "";
+  if (type === "Bank Account") {
+    if (bank && name.startsWith(`${bank} - `)) alias = name.slice(bank.length + 3);
+    else if (bank && name === bank) alias = "";
+    else alias = name; // fallback
+  } else if (type === "Credit Card") {
+    let rest = name;
+    if (rest.startsWith("Credit Card - ")) rest = rest.slice("Credit Card - ".length);
+    else if (rest === "Credit Card") rest = "";
+    if (bank && rest.startsWith(`${bank} - `)) alias = rest.slice(bank.length + 3);
+    else if (bank && rest === bank) alias = "";
+    else alias = rest;
+  } else if (type === "Cash") {
+    alias = name.startsWith("Cash - ") ? name.slice(7) : (name === "Cash" ? "" : name);
+  } else {
+    other_name = name;
+  }
+  return {
+    account_type: type,
+    bank_name: bank,
+    alias,
+    other_name,
+    starting_balance: String(a.starting_balance ?? "0"),
+    notes: a.notes ?? "",
+  };
+};
+
+function AccountFields({ f, setF }: { f: FormState; setF: (n: FormState) => void }) {
+  const showBank = f.account_type === "Bank Account" || f.account_type === "Credit Card";
+  const bankLabel = f.account_type === "Credit Card" ? "Bank Name / Issuer" : "Bank Name";
+  return (
+    <>
+      <div>
+        <Label>Account Type *</Label>
+        <Select value={f.account_type} onValueChange={(v) => setF({ ...f, account_type: v as AcctType })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {ACCT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      {showBank && (
+        <div>
+          <Label>{bankLabel} *</Label>
+          <Input required value={f.bank_name} onChange={e => setF({ ...f, bank_name: e.target.value })} placeholder="e.g. Fidelity, RBC, CIBC" />
+        </div>
+      )}
+      {f.account_type === "Other" && (
+        <div>
+          <Label>Name *</Label>
+          <Input required value={f.other_name} onChange={e => setF({ ...f, other_name: e.target.value })} />
+        </div>
+      )}
+      <div>
+        <Label>Starting Balance</Label>
+        <Input type="number" step="0.01" value={f.starting_balance} onChange={e => setF({ ...f, starting_balance: e.target.value })} />
+      </div>
+      <div>
+        <Label>Alias / Nickname (optional)</Label>
+        <Input value={f.alias} onChange={e => setF({ ...f, alias: e.target.value })} placeholder="e.g. Business Account, Wallet" />
+      </div>
+      <div>
+        <Label>Notes</Label>
+        <Textarea value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} />
+      </div>
+    </>
+  );
+}
+
 export default function Accounts() {
   const { data: accounts = [] } = useAccounts();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+  const [form, setForm] = useState<FormState>(blank);
   const [editing, setEditing] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+  const [editForm, setEditForm] = useState<FormState>(blank);
 
   const openEdit = (a: any) => {
     setEditing(a);
-    setEditForm({
-      name: a.name ?? "",
-      bank_name: a.bank_name ?? "",
-      account_type: a.account_type ?? "Checking",
-      starting_balance: String(a.starting_balance ?? "0"),
-      notes: a.notes ?? "",
-    });
+    setEditForm(parseAccount(a));
   };
 
   const saveEdit = async (e: React.FormEvent) => {
@@ -42,10 +147,12 @@ export default function Accounts() {
     const oldSb = Number(editing.starting_balance) || 0;
     const delta = newSb - oldSb;
     const newCurrent = Number(editing.current_balance) + delta;
+    const display = computeDisplayName(editForm);
+    if (!display) return toast.error("Please complete the required fields");
     const { error } = await supabase.from("accounts").update({
-      name: editForm.name,
-      bank_name: editForm.bank_name || null,
-      account_type: editForm.account_type || null,
+      name: display,
+      bank_name: (editForm.account_type === "Bank Account" || editForm.account_type === "Credit Card") ? (editForm.bank_name || null) : null,
+      account_type: editForm.account_type,
       starting_balance: newSb,
       current_balance: newCurrent,
       notes: editForm.notes || null,
@@ -60,15 +167,21 @@ export default function Accounts() {
     e.preventDefault();
     if (!user) return;
     const sb = parseFloat(form.starting_balance) || 0;
+    const display = computeDisplayName(form);
+    if (!display) return toast.error("Please complete the required fields");
     const { error } = await supabase.from("accounts").insert({
-      user_id: user.id, name: form.name, bank_name: form.bank_name || null,
-      account_type: form.account_type || null, starting_balance: sb, current_balance: sb,
+      user_id: user.id,
+      name: display,
+      bank_name: (form.account_type === "Bank Account" || form.account_type === "Credit Card") ? (form.bank_name || null) : null,
+      account_type: form.account_type,
+      starting_balance: sb,
+      current_balance: sb,
       notes: form.notes || null,
     });
     if (error) return toast.error(error.message);
     toast.success("Account added");
     setOpen(false);
-    setForm({ name: "", bank_name: "", account_type: "Checking", starting_balance: "0", notes: "" });
+    setForm(blank);
     qc.invalidateQueries({ queryKey: ["accounts"] });
   };
 
@@ -83,30 +196,12 @@ export default function Accounts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold">Accounts</h1><p className="text-muted-foreground mt-1">Add and manage your bank accounts.</p></div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setForm(blank); }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Add Account</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>New Account</DialogTitle></DialogHeader>
             <form onSubmit={submit} className="space-y-3">
-              <div><Label>Account Name *</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Groceries, Gas, Spending Money, Savings" /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} placeholder="e.g. Fidelity, CIBC, Commonwealth Bank, RBC" /></div>
-                <div>
-                  <Label>Account Type</Label>
-                  <Select value={form.account_type} onValueChange={v => setForm({ ...form, account_type: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Checking">Checking</SelectItem>
-                      <SelectItem value="Savings">Savings</SelectItem>
-                      <SelectItem value="Credit Card">Credit Card</SelectItem>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div><Label>Starting Balance</Label><Input type="number" step="0.01" value={form.starting_balance} onChange={e => setForm({ ...form, starting_balance: e.target.value })} /></div>
-              <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <AccountFields f={form} setF={setForm} />
               <DialogFooter><Button type="submit">Save</Button></DialogFooter>
             </form>
           </DialogContent>
@@ -123,7 +218,7 @@ export default function Accounts() {
                   <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center text-accent-foreground"><Wallet className="h-5 w-5" /></div>
                   <div>
                     <div className="font-semibold">{a.name}</div>
-                    <div className="text-xs text-muted-foreground">{[a.bank_name, a.account_type].filter(Boolean).join(" · ") || "—"}</div>
+                    <div className="text-xs text-muted-foreground">{a.account_type || "—"}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -151,25 +246,8 @@ export default function Accounts() {
         <DialogContent>
           <DialogHeader><DialogTitle>Edit Account</DialogTitle></DialogHeader>
           <form onSubmit={saveEdit} className="space-y-3">
-            <div><Label>Account Name *</Label><Input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Bank</Label><Input value={editForm.bank_name} onChange={e => setEditForm({ ...editForm, bank_name: e.target.value })} /></div>
-              <div>
-                <Label>Account Type</Label>
-                <Select value={editForm.account_type} onValueChange={v => setEditForm({ ...editForm, account_type: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Checking">Checking</SelectItem>
-                    <SelectItem value="Savings">Savings</SelectItem>
-                    <SelectItem value="Credit Card">Credit Card</SelectItem>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div><Label>Starting Balance</Label><Input type="number" step="0.01" value={editForm.starting_balance} onChange={e => setEditForm({ ...editForm, starting_balance: e.target.value })} /><p className="text-xs text-muted-foreground mt-1">Changing this will adjust the current balance by the same amount.</p></div>
-            <div><Label>Notes</Label><Textarea value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} /></div>
+            <AccountFields f={editForm} setF={setEditForm} />
+            <p className="text-xs text-muted-foreground">Changing the starting balance will adjust the current balance by the same amount. Editing details will not reset balances or unlink transactions.</p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
               <Button type="submit">Save</Button>
