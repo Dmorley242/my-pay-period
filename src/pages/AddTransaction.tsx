@@ -23,8 +23,7 @@ const TYPES: { value: TxType; label: string; desc: string }[] = [
   { value: "transfer", label: "Transfer", desc: "Move money between accounts" },
 ];
 
-const accLabel = (a: { bank_name: string | null; name: string }) =>
-  a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
+import { accountLabel as accLabel } from "@/lib/format";
 
 // Today's date as YYYY-MM-DD in the user's local timezone (avoids UTC off-by-one).
 const todayLocal = () => {
