@@ -215,7 +215,14 @@ export default function BudgetTemplates() {
                     size="sm"
                     className="w-full"
                     disabled={items.length === 0}
-                    onClick={() => setApplyOpen({ templateId: t.id, payPeriodId: active?.id || (periods[0]?.id ?? "") })}
+                    onClick={() => {
+                      const targetId = active?.id || periods.find(p => p.is_active)?.id || "";
+                      if (!targetId) {
+                        toast.error("No active pay period selected.");
+                        return;
+                      }
+                      setApplyOpen({ templateId: t.id, payPeriodId: targetId });
+                    }}
                   >
                     <Send className="h-4 w-4 mr-1" />Apply Template
                   </Button>
