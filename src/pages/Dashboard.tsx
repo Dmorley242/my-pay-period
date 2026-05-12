@@ -201,18 +201,22 @@ export default function Dashboard() {
         const top = items.slice(0, 5);
         const accLbl = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
         return (
-          <Card className="shadow-[var(--shadow-sm)]">
+          <Card className="shadow-[var(--shadow-lg)] border-primary/30 ring-1 ring-primary/20 overflow-hidden">
             <CardHeader className="pb-3 flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base"><PieChart className="h-4 w-4" />Active Budget</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base"><PieChart className="h-4 w-4 text-primary" />Active Budget</CardTitle>
               <Button asChild variant="ghost" size="sm"><Link to="/budget">See More</Link></Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className={`rounded-lg border-2 px-4 py-3 flex items-center justify-between ${toAssign < 0 ? "border-destructive/40 bg-destructive/5" : "border-income/40 bg-income/5"}`}>
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Remaining to Budget</div>
-                  <div className="text-[11px] text-muted-foreground">Pay Amount − Total Budgeted</div>
+              <div
+                className={`relative overflow-hidden rounded-xl px-4 py-3 flex items-center justify-between border ${toAssign < 0 ? "border-destructive/50" : "border-primary/40"}`}
+                style={{ background: "var(--gradient-hero)", boxShadow: "var(--shadow-glow)" }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-white/25 to-transparent pointer-events-none" />
+                <div className="relative text-primary-foreground">
+                  <div className="text-[11px] uppercase tracking-wider font-semibold opacity-90">Remaining to Budget</div>
+                  <div className="text-[11px] opacity-75">Pay Amount − Total Budgeted</div>
                 </div>
-                <div className={`text-2xl md:text-3xl font-bold tabular-nums ${toAssign < 0 ? "text-destructive" : "text-income"}`}>{money(toAssign)}</div>
+                <div className={`relative text-2xl md:text-3xl font-bold tabular-nums text-primary-foreground ${toAssign < 0 ? "text-destructive-foreground" : ""}`}>{money(toAssign)}</div>
               </div>
               {toAssign < 0 && (
                 <div className="text-xs text-destructive font-medium text-center">Over budget by {money(Math.abs(toAssign))}</div>
