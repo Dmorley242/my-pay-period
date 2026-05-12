@@ -289,7 +289,7 @@ export default function Dashboard() {
                             <p className="text-xs text-muted-foreground pl-4">No additional income recorded.</p>
                           ) : incomes.map(t => {
                             const ia = accounts.find(a => a.id === t.account_id);
-                            const iaLbl = ia ? (ia.bank_name ? `${ia.bank_name} - ${ia.name}` : ia.name) : "—";
+                            const iaLbl = ia ? accountLabel(ia) : "—";
                             return (
                               <div key={t.id} className="flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40">
                                 <div className="min-w-0 truncate">
