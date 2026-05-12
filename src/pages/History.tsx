@@ -15,8 +15,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 type Row = { id: string; date: string; kind: "tx" | "transfer"; type: string; category: string; amount: number; notes: string; signed: number; };
 
-const accLabel = (a: { bank_name: string | null; name: string }) =>
-  a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
+import { accountLabel as accLabel } from "@/lib/format";
 
 export default function History() {
   const qc = useQueryClient();
