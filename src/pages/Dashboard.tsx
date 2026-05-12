@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useAccountHolds, useAccounts, useActivePayPeriod, useBudgetItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { money, fmtDate } from "@/lib/format";
+import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
 import { Link } from "react-router-dom";
 import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
