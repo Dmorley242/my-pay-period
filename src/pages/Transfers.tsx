@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { money, fmtDate } from "@/lib/format";
+import { money, fmtDate, accountLabel } from "@/lib/format";
 import { ArrowRight, Trash2 } from "lucide-react";
 
 export default function Transfers() {
