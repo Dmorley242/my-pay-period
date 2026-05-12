@@ -109,6 +109,25 @@ export default function Auth() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset your password</DialogTitle>
+            <DialogDescription>Enter the email for your account and we'll send you a link to reset your password.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={sendReset} className="space-y-4">
+            <div>
+              <Label>Email</Label>
+              <Input type="email" required value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={forgotLoading}>{forgotLoading ? "Sending..." : "Send reset link"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
