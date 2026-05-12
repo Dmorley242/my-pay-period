@@ -76,7 +76,15 @@ export default function Auth() {
               <form onSubmit={signUp} className="space-y-4 mt-4">
                 <div><Label>Display name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-                <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /></div>
+                <div>
+                  <Label>Password</Label>
+                  <div className="relative">
+                    <Input type={showSignUpPw ? "text" : "password"} required minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="pr-10" />
+                    <button type="button" tabIndex={-1} onClick={() => setShowSignUpPw(s => !s)} aria-label={showSignUpPw ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showSignUpPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating..." : "Create Account"}</Button>
               </form>
             </TabsContent>
