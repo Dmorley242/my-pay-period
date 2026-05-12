@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { money, fmtDate } from "@/lib/format";
+import { money, fmtDate, accountLabel } from "@/lib/format";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,7 +49,7 @@ export default function AccountDetail() {
     if (account) setForm({ name: account.name, bank_name: account.bank_name ?? "", account_type: account.account_type ?? "" });
   }, [account?.id]);
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
+  const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
 
   const allMovements: Movement[] = useMemo(() => {
@@ -145,7 +145,7 @@ export default function AccountDetail() {
       <Card className="overflow-hidden">
         <div className="p-6 md:p-8 text-primary-foreground" style={{ background: "var(--gradient-hero)" }}>
           <div className="text-xs opacity-80">{account.account_type || "Account"}</div>
-          <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">{[account.bank_name, account.name].filter(Boolean).join(" ")}</h1>
+          <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">{accountLabel(account)}</h1>
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="rounded-xl bg-white/15 p-3"><div className="text-[11px] opacity-80">Current balance</div><div className="text-xl font-bold tabular-nums">{money(account.current_balance)}</div></div>
             <div className="rounded-xl bg-white/15 p-3"><div className="text-[11px] opacity-80">Active holds</div><div className="text-xl font-bold tabular-nums">{money(activeHoldsTotal)}</div></div>

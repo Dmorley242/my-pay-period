@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { money, fmtDate } from "@/lib/format";
+import { money, fmtDate, accountLabel } from "@/lib/format";
 import { ArrowRight, Trash2 } from "lucide-react";
 
 export default function Transfers() {
@@ -55,7 +55,7 @@ export default function Transfers() {
     qc.invalidateQueries();
   };
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
+  const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
 
   return (
     <div className="space-y-6">
@@ -70,13 +70,13 @@ export default function Transfers() {
               <div><Label>From *</Label>
                 <Select value={from} onValueChange={setFrom}>
                   <SelectTrigger><SelectValue placeholder="Source account" /></SelectTrigger>
-                  <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name} — {money(a.current_balance)}</SelectItem>)}</SelectContent>
+                  <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)} — {money(a.current_balance)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label>To *</Label>
                 <Select value={to} onValueChange={setTo}>
                   <SelectTrigger><SelectValue placeholder="Destination account" /></SelectTrigger>
-                  <SelectContent>{accounts.filter(a => a.id !== from).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{accounts.filter(a => a.id !== from).map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label>Amount *</Label><Input type="number" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>

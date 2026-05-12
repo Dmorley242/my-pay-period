@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useAccountHolds, useAccounts, useActivePayPeriod, useBudgetItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { money, fmtDate } from "@/lib/format";
+import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
 import { Link } from "react-router-dom";
 import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -38,7 +38,7 @@ export default function Dashboard() {
   const netFlow = income - expense;
   const transfersTotal = periodTransfers.reduce((s, t) => s + Number(t.amount), 0);
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
+  const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
 
   const safeIdx = accounts.length === 0 ? 0 : Math.min(idx, accounts.length - 1);
@@ -111,8 +111,10 @@ export default function Dashboard() {
                 <Button onClick={prev} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronLeft className="h-5 w-5" /></Button>
                 <div className="min-w-0 flex-1 text-center">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur"><Wallet className="h-3.5 w-3.5" /> Account {safeIdx + 1} of {accounts.length}</div>
-                  {current.bank_name && <div className="mt-3 text-base md:text-lg font-semibold tracking-tight truncate">{current.bank_name}</div>}
-                  <div className={`${current.bank_name ? "text-sm opacity-90" : "mt-3 text-lg md:text-xl font-semibold"} truncate`}>{current.name}</div>
+                  {(() => { const { bank, alias } = accountParts(current); return (<>
+                    {bank && <div className="mt-3 text-base md:text-lg font-semibold tracking-tight truncate">{bank}</div>}
+                    <div className={`${bank ? "text-sm opacity-90" : "mt-3 text-lg md:text-xl font-semibold"} truncate`}>{alias || (!bank ? accountLabel(current) : "")}</div>
+                  </>); })()}
                 </div>
                 <Button onClick={next} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronRight className="h-5 w-5" /></Button>
               </div>
@@ -197,10 +199,7 @@ export default function Dashboard() {
         const remaining = budgeted - spent;
         const toAssign = payAmount - budgeted;
         const top = items.slice(0, 5);
-        const accLbl = (id: string) => {
-          const a = accounts.find(x => x.id === id);
-          return a ? (a.bank_name ? `${a.bank_name} - ${a.name}` : a.name) : "—";
-        };
+        const accLbl = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
         return (
           <Card className="shadow-[var(--shadow-sm)]">
             <CardHeader className="pb-3 flex-row items-center justify-between">
@@ -277,7 +276,7 @@ export default function Dashboard() {
                         {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <div className="text-xs text-muted-foreground truncate">{p.income_source || "—"}{acc ? ` · ${(acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name)}` : ""}</div>
+                        <div className="text-xs text-muted-foreground truncate">{p.income_source || "—"}{acc ? ` · ${accountLabel(acc)}` : ""}</div>
                         <div className="text-xs font-semibold tabular-nums shrink-0">{p.net_pay_amount != null ? money(p.net_pay_amount) : "—"}</div>
                       </div>
                       <Collapsible className="mt-2">
@@ -290,7 +289,7 @@ export default function Dashboard() {
                             <p className="text-xs text-muted-foreground pl-4">No additional income recorded.</p>
                           ) : incomes.map(t => {
                             const ia = accounts.find(a => a.id === t.account_id);
-                            const iaLbl = ia ? (ia.bank_name ? `${ia.bank_name} - ${ia.name}` : ia.name) : "—";
+                            const iaLbl = ia ? accountLabel(ia) : "—";
                             return (
                               <div key={t.id} className="flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40">
                                 <div className="min-w-0 truncate">

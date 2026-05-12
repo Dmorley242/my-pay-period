@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { money } from "@/lib/format";
+import { money, accountLabel } from "@/lib/format";
 import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -34,18 +34,18 @@ const computeDisplayName = (f: FormState): string => {
   switch (f.account_type) {
     case "Bank Account": {
       const bn = f.bank_name.trim();
-      return alias ? `${bn} - ${alias}` : bn;
+      if (!bn) return alias;
+      if (!alias || alias.toLowerCase() === bn.toLowerCase()) return bn;
+      return `${bn} ${alias}`;
     }
     case "Credit Card": {
       const bn = f.bank_name.trim();
-      const base = "Credit Card";
-      if (alias && bn) return `${base} - ${bn} - ${alias}`;
-      if (alias) return `${base} - ${alias}`;
-      if (bn) return `${base} - ${bn}`;
-      return base;
+      if (!bn) return alias || "Credit Card";
+      if (!alias || alias.toLowerCase() === bn.toLowerCase()) return bn;
+      return `${bn} ${alias}`;
     }
     case "Cash":
-      return alias ? `Cash - ${alias}` : "Cash";
+      return alias || "Cash";
     case "Other":
       return f.other_name.trim() || alias || "Account";
   }
@@ -58,22 +58,26 @@ const parseAccount = (a: any): FormState => {
   const name = a.name ?? "";
   let alias = "";
   let other_name = "";
+  const stripBank = (s: string): string => {
+    let r = s;
+    if (bank) {
+      const re = new RegExp("^" + bank.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*-?\\s*", "i");
+      r = r.replace(re, "");
+    }
+    return r.replace(/\s*-\s*/g, " ").replace(/\s+/g, " ").trim();
+  };
   if (type === "Bank Account") {
-    if (bank && name.startsWith(`${bank} - `)) alias = name.slice(bank.length + 3);
-    else if (bank && name === bank) alias = "";
-    else alias = name; // fallback
+    alias = stripBank(name);
   } else if (type === "Credit Card") {
-    let rest = name;
-    if (rest.startsWith("Credit Card - ")) rest = rest.slice("Credit Card - ".length);
-    else if (rest === "Credit Card") rest = "";
-    if (bank && rest.startsWith(`${bank} - `)) alias = rest.slice(bank.length + 3);
-    else if (bank && rest === bank) alias = "";
-    else alias = rest;
+    let rest = name.replace(/^Credit Card\s*-?\s*/i, "");
+    alias = stripBank(rest);
   } else if (type === "Cash") {
-    alias = name.startsWith("Cash - ") ? name.slice(7) : (name === "Cash" ? "" : name);
+    alias = name.replace(/^Cash\s*-?\s*/i, "").trim();
+    if (alias.toLowerCase() === "cash") alias = "";
   } else {
     other_name = name;
   }
+  if (bank && alias.toLowerCase() === bank.toLowerCase()) alias = "";
   return {
     account_type: type,
     bank_name: bank,
@@ -217,7 +221,7 @@ export default function Accounts() {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center text-accent-foreground"><Wallet className="h-5 w-5" /></div>
                   <div>
-                    <div className="font-semibold">{a.name}</div>
+                    <div className="font-semibold">{accountLabel(a)}</div>
                     <div className="text-xs text-muted-foreground">{a.account_type || "—"}</div>
                   </div>
                 </div>
@@ -226,7 +230,7 @@ export default function Accounts() {
                   <AlertDialog>
                     <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                     <AlertDialogContent>
-                      <AlertDialogHeader><AlertDialogTitle>Delete {a.name}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
+                      <AlertDialogHeader><AlertDialogTitle>Delete {accountLabel(a)}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
                       <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
