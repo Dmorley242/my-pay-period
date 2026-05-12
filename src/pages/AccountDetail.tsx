@@ -49,7 +49,7 @@ export default function AccountDetail() {
     if (account) setForm({ name: account.name, bank_name: account.bank_name ?? "", account_type: account.account_type ?? "" });
   }, [account?.id]);
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
+  const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
 
   const allMovements: Movement[] = useMemo(() => {
