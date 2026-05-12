@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Wallet } from "lucide-react";
+import { Wallet, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
   const nav = useNavigate();
@@ -17,6 +17,30 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSignInPw, setShowSignInPw] = useState(false);
+  const [showSignUpPw, setShowSignUpPw] = useState(false);
+
+  const PwField = ({ show, setShow, value, onChange, minLength }: { show: boolean; setShow: (v: boolean) => void; value: string; onChange: (v: string) => void; minLength?: number }) => (
+    <div className="relative">
+      <Input
+        type={show ? "text" : "password"}
+        required
+        minLength={minLength}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        aria-label={show ? "Hide password" : "Show password"}
+        tabIndex={-1}
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
 
   useEffect(() => { if (user) nav("/", { replace: true }); }, [user, nav]);
 
