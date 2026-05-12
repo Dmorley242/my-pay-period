@@ -34,18 +34,18 @@ const computeDisplayName = (f: FormState): string => {
   switch (f.account_type) {
     case "Bank Account": {
       const bn = f.bank_name.trim();
-      return alias ? `${bn} - ${alias}` : bn;
+      if (!bn) return alias;
+      if (!alias || alias.toLowerCase() === bn.toLowerCase()) return bn;
+      return `${bn} ${alias}`;
     }
     case "Credit Card": {
       const bn = f.bank_name.trim();
-      const base = "Credit Card";
-      if (alias && bn) return `${base} - ${bn} - ${alias}`;
-      if (alias) return `${base} - ${alias}`;
-      if (bn) return `${base} - ${bn}`;
-      return base;
+      if (!bn) return alias || "Credit Card";
+      if (!alias || alias.toLowerCase() === bn.toLowerCase()) return bn;
+      return `${bn} ${alias}`;
     }
     case "Cash":
-      return alias ? `Cash - ${alias}` : "Cash";
+      return alias || "Cash";
     case "Other":
       return f.other_name.trim() || alias || "Account";
   }
