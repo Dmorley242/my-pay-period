@@ -3,6 +3,27 @@ export const money = (n: number | string | null | undefined) => {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v || 0);
 };
 
+export type AccountLike = { bank_name?: string | null; name?: string | null };
+
+export const accountParts = (a: AccountLike) => {
+  const bank = (a.bank_name || "").trim();
+  let rest = (a.name || "").trim();
+  rest = rest.replace(/^Credit Card\s*-\s*/i, "").replace(/^Credit Card$/i, "");
+  if (bank) {
+    const re = new RegExp("^" + bank.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*-?\\s*", "i");
+    rest = rest.replace(re, "");
+  }
+  rest = rest.replace(/\s*-\s*/g, " ").replace(/\s+/g, " ").trim();
+  if (bank && rest.toLowerCase() === bank.toLowerCase()) rest = "";
+  return { bank, alias: rest };
+};
+
+export const accountLabel = (a: AccountLike) => {
+  const { bank, alias } = accountParts(a);
+  if (!bank) return alias;
+  return alias ? `${bank} ${alias}` : bank;
+};
+
 export const fmtDate = (d: string | Date) => {
   let date: Date;
   if (typeof d === "string") {
