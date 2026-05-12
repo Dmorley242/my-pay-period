@@ -127,6 +127,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit} aria-label="Edit app title">
               <Pencil className="h-4 w-4" />
             </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOut} aria-label="Sign out">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </header>
         <main className="flex-1 overflow-auto">
