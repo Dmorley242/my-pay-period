@@ -88,7 +88,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <div className="font-semibold text-sm text-sidebar-primary-foreground truncate">{title}</div>
           <div className="text-[11px] text-sidebar-foreground/70 -mt-0.5">Money Tracker</div>
         </Link>
-        <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
+        <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={toggleTheme} aria-label="Toggle theme">
+          {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
           <Pencil className="h-3.5 w-3.5" />
         </Button>
       </div>
