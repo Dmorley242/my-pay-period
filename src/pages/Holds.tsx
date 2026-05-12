@@ -37,7 +37,7 @@ export default function Holds() {
 
   const accName = (id: string) => {
     const a = accounts.find(x => x.id === id);
-    return a ? [a.bank_name, a.name].filter(Boolean).join(" - ") : "—";
+    return a ? accountLabel(a) : "—";
   };
 
   const active = useMemo(() => holds.filter(h => h.status === "active"), [holds]);
