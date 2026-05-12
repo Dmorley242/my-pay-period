@@ -276,7 +276,7 @@ export default function Dashboard() {
                         {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <div className="text-xs text-muted-foreground truncate">{p.income_source || "—"}{acc ? ` · ${(acc.bank_name ? `${acc.bank_name} - ${acc.name}` : acc.name)}` : ""}</div>
+                        <div className="text-xs text-muted-foreground truncate">{p.income_source || "—"}{acc ? ` · ${accountLabel(acc)}` : ""}</div>
                         <div className="text-xs font-semibold tabular-nums shrink-0">{p.net_pay_amount != null ? money(p.net_pay_amount) : "—"}</div>
                       </div>
                       <Collapsible className="mt-2">
