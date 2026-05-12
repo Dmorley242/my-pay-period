@@ -255,9 +255,9 @@ export default function Dashboard() {
         );
       })()}
 
-      <Card className="shadow-[var(--shadow-sm)]">
+      <Card className="shadow-[var(--shadow-lg)] border-primary/20 ring-1 ring-primary/10">
         <CardHeader className="pb-3 flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base"><CalendarRange className="h-4 w-4" />Pay Periods</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base"><CalendarRange className="h-4 w-4 text-primary" />Pay Periods</CardTitle>
           <Button asChild variant="ghost" size="sm"><Link to="/pay-periods">See more</Link></Button>
         </CardHeader>
         <CardContent>
@@ -274,10 +274,10 @@ export default function Dashboard() {
                   const acc = accounts.find(a => a.id === p.paycheck_account_id);
                   const incomes = txs.filter(t => t.transaction_type === "income" && t.pay_period_id === p.id);
                   return (
-                    <div key={p.id} className={`rounded-xl px-3 py-2 border ${p.is_active ? "border-income/40 bg-income/10 shadow-sm" : "border-border bg-accent/40"}`}>
+                    <div key={p.id} className={`rounded-xl px-3 py-2 border ${p.is_active ? "border-primary/50 bg-primary/10 shadow-[var(--shadow-glow)]" : "border-border bg-accent/40"}`}>
                       <div className="flex items-center justify-between gap-2">
                         <div className="text-sm font-medium truncate">{fmtDate(p.start_date)} – {fmtDate(p.end_date)}</div>
-                        {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-income text-income-foreground shrink-0">ACTIVE</span>}
+                        {p.is_active && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded text-primary-foreground shrink-0" style={{ background: "var(--gradient-primary)" }}>ACTIVE</span>}
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
                         <div className="text-xs text-muted-foreground truncate">{p.income_source || "—"}{acc ? ` · ${accountLabel(acc)}` : ""}</div>
