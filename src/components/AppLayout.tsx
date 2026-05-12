@@ -1,10 +1,13 @@
-import { ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate } from "lucide-react";
+import { ReactNode, useEffect, useState } from "react";
+import { NavLink, useNavigate, Link } from "react-router-dom";
+import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const links = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
@@ -17,6 +20,9 @@ const links = [
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
   { to: "/history", icon: History, label: "Account History" },
 ];
+
+const TITLE_KEY = "app:customTitle";
+const DEFAULT_TITLE = "Money Tracker";
 
 const NavItems = ({ onClick }: { onClick?: () => void }) => (
   <nav className="space-y-1">
@@ -40,16 +46,39 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const handleOut = async () => { await signOut(); nav("/auth"); };
 
+  const [title, setTitle] = useState<string>(DEFAULT_TITLE);
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(TITLE_KEY);
+      if (saved && saved.trim()) setTitle(saved);
+    } catch {}
+  }, []);
+
+  const openEdit = () => { setDraft(title); setEditOpen(true); };
+  const saveTitle = (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = draft.trim() || DEFAULT_TITLE;
+    setTitle(v);
+    try { localStorage.setItem(TITLE_KEY, v); } catch {}
+    setEditOpen(false);
+  };
+
   const sidebar = (
     <div className="flex flex-col h-full p-4 bg-sidebar text-sidebar-foreground">
       <div className="flex items-center gap-2 mb-8 px-2">
-        <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
+        <Link to="/" aria-label="Go to dashboard" className="h-9 w-9 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity" style={{ background: "var(--gradient-primary)" }}>
           <Wallet className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <div>
-          <div className="font-semibold text-sm text-sidebar-primary-foreground">Pay Period</div>
+        </Link>
+        <Link to="/" className="min-w-0 hover:opacity-90 transition-opacity">
+          <div className="font-semibold text-sm text-sidebar-primary-foreground truncate">{title}</div>
           <div className="text-[11px] text-sidebar-foreground/70 -mt-0.5">Money Tracker</div>
-        </div>
+        </Link>
+        <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
       </div>
       <NavItems />
       <div className="mt-auto pt-4 border-t border-sidebar-border">
@@ -70,18 +99,36 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <SheetTrigger asChild><Button variant="ghost" size="icon" className="justify-self-start"><Menu className="h-5 w-5" /></Button></SheetTrigger>
             <SheetContent side="left" className="p-0 w-64 bg-sidebar border-sidebar-border">{sidebar}</SheetContent>
           </Sheet>
-          <div className="flex items-center gap-2 justify-self-center">
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
+          <Link to="/" className="flex items-center gap-2 justify-self-center min-w-0 hover:opacity-90 transition-opacity">
+            <span className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
               <Wallet className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold">Money Tracker</span>
-          </div>
-          <div />
+            </span>
+            <span className="font-semibold truncate">{title}</span>
+          </Link>
+          <Button variant="ghost" size="icon" className="justify-self-end h-8 w-8" onClick={openEdit} aria-label="Edit app title">
+            <Pencil className="h-4 w-4" />
+          </Button>
         </header>
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto p-4 md:p-8">{children}</div>
         </main>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit App Title</DialogTitle></DialogHeader>
+          <form onSubmit={saveTitle} className="space-y-3">
+            <div>
+              <Label htmlFor="app-title">Title</Label>
+              <Input id="app-title" value={draft} onChange={e => setDraft(e.target.value)} placeholder={DEFAULT_TITLE} autoFocus />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit">Save</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
