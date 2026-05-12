@@ -114,7 +114,7 @@ export default function Holds() {
                 <div className="md:col-span-2"><Label>Account</Label>
                   <Select value={account_id} onValueChange={setAccountId}>
                     <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
-                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{[a.bank_name, a.name].filter(Boolean).join(" - ")}</SelectItem>)}</SelectContent>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 {holdType === "reserve_hold" ? (
