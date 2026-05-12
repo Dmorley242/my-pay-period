@@ -18,6 +18,7 @@ import Holds from "./pages/Holds";
 import Budget from "./pages/Budget";
 import BudgetTemplates from "./pages/BudgetTemplates";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
