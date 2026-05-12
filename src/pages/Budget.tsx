@@ -51,7 +51,8 @@ function isRecurringDue(rec: { recurring_frequency?: string | null; recurring_da
   return false;
 }
 
-const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
+import { accountLabel as accLabel } from "@/lib/format";
+// (accLabel re-exported)
 
 export default function Budget() {
   const { user } = useAuth();

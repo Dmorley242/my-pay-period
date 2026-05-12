@@ -25,7 +25,8 @@ const defaultNext = () => {
   return { start: fmt(start), end: fmt(end), name: start.toLocaleDateString("en-US", { month: "long", year: "numeric" }) };
 };
 
-const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
+import { accountLabel as accLabel } from "@/lib/format";
+// (accLabel re-exported)
 
 type FormState = {
   name: string; start: string; end: string;

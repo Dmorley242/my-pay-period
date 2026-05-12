@@ -14,7 +14,8 @@ import { toast } from "sonner";
 import { money, fmtDate } from "@/lib/format";
 import { Plus, Trash2, Pencil, LayoutTemplate, Send, Repeat } from "lucide-react";
 
-const accLabel = (a: { bank_name: string | null; name: string }) => a.bank_name ? `${a.bank_name} - ${a.name}` : a.name;
+import { accountLabel as accLabel } from "@/lib/format";
+// (accLabel re-exported)
 
 export default function BudgetTemplates() {
   const { user } = useAuth();
