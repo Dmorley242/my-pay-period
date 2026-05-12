@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { money, fmtDate } from "@/lib/format";
+import { money, fmtDate, accountLabel } from "@/lib/format";
 import { Lock, Plus, X, Check, Target, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
