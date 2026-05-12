@@ -38,7 +38,7 @@ export default function Dashboard() {
   const netFlow = income - expense;
   const transfersTotal = periodTransfers.reduce((s, t) => s + Number(t.amount), 0);
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
+  const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
 
   const safeIdx = accounts.length === 0 ? 0 : Math.min(idx, accounts.length - 1);
