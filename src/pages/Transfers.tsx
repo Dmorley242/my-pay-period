@@ -76,7 +76,7 @@ export default function Transfers() {
               <div><Label>To *</Label>
                 <Select value={to} onValueChange={setTo}>
                   <SelectTrigger><SelectValue placeholder="Destination account" /></SelectTrigger>
-                  <SelectContent>{accounts.filter(a => a.id !== from).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{accounts.filter(a => a.id !== from).map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label>Amount *</Label><Input type="number" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
