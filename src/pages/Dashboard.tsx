@@ -111,8 +111,10 @@ export default function Dashboard() {
                 <Button onClick={prev} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronLeft className="h-5 w-5" /></Button>
                 <div className="min-w-0 flex-1 text-center">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur"><Wallet className="h-3.5 w-3.5" /> Account {safeIdx + 1} of {accounts.length}</div>
-                  {current.bank_name && <div className="mt-3 text-base md:text-lg font-semibold tracking-tight truncate">{current.bank_name}</div>}
-                  <div className={`${current.bank_name ? "text-sm opacity-90" : "mt-3 text-lg md:text-xl font-semibold"} truncate`}>{current.name}</div>
+                  {(() => { const { bank, alias } = accountParts(current); return (<>
+                    {bank && <div className="mt-3 text-base md:text-lg font-semibold tracking-tight truncate">{bank}</div>}
+                    <div className={`${bank ? "text-sm opacity-90" : "mt-3 text-lg md:text-xl font-semibold"} truncate`}>{alias || (!bank ? accountLabel(current) : "")}</div>
+                  </>); })()}
                 </div>
                 <Button onClick={next} disabled={accounts.length < 2} variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-white/15 hover:bg-white/25 text-primary-foreground shrink-0"><ChevronRight className="h-5 w-5" /></Button>
               </div>
