@@ -58,22 +58,26 @@ const parseAccount = (a: any): FormState => {
   const name = a.name ?? "";
   let alias = "";
   let other_name = "";
+  const stripBank = (s: string): string => {
+    let r = s;
+    if (bank) {
+      const re = new RegExp("^" + bank.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*-?\\s*", "i");
+      r = r.replace(re, "");
+    }
+    return r.replace(/\s*-\s*/g, " ").replace(/\s+/g, " ").trim();
+  };
   if (type === "Bank Account") {
-    if (bank && name.startsWith(`${bank} - `)) alias = name.slice(bank.length + 3);
-    else if (bank && name === bank) alias = "";
-    else alias = name; // fallback
+    alias = stripBank(name);
   } else if (type === "Credit Card") {
-    let rest = name;
-    if (rest.startsWith("Credit Card - ")) rest = rest.slice("Credit Card - ".length);
-    else if (rest === "Credit Card") rest = "";
-    if (bank && rest.startsWith(`${bank} - `)) alias = rest.slice(bank.length + 3);
-    else if (bank && rest === bank) alias = "";
-    else alias = rest;
+    let rest = name.replace(/^Credit Card\s*-?\s*/i, "");
+    alias = stripBank(rest);
   } else if (type === "Cash") {
-    alias = name.startsWith("Cash - ") ? name.slice(7) : (name === "Cash" ? "" : name);
+    alias = name.replace(/^Cash\s*-?\s*/i, "").trim();
+    if (alias.toLowerCase() === "cash") alias = "";
   } else {
     other_name = name;
   }
+  if (bank && alias.toLowerCase() === bank.toLowerCase()) alias = "";
   return {
     account_type: type,
     bank_name: bank,
