@@ -177,12 +177,11 @@
 
   .bg-destructive {
     background: linear-gradient(180deg,
-      hsl(348 95% 70%) 0%,
-      hsl(348 90% 56%) 48%,
-      hsl(348 90% 42%) 52%,
-      hsl(348 90% 60%) 100%) !important;
+      hsl(348 92% 62%) 0%,
+      hsl(348 90% 52%) 55%,
+      hsl(348 88% 42%) 100%) !important;
     box-shadow: var(--shadow-bevel);
-    text-shadow: 0 1px 0 hsl(348 80% 25% / 0.5);
+    text-shadow: 0 1px 0 hsl(348 80% 22% / 0.5);
   }
 
   /* Cards: glassy with subtle bevel + top sheen */
