@@ -19,6 +19,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showSignInPw, setShowSignInPw] = useState(false);
   const [showSignUpPw, setShowSignUpPw] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => { if (user) nav("/", { replace: true }); }, [user, nav]);
 
@@ -39,6 +42,17 @@ export default function Auth() {
     });
     setLoading(false);
     if (error) toast.error(error.message); else { toast.success("Account created!"); nav("/", { replace: true }); }
+  };
+
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Password reset email sent. Check your inbox."); setForgotOpen(false); setForgotEmail(""); }
   };
 
   return (
