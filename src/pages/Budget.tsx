@@ -691,7 +691,7 @@ export default function Budget() {
                     </div>
                     {siRecurring && (
                       <div className="space-y-2">
-                        <div><Label className="text-xs">Recurring Name</Label><Input value={siRecName} onChange={e => setSiRecName(e.target.value)} placeholder={siName || "ChatGPT"} /></div>
+                        
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <Label className="text-xs">Frequency</Label>
