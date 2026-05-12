@@ -22,6 +22,7 @@ const links = [
 ];
 
 const TITLE_KEY = "app:customTitle";
+const THEME_KEY = "app:theme";
 const DEFAULT_TITLE = "Money Tracker";
 
 const NavItems = ({ onClick }: { onClick?: () => void }) => (
