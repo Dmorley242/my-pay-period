@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Wallet } from "lucide-react";
+import { Wallet, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
   const nav = useNavigate();
@@ -17,6 +17,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSignInPw, setShowSignInPw] = useState(false);
+  const [showSignUpPw, setShowSignUpPw] = useState(false);
 
   useEffect(() => { if (user) nav("/", { replace: true }); }, [user, nav]);
 
@@ -58,7 +60,15 @@ export default function Auth() {
             <TabsContent value="signin">
               <form onSubmit={signIn} className="space-y-4 mt-4">
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-                <div><Label>Password</Label><Input type="password" required value={password} onChange={e => setPassword(e.target.value)} /></div>
+                <div>
+                  <Label>Password</Label>
+                  <div className="relative">
+                    <Input type={showSignInPw ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} className="pr-10" />
+                    <button type="button" tabIndex={-1} onClick={() => setShowSignInPw(s => !s)} aria-label={showSignInPw ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showSignInPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
               </form>
             </TabsContent>
@@ -66,7 +76,15 @@ export default function Auth() {
               <form onSubmit={signUp} className="space-y-4 mt-4">
                 <div><Label>Display name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-                <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /></div>
+                <div>
+                  <Label>Password</Label>
+                  <div className="relative">
+                    <Input type={showSignUpPw ? "text" : "password"} required minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="pr-10" />
+                    <button type="button" tabIndex={-1} onClick={() => setShowSignUpPw(s => !s)} aria-label={showSignUpPw ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showSignUpPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating..." : "Create Account"}</Button>
               </form>
             </TabsContent>
