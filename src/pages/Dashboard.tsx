@@ -199,10 +199,7 @@ export default function Dashboard() {
         const remaining = budgeted - spent;
         const toAssign = payAmount - budgeted;
         const top = items.slice(0, 5);
-        const accLbl = (id: string) => {
-          const a = accounts.find(x => x.id === id);
-          return a ? (a.bank_name ? `${a.bank_name} - ${a.name}` : a.name) : "—";
-        };
+        const accLbl = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
         return (
           <Card className="shadow-[var(--shadow-sm)]">
             <CardHeader className="pb-3 flex-row items-center justify-between">
