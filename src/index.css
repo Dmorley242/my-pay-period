@@ -118,15 +118,13 @@
     --ring: 200 100% 60%;
 
     --gradient-primary: linear-gradient(180deg,
-      hsl(200 100% 70%) 0%,
-      hsl(215 95% 52%) 48%,
-      hsl(220 85% 32%) 52%,
-      hsl(215 95% 50%) 100%);
+      hsl(200 100% 64%) 0%,
+      hsl(210 95% 48%) 55%,
+      hsl(218 90% 38%) 100%);
     --gradient-chrome: linear-gradient(180deg,
-      hsl(220 30% 30%) 0%,
-      hsl(220 25% 18%) 48%,
-      hsl(220 30% 12%) 52%,
-      hsl(220 25% 24%) 100%);
+      hsl(220 30% 28%) 0%,
+      hsl(220 28% 20%) 55%,
+      hsl(220 30% 14%) 100%);
     --gradient-card: linear-gradient(180deg,
       hsl(222 45% 13%) 0%,
       hsl(222 45% 10%) 100%);
