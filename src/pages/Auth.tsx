@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Wallet, Eye, EyeOff } from "lucide-react";
@@ -19,6 +20,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showSignInPw, setShowSignInPw] = useState(false);
   const [showSignUpPw, setShowSignUpPw] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => { if (user) nav("/", { replace: true }); }, [user, nav]);
 
@@ -39,6 +43,17 @@ export default function Auth() {
     });
     setLoading(false);
     if (error) toast.error(error.message); else { toast.success("Account created!"); nav("/", { replace: true }); }
+  };
+
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Password reset email sent. Check your inbox."); setForgotOpen(false); setForgotEmail(""); }
   };
 
   return (
@@ -70,6 +85,9 @@ export default function Auth() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
+                <button type="button" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} className="block w-full text-center text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline">
+                  Forgot password?
+                </button>
               </form>
             </TabsContent>
             <TabsContent value="signup">
@@ -91,6 +109,25 @@ export default function Auth() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset your password</DialogTitle>
+            <DialogDescription>Enter the email for your account and we'll send you a link to reset your password.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={sendReset} className="space-y-4">
+            <div>
+              <Label>Email</Label>
+              <Input type="email" required value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={forgotLoading}>{forgotLoading ? "Sending..." : "Send reset link"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

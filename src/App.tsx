@@ -18,6 +18,7 @@ import Holds from "./pages/Holds";
 import Budget from "./pages/Budget";
 import BudgetTemplates from "./pages/BudgetTemplates";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<Protected el={<Dashboard />} />} />
             <Route path="/accounts" element={<Protected el={<Accounts />} />} />
             <Route path="/accounts/:accountId" element={<Protected el={<AccountDetail />} />} />
