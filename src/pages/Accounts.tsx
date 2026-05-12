@@ -214,21 +214,32 @@ export default function Accounts() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {accounts.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">No accounts yet.</p>}
-        {accounts.map(a => (
-          <Card key={a.id} className="hover:shadow-[var(--shadow-md)] transition-shadow">
-            <CardContent className="p-5">
+        {accounts.map(a => {
+          const t = a.account_type;
+          const grad = t === "Cash" ? "y2k-card-cash"
+            : t === "Credit Card" ? "y2k-card-credit"
+            : t === "Bank Account" ? "y2k-card-bank"
+            : "y2k-card-other";
+          const isLight = grad === "y2k-card-other";
+          const sub = isLight ? "text-foreground/70" : "text-white/80";
+          const iconBg = isLight ? "bg-white/60 text-foreground" : "bg-white/25 text-white";
+          const btnText = isLight ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white";
+          const btnDanger = isLight ? "text-foreground/70 hover:text-destructive" : "text-white/80 hover:text-white";
+          return (
+          <Card key={a.id} className={`${grad} border-0 hover:shadow-[var(--shadow-glow)] transition-shadow`}>
+            <CardContent className="p-5 relative">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center text-accent-foreground"><Wallet className="h-5 w-5" /></div>
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${iconBg} backdrop-blur-sm`}><Wallet className="h-5 w-5" /></div>
                   <div>
-                    <div className="font-semibold">{accountLabel(a)}</div>
-                    <div className="text-xs text-muted-foreground">{a.account_type || "—"}</div>
+                    <div className="font-semibold drop-shadow-sm">{accountLabel(a)}</div>
+                    <div className={`text-xs ${sub}`}>{a.account_type || "—"}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" className={`h-8 w-8 ${btnText} hover:bg-white/20`} onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
                   <AlertDialog>
-                    <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                    <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className={`h-8 w-8 ${btnDanger} hover:bg-white/20`}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader><AlertDialogTitle>Delete {accountLabel(a)}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
                       <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
@@ -237,13 +248,13 @@ export default function Accounts() {
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-2xl font-bold tabular-nums">{money(a.current_balance)}</div>
-                <div className="text-xs text-muted-foreground">Started at {money(a.starting_balance)}</div>
+                <div className="text-2xl font-bold tabular-nums drop-shadow-sm">{money(a.current_balance)}</div>
+                <div className={`text-xs ${sub}`}>Started at {money(a.starting_balance)}</div>
               </div>
-              {a.notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{a.notes}</p>}
+              {a.notes && <p className={`text-xs ${sub} mt-3 line-clamp-2`}>{a.notes}</p>}
             </CardContent>
           </Card>
-        ))}
+        );})}
       </div>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>

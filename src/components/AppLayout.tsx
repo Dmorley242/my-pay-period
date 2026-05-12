@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil } from "lucide-react";
+import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ const links = [
 ];
 
 const TITLE_KEY = "app:customTitle";
+const THEME_KEY = "app:theme";
 const DEFAULT_TITLE = "Money Tracker";
 
 const NavItems = ({ onClick }: { onClick?: () => void }) => (
@@ -49,13 +50,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [title, setTitle] = useState<string>(DEFAULT_TITLE);
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<string>("");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(TITLE_KEY);
       if (saved && saved.trim()) setTitle(saved);
+      const t = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) || "light";
+      setTheme(t);
+      document.documentElement.classList.toggle("dark", t === "dark");
     } catch {}
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    try { localStorage.setItem(THEME_KEY, next); } catch {}
+  };
 
   const openEdit = () => { setDraft(title); setEditOpen(true); };
   const saveTitle = (e: React.FormEvent) => {
@@ -76,7 +88,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <div className="font-semibold text-sm text-sidebar-primary-foreground truncate">{title}</div>
           <div className="text-[11px] text-sidebar-foreground/70 -mt-0.5">Money Tracker</div>
         </Link>
-        <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
+        <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={toggleTheme} aria-label="Toggle theme">
+          {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
           <Pencil className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -105,9 +120,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </span>
             <span className="font-semibold truncate">{title}</span>
           </Link>
-          <Button variant="ghost" size="icon" className="justify-self-end h-8 w-8" onClick={openEdit} aria-label="Edit app title">
-            <Pencil className="h-4 w-4" />
-          </Button>
+          <div className="justify-self-end flex items-center">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit} aria-label="Edit app title">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
         </header>
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto p-4 md:p-8">{children}</div>
