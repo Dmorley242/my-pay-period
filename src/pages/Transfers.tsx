@@ -70,7 +70,7 @@ export default function Transfers() {
               <div><Label>From *</Label>
                 <Select value={from} onValueChange={setFrom}>
                   <SelectTrigger><SelectValue placeholder="Source account" /></SelectTrigger>
-                  <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name} — {money(a.current_balance)}</SelectItem>)}</SelectContent>
+                  <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)} — {money(a.current_balance)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label>To *</Label>
