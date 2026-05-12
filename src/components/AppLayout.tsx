@@ -50,13 +50,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [title, setTitle] = useState<string>(DEFAULT_TITLE);
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<string>("");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(TITLE_KEY);
       if (saved && saved.trim()) setTitle(saved);
+      const t = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) || "light";
+      setTheme(t);
+      document.documentElement.classList.toggle("dark", t === "dark");
     } catch {}
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    try { localStorage.setItem(THEME_KEY, next); } catch {}
+  };
 
   const openEdit = () => { setDraft(title); setEditOpen(true); };
   const saveTitle = (e: React.FormEvent) => {
