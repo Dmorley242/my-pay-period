@@ -120,9 +120,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </span>
             <span className="font-semibold truncate">{title}</span>
           </Link>
-          <Button variant="ghost" size="icon" className="justify-self-end h-8 w-8" onClick={openEdit} aria-label="Edit app title">
-            <Pencil className="h-4 w-4" />
-          </Button>
+          <div className="justify-self-end flex items-center">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit} aria-label="Edit app title">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
         </header>
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto p-4 md:p-8">{children}</div>
