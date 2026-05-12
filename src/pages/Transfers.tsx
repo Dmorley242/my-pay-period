@@ -55,7 +55,7 @@ export default function Transfers() {
     qc.invalidateQueries();
   };
 
-  const accName = (id: string) => accounts.find(a => a.id === id)?.name ?? "—";
+  const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
 
   return (
     <div className="space-y-6">
