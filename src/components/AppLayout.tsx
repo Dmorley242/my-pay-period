@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil, Sun, Moon, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ const links = [
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
   { to: "/history", icon: History, label: "Account History" },
+  { to: "/backup", icon: Download, label: "Backup" },
 ];
 
 const TITLE_KEY = "app:customTitle";
