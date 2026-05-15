@@ -119,11 +119,11 @@ export default function Holds() {
                   </Select>
                 </div>
                 {holdType === "reserve_hold" ? (
-                  <div className="md:col-span-2"><Label>Amount</Label><Input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
+                  <div className="md:col-span-2"><Label>Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
                 ) : (
                   <>
-                    <div><Label>Goal Amount</Label><Input type="number" step="0.01" min="0" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} required /></div>
-                    <div><Label>Starting Hold Amount</Label><Input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+                    <div><Label>Goal Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} required /></div>
+                    <div><Label>Starting Hold Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
                   </>
                 )}
                 <div className="md:col-span-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
@@ -207,7 +207,7 @@ export default function Holds() {
           <DialogHeader><DialogTitle>Increase Held Amount</DialogTitle></DialogHeader>
           <div className="space-y-2">
             <Label>Amount to add</Label>
-            <Input type="number" step="0.01" min="0" value={increaseAmt} onChange={e => setIncreaseAmt(e.target.value)} autoFocus />
+            <Input type="number" inputMode="decimal" step="0.01" min="0" value={increaseAmt} onChange={e => setIncreaseAmt(e.target.value)} autoFocus />
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIncreaseId(null)}>Cancel</Button>

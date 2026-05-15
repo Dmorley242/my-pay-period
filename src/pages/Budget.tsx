@@ -597,7 +597,7 @@ export default function Budget() {
                 <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+            <div><Label>Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => { reset(); setBuilderOpen(false); }}>Cancel</Button>
               <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
@@ -619,7 +619,7 @@ export default function Budget() {
                   <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Budget Amount *</Label><Input type="number" step="0.01" value={editing.budget_amount} onChange={e => setEditing({ ...editing, budget_amount: e.target.value })} /></div>
+              <div><Label>Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={editing.budget_amount} onChange={e => setEditing({ ...editing, budget_amount: e.target.value })} /></div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
                 <Button onClick={saveEdit}>Save</Button>
@@ -682,7 +682,7 @@ export default function Budget() {
                       <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label className="text-xs">Budget Amount *</Label><Input type="number" step="0.01" value={siAmount} onChange={e => setSiAmount(e.target.value)} placeholder="0.00" /></div>
+                  <div><Label className="text-xs">Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={siAmount} onChange={e => setSiAmount(e.target.value)} placeholder="0.00" /></div>
                   <div className="rounded-md border p-2 space-y-2">
                     <div className="flex items-center gap-2">
                       <Checkbox id="si-rec" checked={siRecurring} onCheckedChange={v => setSiRecurring(!!v)} />
@@ -729,7 +729,7 @@ export default function Budget() {
                 <form onSubmit={addCatSub} className="space-y-2">
                   <div className="flex gap-2 items-end">
                     <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
-                    <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                    <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
                     <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -774,7 +774,7 @@ export default function Budget() {
                 )}
                 <div>
                   <Label className="text-xs">Parent Amount (optional override)</Label>
-                  <Input type="number" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
+                  <Input type="number" inputMode="decimal" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
                   {catMismatch && <div className="text-[11px] text-destructive mt-1">Manual amount does not match sub-items total ({money(catSubsTotal)}).</div>}
                 </div>
                 <Button type="button" size="sm" className="w-full" onClick={addCategoryDraft}><Plus className="h-4 w-4 mr-1" />Add Category Item</Button>
@@ -890,7 +890,7 @@ export default function Budget() {
             <form onSubmit={addCatSub} className="space-y-2">
               <div className="flex gap-2 items-end">
                 <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
-                <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
                 <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
               </div>
             </form>
@@ -910,7 +910,7 @@ export default function Budget() {
             )}
             <div>
               <Label className="text-xs">Parent Amount (optional override)</Label>
-              <Input type="number" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
+              <Input type="number" inputMode="decimal" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
               {catMismatch && <div className="text-[11px] text-destructive mt-1">Manual amount does not match sub-items total ({money(catSubsTotal)}).</div>}
             </div>
             <div className="flex gap-2 justify-end pt-2">
@@ -1005,7 +1005,7 @@ function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
       )}
       <form onSubmit={add} className="flex gap-2">
         <Input className="h-8 text-xs" placeholder="Sub-item name" value={n} onChange={e => setN(e.target.value)} />
-        <Input className="h-8 text-xs w-24" type="number" step="0.01" placeholder="0.00" value={a} onChange={e => setA(e.target.value)} />
+        <Input className="h-8 text-xs w-24" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={a} onChange={e => setA(e.target.value)} />
         <Button type="submit" size="sm" className="h-8"><Plus className="h-3.5 w-3.5" /></Button>
       </form>
     </div>
