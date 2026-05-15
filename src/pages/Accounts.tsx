@@ -117,7 +117,7 @@ function AccountFields({ f, setF }: { f: FormState; setF: (n: FormState) => void
       )}
       <div>
         <Label>Starting Balance</Label>
-        <Input type="number" step="0.01" value={f.starting_balance} onChange={e => setF({ ...f, starting_balance: e.target.value })} />
+        <Input type="number" inputMode="decimal" step="0.01" value={f.starting_balance} onChange={e => setF({ ...f, starting_balance: e.target.value })} />
       </div>
       <div>
         <Label>Alias / Nickname (optional)</Label>

@@ -54,7 +54,7 @@ const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) =>
         </SelectContent>
       </Select>
     </div>
-    <div><Label>Pay Amount</Label><Input type="number" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00" /></div>
+    <div><Label>Pay Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00" /></div>
     <div className="md:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
   </div>
 );
