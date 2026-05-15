@@ -110,7 +110,7 @@ export default function Holds() {
                 </TabsList>
               </Tabs>
 
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="md:col-span-2"><Label>Hold name</Label><Input value={hold_name} onChange={e => setHoldName(e.target.value)} placeholder={holdType === "savings_goal" ? "Home Gym" : "Radiator Pump"} required /></div>
                 <div className="md:col-span-2"><Label>Account</Label>
                   <Select value={account_id} onValueChange={setAccountId}>
