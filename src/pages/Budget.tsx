@@ -558,7 +558,7 @@ export default function Budget() {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-xs">
                           <Cell label="Budget" value={money(i.budget_amount)} />
                           <Cell label="Spent" value={money(spent)} cls="text-expense" />
                           <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
@@ -659,7 +659,7 @@ export default function Budget() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Build Budget</DialogTitle></DialogHeader>
 
-          <div className="grid grid-cols-3 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
             <Cell label="Pay Amount" value={money(payAmount)} />
             <Cell label="Total Budgeted" value={money(liveTotalBudgeted)} />
             <Cell label="Remaining to Assign" value={money(liveRemainingToAssign)} cls={liveRemainingToAssign < 0 ? "text-destructive" : "text-income"} />
@@ -727,9 +727,9 @@ export default function Budget() {
                   </Select>
                 </div>
                 <form onSubmit={addCatSub} className="space-y-2">
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
-                    <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                  <div className="flex flex-wrap gap-2 items-end">
+                    <div className="flex-1 min-w-[10rem]"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
+                    <div className="w-24 sm:w-28"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
                     <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -888,9 +888,9 @@ export default function Budget() {
               </Select>
             </div>
             <form onSubmit={addCatSub} className="space-y-2">
-              <div className="flex gap-2 items-end">
-                <div className="flex-1"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
-                <div className="w-24"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+              <div className="flex flex-wrap gap-2 items-end">
+                <div className="flex-1 min-w-[10rem]"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
+                <div className="w-24 sm:w-28"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
                 <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
               </div>
             </form>
@@ -1003,8 +1003,8 @@ function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
           )}
         </div>
       )}
-      <form onSubmit={add} className="flex gap-2">
-        <Input className="h-8 text-xs" placeholder="Sub-item name" value={n} onChange={e => setN(e.target.value)} />
+      <form onSubmit={add} className="flex flex-wrap gap-2">
+        <Input className="h-8 text-xs flex-1 min-w-[8rem]" placeholder="Sub-item name" value={n} onChange={e => setN(e.target.value)} />
         <Input className="h-8 text-xs w-24" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={a} onChange={e => setA(e.target.value)} />
         <Button type="submit" size="sm" className="h-8"><Plus className="h-3.5 w-3.5" /></Button>
       </form>
