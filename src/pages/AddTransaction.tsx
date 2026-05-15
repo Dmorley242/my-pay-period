@@ -187,7 +187,7 @@ export default function AddTransaction() {
           <form onSubmit={submit} className="space-y-4">
             {isTransfer ? (
               <>
-                <div className="grid grid-cols-2 gap-4">{dateField}{amountField}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
                 <div>
                   <Label>From Account *</Label>
                   <Select value={accountId} onValueChange={setAccountId}>
@@ -206,7 +206,7 @@ export default function AddTransaction() {
               </>
             ) : type === "income" ? (
               <>
-                <div className="grid grid-cols-2 gap-4">{dateField}{amountField}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
                 {accountField}
                 <div>
                   <Label>Income Source</Label>
@@ -226,7 +226,7 @@ export default function AddTransaction() {
               </>
             ) : type === "expense" ? (
               <>
-                <div className="grid grid-cols-2 gap-4">{dateField}{amountField}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
                 {subtractFromBudgetField}
                 {accountField}
                 <div>
@@ -239,7 +239,7 @@ export default function AddTransaction() {
             ) : (
               // withdrawal
               <>
-                <div className="grid grid-cols-2 gap-4">{dateField}{amountField}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
                 {subtractFromBudgetField}
                 {accountField}
                 <div>
