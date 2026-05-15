@@ -110,23 +110,23 @@ export default function Holds() {
                 </TabsList>
               </Tabs>
 
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="md:col-span-2"><Label>Hold name</Label><Input value={hold_name} onChange={e => setHoldName(e.target.value)} placeholder={holdType === "savings_goal" ? "Home Gym" : "Radiator Pump"} required /></div>
-                <div className="md:col-span-2"><Label>Account</Label>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="sm:col-span-2"><Label>Hold name</Label><Input value={hold_name} onChange={e => setHoldName(e.target.value)} placeholder={holdType === "savings_goal" ? "Home Gym" : "Radiator Pump"} required /></div>
+                <div className="sm:col-span-2"><Label>Account</Label>
                   <Select value={account_id} onValueChange={setAccountId}>
                     <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
                     <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 {holdType === "reserve_hold" ? (
-                  <div className="md:col-span-2"><Label>Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
+                  <div className="sm:col-span-2"><Label>Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
                 ) : (
                   <>
                     <div><Label>Goal Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} required /></div>
                     <div><Label>Starting Hold Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
                   </>
                 )}
-                <div className="md:col-span-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
+                <div className="sm:col-span-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setFormOpen(false)}>Cancel</Button>

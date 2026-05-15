@@ -40,7 +40,7 @@ const emptyForm = (): FormState => {
 };
 
 const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) => void; accounts: { id: string; name: string; bank_name: string | null }[] }) => (
-  <div className="grid gap-3 md:grid-cols-2">
+  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
     <div><Label>From Date</Label><Input type="date" value={s.start} onChange={e => set({ ...s, start: e.target.value })} /></div>
     <div><Label>Until Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
     <div><Label>Income Source</Label><Input value={s.income_source} onChange={e => set({ ...s, income_source: e.target.value })} placeholder="e.g. Fidelity Salary" /></div>
@@ -55,7 +55,7 @@ const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) =>
       </Select>
     </div>
     <div><Label>Pay Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={s.net_pay} onChange={e => set({ ...s, net_pay: e.target.value })} placeholder="0.00" /></div>
-    <div className="md:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
+    <div className="sm:col-span-2"><Label>Notes</Label><Textarea value={s.notes} onChange={e => set({ ...s, notes: e.target.value })} placeholder="Optional" /></div>
   </div>
 );
 
