@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 
 const SEEDS = ["Salary","Groceries","Gas","Food","Bills","Savings","Business","Personal","Debt","Emergency"];
 

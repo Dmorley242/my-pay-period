@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 type TxType = "income" | "expense" | "withdrawal" | "transfer";

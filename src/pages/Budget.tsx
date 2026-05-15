@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { money, fmtDate } from "@/lib/format";
 import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree, Repeat } from "lucide-react";
 

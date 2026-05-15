@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { money, fmtDate } from "@/lib/format";
 import { Trash2, Search, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { useSearchParams } from "react-router-dom";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 

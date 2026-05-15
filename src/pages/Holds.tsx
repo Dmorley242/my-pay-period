@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { money, fmtDate, accountLabel } from "@/lib/format";
 import { Lock, Plus, X, Check, Target, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 
 type HoldType = "reserve_hold" | "savings_goal";
 

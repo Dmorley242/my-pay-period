@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Trash2, Plus, CheckCircle2, Pencil, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { fmtDate, money } from "@/lib/format";
 
 const defaultNext = () => {

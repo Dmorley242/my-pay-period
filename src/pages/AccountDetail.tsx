@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { money, fmtDate, accountLabel } from "@/lib/format";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 
 type Movement = {
   id: string; kind: "tx" | "transfer"; date: string; created_at: string;

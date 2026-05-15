@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { money, fmtDate } from "@/lib/format";
 import { Plus, Trash2, Pencil, LayoutTemplate, Send, Repeat } from "lucide-react";
 
