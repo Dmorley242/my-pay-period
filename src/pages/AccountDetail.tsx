@@ -180,7 +180,7 @@ export default function AccountDetail() {
 
       <Card>
         <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-4">
+        <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
           <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
           <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
           <div><Label>Pay Period</Label>
