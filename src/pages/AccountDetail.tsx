@@ -180,21 +180,21 @@ export default function AccountDetail() {
 
       <Card>
         <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-          <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
-          <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-          <div><Label>Pay Period</Label>
-            <Select value={period} onValueChange={setPeriod}><SelectTrigger><SelectValue /></SelectTrigger>
+        <CardContent className="px-4 sm:px-6 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+          <div className="min-w-0"><Label>From</Label><Input type="date" className="max-w-full" value={from} onChange={e => setFrom(e.target.value)} /></div>
+          <div className="min-w-0"><Label>To</Label><Input type="date" className="max-w-full" value={to} onChange={e => setTo(e.target.value)} /></div>
+          <div className="min-w-0"><Label>Pay Period</Label>
+            <Select value={period} onValueChange={setPeriod}><SelectTrigger className="max-w-full"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="all">All</SelectItem>{periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div><Label>Category</Label>
-            <Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger>
+          <div className="min-w-0"><Label>Category</Label>
+            <Select value={category} onValueChange={setCategory}><SelectTrigger className="max-w-full"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="all">All</SelectItem>{cats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div><Label>Type</Label>
-            <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger>
+          <div className="min-w-0"><Label>Type</Label>
+            <Select value={type} onValueChange={setType}><SelectTrigger className="max-w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="income">Income</SelectItem>
