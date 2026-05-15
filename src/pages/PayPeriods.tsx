@@ -40,7 +40,7 @@ const emptyForm = (): FormState => {
 };
 
 const FormFields = ({ s, set, accounts }: { s: FormState; set: (f: FormState) => void; accounts: { id: string; name: string; bank_name: string | null }[] }) => (
-  <div className="grid gap-3 md:grid-cols-2">
+  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
     <div><Label>From Date</Label><Input type="date" value={s.start} onChange={e => set({ ...s, start: e.target.value })} /></div>
     <div><Label>Until Date</Label><Input type="date" value={s.end} onChange={e => set({ ...s, end: e.target.value })} /></div>
     <div><Label>Income Source</Label><Input value={s.income_source} onChange={e => set({ ...s, income_source: e.target.value })} placeholder="e.g. Fidelity Salary" /></div>
