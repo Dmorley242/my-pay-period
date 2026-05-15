@@ -97,7 +97,7 @@ export default function AccountDetail() {
     const { error } = await supabase.from("accounts").update({
       name: form.name, bank_name: form.bank_name || null, account_type: form.account_type || null,
     }).eq("id", account.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account updated");
     setEditOpen(false);
     qc.invalidateQueries({ queryKey: ["accounts"] });
@@ -106,7 +106,7 @@ export default function AccountDetail() {
   const delMovement = async (kind: string, id: string) => {
     const table = kind === "tx" ? "transactions" : "transfers";
     const { error } = await supabase.from(table).delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries();
   };

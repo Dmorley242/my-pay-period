@@ -55,7 +55,7 @@ export default function BudgetTemplates() {
     if (!user) return;
     const name = "Untitled Template";
     const { data, error } = await (supabase as any).from("budget_templates").insert({ user_id: user.id, name, notes: null }).select().single();
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     setEditingTpl({ id: data.id, name: data.name, notes: "" });
     setBuilderOpen(true);
     qc.invalidateQueries({ queryKey: ["budget_templates"] });
@@ -74,7 +74,7 @@ export default function BudgetTemplates() {
     const { error } = await (supabase as any).from("budget_templates").update({
       name: editingTpl.name.trim(), notes: editingTpl.notes || null,
     }).eq("id", editingTpl.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budget_templates"] });
   };
 
@@ -87,7 +87,7 @@ export default function BudgetTemplates() {
     const { error } = await (supabase as any).from("budget_template_items").insert({
       user_id: user.id, template_id: editingTpl.id, account_id: itemAccount, name: itemName, budget_amount: amt,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Item added");
     setItemName(""); setItemAccount(""); setItemAmount("");
     qc.invalidateQueries({ queryKey: ["budget_template_items"] });
@@ -96,7 +96,7 @@ export default function BudgetTemplates() {
   const removeItem = async (id: string) => {
     if (!confirm("Delete this template item?")) return;
     const { error } = await (supabase as any).from("budget_template_items").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budget_template_items"] });
   };
 
@@ -107,7 +107,7 @@ export default function BudgetTemplates() {
     const { error } = await (supabase as any).from("budget_template_items").update({
       name: editingItem.name, account_id: editingItem.account_id, budget_amount: amt,
     }).eq("id", editingItem.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budget_template_items"] });
     setEditingItem(null);
   };
@@ -115,7 +115,7 @@ export default function BudgetTemplates() {
   const deleteTemplate = async (id: string) => {
     if (!confirm("Delete this template? Items in already-applied pay periods will remain.")) return;
     const { error } = await (supabase as any).from("budget_templates").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Template deleted");
     qc.invalidateQueries({ queryKey: ["budget_templates"] });
     qc.invalidateQueries({ queryKey: ["budget_template_items"] });
@@ -143,7 +143,7 @@ export default function BudgetTemplates() {
       recurring_frequency: (i as any).recurring_frequency ?? null,
     }));
     const { data: insertedItems, error } = await (supabase as any).from("budget_items").insert(rows).select();
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     // Apply sub-items
     const subRows: any[] = [];
     items.forEach((tpl, idx) => {

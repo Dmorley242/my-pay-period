@@ -25,14 +25,14 @@ export default function Categories() {
     e.preventDefault();
     if (!user || !name.trim()) return;
     const { error } = await supabase.from("categories").insert({ user_id: user.id, name: name.trim(), category_type: type });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     setName("");
     qc.invalidateQueries({ queryKey: ["categories"] });
   };
 
   const del = async (id: string) => {
     const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["categories"] });
   };
 
@@ -45,7 +45,7 @@ export default function Categories() {
     }));
     if (toAdd.length === 0) return toast.info("All defaults already added");
     const { error } = await supabase.from("categories").insert(toAdd as any);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success(`Added ${toAdd.length} categories`);
     qc.invalidateQueries({ queryKey: ["categories"] });
   };

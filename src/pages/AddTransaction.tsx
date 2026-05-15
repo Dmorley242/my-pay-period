@@ -82,7 +82,7 @@ export default function AddTransaction() {
         pay_period_id: null,
         amount: parsedAmount, notes: notes || null,
       });
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       toast.success("Transfer added");
     } else {
       if (!accountId) return toast.error("Account required");
@@ -108,7 +108,7 @@ export default function AddTransaction() {
         amount: parsedAmount, notes: effectiveNotes,
         ...(includeBudget ? { budget_item_id: budgetItemId } : {}),
       } as any);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       toast.success("Transaction added");
     }
     qc.invalidateQueries();

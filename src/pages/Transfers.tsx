@@ -43,7 +43,7 @@ export default function Transfers() {
       pay_period_id: periodId === "none" ? null : periodId,
       amount: parsedAmount, notes: notes || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Transfer saved");
     setAmount(""); setNotes("");
     qc.invalidateQueries();
@@ -51,7 +51,7 @@ export default function Transfers() {
 
   const del = async (id: string) => {
     const { error } = await supabase.from("transfers").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries();
   };
 

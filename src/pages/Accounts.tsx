@@ -161,7 +161,7 @@ export default function Accounts() {
       current_balance: newCurrent,
       notes: editForm.notes || null,
     }).eq("id", editing.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account updated");
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["accounts"] });
@@ -182,7 +182,7 @@ export default function Accounts() {
       current_balance: sb,
       notes: form.notes || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account added");
     setOpen(false);
     setForm(blank);
@@ -191,7 +191,7 @@ export default function Accounts() {
 
   const del = async (id: string) => {
     const { error } = await supabase.from("accounts").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account deleted");
     qc.invalidateQueries({ queryKey: ["accounts"] });
   };

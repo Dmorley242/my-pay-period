@@ -128,7 +128,7 @@ export default function Budget() {
         user_id: user.id, pay_period_id: active.id, account_id: catAccount,
         name: catName, budget_amount: catParentAmount, is_recurring: false,
       }).select().single();
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       const subRows = catSubs.map(s => ({
         user_id: user.id, budget_item_id: inserted.id, name: s.name, amount: s.amount,
         is_recurring: !!s.is_recurring,
@@ -226,7 +226,7 @@ export default function Budget() {
         recurring_frequency: d.recurring_frequency ?? null,
       }));
       const { data: inserted, error } = await (supabase as any).from("budget_items").insert(itemRows).select();
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       const subRows: any[] = [];
       drafts.forEach((d, idx) => {
         const insertedId = inserted?.[idx]?.id;
@@ -414,7 +414,7 @@ export default function Budget() {
       user_id: user.id, pay_period_id: active.id, account_id: accountId,
       name, budget_amount: amt,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Budget item added");
     qc.invalidateQueries({ queryKey: ["budget_items"] });
     reset();
@@ -425,7 +425,7 @@ export default function Budget() {
     if (linked) return toast.error("Cannot delete: this budget item has linked transactions.");
     if (!confirm("Delete this budget item?")) return;
     const { error } = await (supabase as any).from("budget_items").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries({ queryKey: ["budget_items"] });
   };
@@ -437,7 +437,7 @@ export default function Budget() {
     const { error } = await (supabase as any).from("budget_items").update({
       name: editing.name, account_id: editing.account_id, budget_amount: amt,
     }).eq("id", editing.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Updated");
     qc.invalidateQueries({ queryKey: ["budget_items"] });
     setEditing(null);
@@ -957,7 +957,7 @@ function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
     const { error } = await (supabase as any).from("budget_sub_items").insert({
       user_id: userId, budget_item_id: budgetItemId, name: n, amount: amt,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     setN(""); setA("");
     qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
   };
@@ -965,7 +965,7 @@ function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
   const del = async (id: string) => {
     if (!confirm("Delete this sub-item?")) return;
     const { error } = await (supabase as any).from("budget_sub_items").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budget_sub_items"] });
   };
 

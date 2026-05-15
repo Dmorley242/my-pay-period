@@ -58,7 +58,7 @@ export default function Holds() {
       amount: startAmt, notes: notes || null, status: "active",
       hold_type: holdType, goal_amount: goal,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success(holdType === "savings_goal" ? "Savings goal created" : "Hold created");
     setHoldName(""); setAmount(""); setGoalAmount(""); setNotes("");
     setFormOpen(false);
@@ -69,7 +69,7 @@ export default function Holds() {
     const { error } = await supabase.from("account_holds").update({
       status, released_at: new Date().toISOString(),
     }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success(status === "released" ? "Hold released" : "Hold cancelled");
     qc.invalidateQueries({ queryKey: ["account_holds"] });
   };
@@ -82,7 +82,7 @@ export default function Holds() {
     if (!h) return;
     const { error } = await supabase.from("account_holds")
       .update({ amount: Number(h.amount) + add }).eq("id", increaseId);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Held amount increased");
     setIncreaseId(null); setIncreaseAmt("");
     qc.invalidateQueries({ queryKey: ["account_holds"] });

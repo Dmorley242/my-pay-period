@@ -86,7 +86,7 @@ export default function History() {
   const del = async (kind: string, id: string) => {
     const table = kind === "tx" ? "transactions" : "transfers";
     const { error } = await supabase.from(table).delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries();
   };
