@@ -133,21 +133,21 @@ export default function History() {
             </div>
             <CollapsibleContent>
               <Card className="mt-3">
-                <CardContent className="pt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-                  <div><Label>From</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
-                  <div><Label>To</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-                  <div><Label>Pay Period</Label>
-                    <Select value={period} onValueChange={setPeriod}><SelectTrigger><SelectValue /></SelectTrigger>
+                <CardContent className="pt-6 px-4 sm:px-6 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+                  <div className="min-w-0"><Label>From</Label><Input type="date" className="max-w-full" value={from} onChange={e => setFrom(e.target.value)} /></div>
+                  <div className="min-w-0"><Label>To</Label><Input type="date" className="max-w-full" value={to} onChange={e => setTo(e.target.value)} /></div>
+                  <div className="min-w-0"><Label>Pay Period</Label>
+                    <Select value={period} onValueChange={setPeriod}><SelectTrigger className="max-w-full"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="all">All</SelectItem>{periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Category</Label>
-                    <Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <div className="min-w-0"><Label>Category</Label>
+                    <Select value={category} onValueChange={setCategory}><SelectTrigger className="max-w-full"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="all">All</SelectItem>{cats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Type</Label>
-                    <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <div className="min-w-0"><Label>Type</Label>
+                    <Select value={type} onValueChange={setType}><SelectTrigger className="max-w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All</SelectItem>
                         <SelectItem value="income">Income</SelectItem>
@@ -159,8 +159,8 @@ export default function History() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="md:col-span-3"><Label>Search notes</Label>
-                    <div className="relative"><Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." /></div>
+                  <div className="min-w-0 sm:col-span-2 md:col-span-3"><Label>Search notes</Label>
+                    <div className="relative"><Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9 max-w-full" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." /></div>
                   </div>
                   <div className="md:col-span-4"><Button variant="outline" size="sm" onClick={reset}>Reset filters</Button></div>
                 </CardContent>
