@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Trash2, Plus, CheckCircle2, Pencil, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { fmtDate, money } from "@/lib/format";
 
 const defaultNext = () => {
@@ -97,7 +98,7 @@ export default function PayPeriods() {
           user_id: user.id, transaction_type: "income", date, account_id: accountId!,
           pay_period_id: period.id, amount, notes: incomeSource || notes || "Paycheck",
         }).select("id").single();
-        if (error) { toast.error(error.message); return existingTxId; }
+        if (error) { toast.error(friendlyError(error)); return existingTxId; }
         return ins.id;
       } else {
         await supabase.from("transactions").update({
@@ -111,7 +112,7 @@ export default function PayPeriods() {
         user_id: user.id, transaction_type: "income", date, account_id: accountId!,
         pay_period_id: period.id, amount, notes: incomeSource || notes || "Paycheck",
       }).select("id").single();
-      if (error) { toast.error(error.message); return null; }
+      if (error) { toast.error(friendlyError(error)); return null; }
       return ins.id;
     }
     return null;
@@ -130,7 +131,7 @@ export default function PayPeriods() {
       net_pay_amount: amt,
       notes: form.notes || null,
     }).select("*").single();
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
 
     const txId = await upsertPaycheckTx(created, null, accountId, amt, form.income_source, form.notes, form.start);
     if (txId) await supabase.from("pay_periods").update({ paycheck_transaction_id: txId }).eq("id", created.id);
@@ -171,7 +172,7 @@ export default function PayPeriods() {
       notes: editForm.notes || null,
       paycheck_transaction_id: newTxId,
     }).eq("id", editing.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
 
     toast.success("Pay period updated");
     setEditing(null);
@@ -189,7 +190,7 @@ export default function PayPeriods() {
   const del = async (p: PayPeriod) => {
     if (p.paycheck_transaction_id) await supabase.from("transactions").delete().eq("id", p.paycheck_transaction_id);
     const { error } = await supabase.from("pay_periods").delete().eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries();
   };
 

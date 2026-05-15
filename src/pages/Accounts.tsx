@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { money, accountLabel } from "@/lib/format";
 import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type AcctType = "Bank Account" | "Credit Card" | "Cash" | "Other";
@@ -161,7 +162,7 @@ export default function Accounts() {
       current_balance: newCurrent,
       notes: editForm.notes || null,
     }).eq("id", editing.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account updated");
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["accounts"] });
@@ -182,7 +183,7 @@ export default function Accounts() {
       current_balance: sb,
       notes: form.notes || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account added");
     setOpen(false);
     setForm(blank);
@@ -191,7 +192,7 @@ export default function Accounts() {
 
   const del = async (id: string) => {
     const { error } = await supabase.from("accounts").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Account deleted");
     qc.invalidateQueries({ queryKey: ["accounts"] });
   };

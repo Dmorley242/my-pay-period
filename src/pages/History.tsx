@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { money, fmtDate } from "@/lib/format";
 import { Trash2, Search, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/friendlyError";
 import { useSearchParams } from "react-router-dom";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
@@ -86,7 +87,7 @@ export default function History() {
   const del = async (kind: string, id: string) => {
     const table = kind === "tx" ? "transactions" : "transfers";
     const { error } = await supabase.from(table).delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries();
   };
