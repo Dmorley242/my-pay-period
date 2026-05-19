@@ -20,7 +20,7 @@ import { friendlyError } from "@/lib/friendlyError";
 type Movement = {
   id: string; kind: "tx" | "transfer"; date: string; created_at: string;
   label: string; type: string; categoryId: string | null; payPeriodId: string | null;
-  signed: number; balanceAfter: number; hasNote: boolean; raw: any;
+  signed: number; balanceBefore: number; balanceAfter: number; hasNote: boolean; raw: any;
 };
 
 export default function History() {
@@ -76,7 +76,7 @@ export default function History() {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
         label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), type: t.transaction_type,
         categoryId: t.category_id, payPeriodId: t.pay_period_id,
-        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceBefore: 0, balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,
       };
     });
@@ -86,7 +86,7 @@ export default function History() {
         id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
         label: isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`,
         type: "transfer", categoryId: null, payPeriodId: t.pay_period_id,
-        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceBefore: 0, balanceAfter: 0,
         hasNote: !!t.notes, raw: t,
       };
     });
@@ -94,7 +94,7 @@ export default function History() {
       a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
     );
     let running = Number(account.starting_balance);
-    for (const m of all) { running += m.signed; m.balanceAfter = running; }
+    for (const m of all) { m.balanceBefore = running; running += m.signed; m.balanceAfter = running; }
     return all.reverse();
   }, [account, txs, transfers, cats, accounts]);
 
@@ -263,8 +263,8 @@ export default function History() {
                     key={m.kind + m.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setDetail({ kind: m.kind, record: m.raw } as MovementRef)}
-                    onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw } as MovementRef); }}
+                    onClick={() => setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef); }}
                     className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-accent/40 rounded-md px-2 -mx-2"
                   >
                     <div className="min-w-0 flex-1">
@@ -274,12 +274,15 @@ export default function History() {
                         <span className="text-xs uppercase ml-1 text-muted-foreground">{m.type}</span>
                       </div>
                       <div className="text-xs text-muted-foreground truncate">{fmtDate(m.date)}</div>
+                      <div className="mt-1 text-[11px] text-muted-foreground tabular-nums flex flex-wrap gap-x-2">
+                        <span>Before: {money(m.balanceBefore)}</span>
+                        <span>After: {money(m.balanceAfter)}</span>
+                      </div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className={`font-semibold tabular-nums ${m.kind === "transfer" ? "text-transfer" : m.signed >= 0 ? "text-income" : "text-expense"}`}>
                         {m.signed >= 0 ? "+" : "-"}{money(Math.abs(m.signed))}
                       </div>
-                      <div className="text-[11px] text-muted-foreground tabular-nums">bal {money(m.balanceAfter)}</div>
                     </div>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
                   </div>

@@ -12,8 +12,8 @@ import { useAccounts, useCategories, usePayPeriods, type Transaction, type Trans
 import { parseTxNotes, buildTxNotes } from "@/lib/txNotes";
 
 export type MovementRef =
-  | { kind: "tx"; record: Transaction }
-  | { kind: "transfer"; record: Transfer };
+  | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
+  | { kind: "transfer"; record: Transfer; balanceBefore?: number; balanceAfter?: number };
 
 export function MovementDetailsDialog({
   open,
@@ -115,6 +115,21 @@ export function MovementDetailsDialog({
 
           {periodName(rec.pay_period_id) && (
             <DetailRow label="Pay Period" value={periodName(rec.pay_period_id)!} />
+          )}
+
+          {(movement.balanceBefore !== undefined || movement.balanceAfter !== undefined) && (
+            <div className="rounded-md border bg-muted/40 p-3 space-y-1 text-sm">
+              {movement.balanceBefore !== undefined && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Balance before</span><span className="tabular-nums font-medium">{money(movement.balanceBefore)}</span></div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground capitalize">{type}</span>
+                <span className={`tabular-nums font-medium ${signClass}`}>{isTx ? (isIn ? "+" : "-") : (movement.balanceAfter! >= (movement.balanceBefore ?? 0) ? "+" : "-")}{money(Math.abs(amount))}</span>
+              </div>
+              {movement.balanceAfter !== undefined && (
+                <div className="flex justify-between border-t pt-1"><span className="text-muted-foreground">Balance after</span><span className="tabular-nums font-semibold">{money(movement.balanceAfter)}</span></div>
+              )}
+            </div>
           )}
 
           <DetailRow label="ID" value={<span className="font-mono text-xs break-all">{rec.id}</span>} />
