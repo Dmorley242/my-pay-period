@@ -15,6 +15,7 @@ import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
 
 type AcctType = "Bank Account" | "Credit Card" | "Cash" | "Other";
 const ACCT_TYPES: AcctType[] = ["Cash", "Credit Card", "Bank Account", "Other"];
