@@ -47,6 +47,7 @@ export default function AccountDetail() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState({ name: "", bank_name: "", account_type: "" });
+  const [detail, setDetail] = useState<MovementRef | null>(null);
 
   useEffect(() => {
     if (account) setForm({ name: account.name, bank_name: account.bank_name ?? "", account_type: account.account_type ?? "" });
