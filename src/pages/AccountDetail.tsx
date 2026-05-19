@@ -64,7 +64,7 @@ export default function AccountDetail() {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
         label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), type: t.transaction_type,
         categoryId: t.category_id, payPeriodId: t.pay_period_id,
-        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceBefore: 0, balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,
       };
     });
@@ -74,7 +74,7 @@ export default function AccountDetail() {
         id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
         label: isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`,
         type: "transfer", categoryId: null, payPeriodId: t.pay_period_id,
-        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        signed: isIn ? Number(t.amount) : -Number(t.amount), balanceBefore: 0, balanceAfter: 0,
         hasNote: !!t.notes, raw: t,
       };
     });
@@ -82,7 +82,7 @@ export default function AccountDetail() {
       a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
     );
     let running = Number(account.starting_balance);
-    for (const m of all) { running += m.signed; m.balanceAfter = running; }
+    for (const m of all) { m.balanceBefore = running; running += m.signed; m.balanceAfter = running; }
     return all.reverse();
   }, [account, txs, transfers, cats, accounts]);
 
