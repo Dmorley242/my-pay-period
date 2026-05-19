@@ -131,7 +131,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <form onSubmit={saveTitle} className="space-y-3">
             <div>
               <Label htmlFor="app-title">Title</Label>
-              <Input id="app-title" value={draft} onChange={e => setDraft(e.target.value)} placeholder={DEFAULT_TITLE} autoFocus />
+              <Input id="app-title" value={draft} onChange={e => setDraft(e.target.value)} placeholder={DEFAULT_TITLE} />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>

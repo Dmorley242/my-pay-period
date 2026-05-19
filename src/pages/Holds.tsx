@@ -207,7 +207,7 @@ export default function Holds() {
           <DialogHeader><DialogTitle>Increase Held Amount</DialogTitle></DialogHeader>
           <div className="space-y-2">
             <Label>Amount to add</Label>
-            <Input type="number" inputMode="decimal" step="0.01" min="0" value={increaseAmt} onChange={e => setIncreaseAmt(e.target.value)} autoFocus />
+            <Input type="number" inputMode="decimal" step="0.01" min="0" value={increaseAmt} onChange={e => setIncreaseAmt(e.target.value)} />
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIncreaseId(null)}>Cancel</Button>
