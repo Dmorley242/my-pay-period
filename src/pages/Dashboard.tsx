@@ -54,14 +54,16 @@ export default function Dashboard() {
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: t.notes || catName(t.category_id), type: t.transaction_type, signed, balanceAfter: 0,
+        label: txLabel(t.notes, catName(t.category_id) || t.transaction_type),
+        type: t.transaction_type, signed, balanceAfter: 0,
+        hasNote: hasNotes(t.notes), raw: t,
       };
     });
     const aTr = transfers.filter(t => t.from_account_id === accountId || t.to_account_id === accountId).map(t => {
       const isIn = t.to_account_id === accountId;
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       const label = isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`;
-      return { id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date, label, type: "transfer", signed, balanceAfter: 0 };
+      return { id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date, label, type: "transfer", signed, balanceAfter: 0, hasNote: !!t.notes, raw: t };
     });
     const all = [...aTxs, ...aTr].sort((a, b) =>
       a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
