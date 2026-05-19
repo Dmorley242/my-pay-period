@@ -568,7 +568,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      recalculate_account_balances: {
+        Args: { _user_id?: string }
+        Returns: {
+          account_id: string
+          account_name: string
+          difference: number
+          new_balance: number
+          old_balance: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
