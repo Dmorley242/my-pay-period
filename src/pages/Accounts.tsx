@@ -226,10 +226,18 @@ export default function Accounts() {
           const isLight = grad === "y2k-card-other";
           const sub = isLight ? "text-foreground/70" : "text-white/80";
           const iconBg = isLight ? "bg-white/60 text-foreground" : "bg-white/25 text-white";
-          const btnText = isLight ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white";
-          const btnDanger = isLight ? "text-foreground/70 hover:text-destructive" : "text-white/80 hover:text-white";
+          const btnText = isLight ? "text-foreground hover:text-foreground hover:bg-foreground/10" : "text-white hover:text-white hover:bg-white/25";
+          const btnDanger = isLight ? "text-foreground hover:text-destructive hover:bg-destructive/10" : "text-white hover:text-white hover:bg-white/25";
+          const stop = (e: React.MouseEvent | React.KeyboardEvent) => { e.stopPropagation(); };
           return (
-          <Card key={a.id} className={`${grad} border-0 hover:shadow-[var(--shadow-glow)] transition-shadow`}>
+          <Card
+            key={a.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(`/history?account=${a.id}`)}
+            onKeyDown={(e) => { if (e.key === "Enter") navigate(`/history?account=${a.id}`); }}
+            className={`${grad} border-0 hover:shadow-[var(--shadow-glow)] transition-shadow cursor-pointer`}
+          >
             <CardContent className="p-5 relative">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -239,11 +247,11 @@ export default function Accounts() {
                     <div className={`text-xs ${sub}`}>{a.account_type || "—"}</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className={`h-8 w-8 ${btnText} hover:bg-white/20`} onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                <div className="flex items-center gap-1" onClick={stop}>
+                  <Button size="icon" variant="ghost" className={`h-8 w-8 ${btnText}`} onClick={(e) => { e.stopPropagation(); openEdit(a); }}><Pencil className="h-4 w-4" /></Button>
                   <AlertDialog>
-                    <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className={`h-8 w-8 ${btnDanger} hover:bg-white/20`}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className={`h-8 w-8 ${btnDanger}`} onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                    <AlertDialogContent onClick={stop}>
                       <AlertDialogHeader><AlertDialogTitle>Delete {accountLabel(a)}?</AlertDialogTitle><AlertDialogDescription>This will also delete its transactions and transfers.</AlertDialogDescription></AlertDialogHeader>
                       <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del(a.id)}>Delete</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
