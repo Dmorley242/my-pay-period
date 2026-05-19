@@ -62,7 +62,7 @@ export default function AccountDetail() {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: txLabel(t.notes, catName(t.category_id) || t.transaction_type), type: t.transaction_type,
+        label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), type: t.transaction_type,
         categoryId: t.category_id, payPeriodId: t.pay_period_id,
         signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,
