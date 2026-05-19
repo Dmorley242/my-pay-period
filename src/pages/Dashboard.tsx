@@ -337,6 +337,7 @@ export default function Dashboard() {
           })()}
         </CardContent>
       </Card>
+      <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
     </div>
   );
 }
