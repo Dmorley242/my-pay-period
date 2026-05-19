@@ -161,16 +161,24 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-1">
                     {currentMovements.map(m => (
-                      <div key={m.kind + m.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/10 px-3 py-2">
+                      <button
+                        type="button"
+                        key={m.kind + m.id}
+                        onClick={() => setDetail({ kind: m.kind, record: m.raw } as MovementRef)}
+                        className="w-full text-left flex items-center justify-between gap-2 rounded-xl bg-white/10 px-3 py-2 hover:bg-white/20 transition-colors"
+                      >
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{m.label}</div>
+                          <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                            <span className="truncate">{m.label}</span>
+                            {m.hasNote && <StickyNote className="h-3 w-3 opacity-80 shrink-0" />}
+                          </div>
                           <div className="text-[11px] opacity-80 truncate">{fmtDate(m.date)} · {m.type}</div>
                         </div>
                         <div className="text-right shrink-0">
                           <div className={`text-sm font-semibold tabular-nums ${m.signed >= 0 ? "text-income-foreground" : ""}`}>{m.signed >= 0 ? "+" : "-"}{money(Math.abs(m.signed))}</div>
                           <div className="text-[11px] opacity-80 tabular-nums">bal {money(m.balanceAfter)}</div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
