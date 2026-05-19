@@ -645,7 +645,7 @@ export default function Budget() {
         <DialogContent>
           <DialogHeader><DialogTitle>Save as Template</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Template Name *</Label><Input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Regular Paycheck Budget" autoFocus /></div>
+            <div><Label>Template Name *</Label><Input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="Regular Paycheck Budget" /></div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => { setTemplateName(""); setTemplateNameOpen(false); }}>Cancel</Button>
               <Button onClick={saveAsTemplate}>Save Template & Publish</Button>
@@ -864,7 +864,7 @@ export default function Budget() {
         <DialogContent>
           <DialogHeader><DialogTitle>Save as Template</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Template Name *</Label><Input value={postPublishTplName} onChange={e => setPostPublishTplName(e.target.value)} placeholder="Regular Paycheck Budget" autoFocus /></div>
+            <div><Label>Template Name *</Label><Input value={postPublishTplName} onChange={e => setPostPublishTplName(e.target.value)} placeholder="Regular Paycheck Budget" /></div>
             <div className="text-xs text-muted-foreground">Saving {publishedDrafts.length} item{publishedDrafts.length === 1 ? "" : "s"} (including any sub-items).</div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => { setPostPublishTplName(""); setPublishedDrafts([]); setPostPublishTplOpen(false); }}>Cancel</Button>
