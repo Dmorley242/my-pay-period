@@ -21,7 +21,6 @@ type TxType = "income" | "expense" | "withdrawal" | "transfer";
 const TYPES: { value: TxType; label: string; desc: string }[] = [
   { value: "income", label: "Income", desc: "Money in (e.g. salary)" },
   { value: "expense", label: "Expense", desc: "Money spent" },
-  { value: "withdrawal", label: "Withdrawal", desc: "Decrease account balance" },
   { value: "transfer", label: "Transfer", desc: "Move money between accounts" },
 ];
 
@@ -47,7 +46,7 @@ export default function AddTransaction() {
   const { data: budgetItems = [] } = useBudgetItems();
 
   const initialType = searchParams.get("type");
-  const safeInitialType: TxType = (["income", "expense", "withdrawal", "transfer"].includes(initialType || "")
+  const safeInitialType: TxType = (["income", "expense", "transfer"].includes(initialType || "")
     ? initialType
     : "expense") as TxType;
 
@@ -175,7 +174,7 @@ export default function AddTransaction() {
         <CardHeader><CardTitle>Transaction Type</CardTitle></CardHeader>
         <CardContent>
           <Tabs value={type} onValueChange={v => { setType(v as TxType); setBudgetItemId("none"); }}>
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-3 w-full">
               {TYPES.map(t => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
             </TabsList>
           </Tabs>
@@ -225,7 +224,8 @@ export default function AddTransaction() {
                 )}
                 {notesField}
               </>
-            ) : type === "expense" ? (
+            ) : (
+              // expense
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
                 {subtractFromBudgetField}
@@ -233,19 +233,6 @@ export default function AddTransaction() {
                 <div>
                   <Label>Expense</Label>
                   <Input value={expenseLabel} onChange={e => setExpenseLabel(e.target.value)} placeholder="e.g. Ice cream, Gas, Food, Barber, Lunch" />
-                </div>
-                {payPeriodField}
-                {notesField}
-              </>
-            ) : (
-              // withdrawal
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
-                {subtractFromBudgetField}
-                {accountField}
-                <div>
-                  <Label>Purpose</Label>
-                  <Input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g. Pay Barber, Cash for Food, Help Someone" />
                 </div>
                 {payPeriodField}
                 {notesField}
