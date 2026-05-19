@@ -23,7 +23,8 @@ const links = [
 
 const TITLE_KEY = "app:customTitle";
 const THEME_KEY = "app:theme";
-const DEFAULT_TITLE = "Money Tracker";
+const DEFAULT_TITLE = "WealthOS";
+const TAGLINE = "Wealth. Control. Freedom.";
 
 const NavItems = ({ onClick }: { onClick?: () => void }) => (
   <nav className="space-y-1">
