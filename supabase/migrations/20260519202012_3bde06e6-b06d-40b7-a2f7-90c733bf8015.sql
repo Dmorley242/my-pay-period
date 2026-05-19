@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.recalculate_account_balances(uuid) FROM PUBLIC, anon, authenticated;
