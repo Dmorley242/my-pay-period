@@ -134,6 +134,7 @@ function AccountFields({ f, setF }: { f: FormState; setF: (n: FormState) => void
 
 export default function Accounts() {
   const { data: accounts = [] } = useAccounts();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
