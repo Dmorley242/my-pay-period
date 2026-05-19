@@ -12,9 +12,7 @@ import { Label } from "@/components/ui/label";
 const links = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/accounts", icon: Wallet, label: "Accounts" },
-  { to: "/add", icon: PlusCircle, label: "Add Transaction" },
   { to: "/budget", icon: PieChart, label: "Budget" },
-  { to: "/budget-templates", icon: LayoutTemplate, label: "Budget Templates" },
   { to: "/holds", icon: Lock, label: "Holds" },
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
