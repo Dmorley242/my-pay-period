@@ -12,7 +12,16 @@ export function parseTxNotes(raw: string | null | undefined): { label: string | 
     const notes = rest.join(SEP);
     return { label: label || null, notes: notes || null };
   }
-  return { label: null, notes: raw || null };
+  // Backward compat: legacy records used " — " (em dash) to join label and notes.
+  const emDashIdx = raw.indexOf(" — ");
+  if (emDashIdx > 0) {
+    const label = raw.slice(0, emDashIdx).trim();
+    const notes = raw.slice(emDashIdx + 3).trim();
+    return { label: label || null, notes: notes || null };
+  }
+  // Single-string legacy value: treat as label (that's how rows displayed before),
+  // so the popup will not show it as user-written notes.
+  return { label: raw || null, notes: null };
 }
 
 export function buildTxNotes(label: string | null | undefined, notes: string | null | undefined): string | null {
