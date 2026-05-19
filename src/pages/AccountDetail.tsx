@@ -61,9 +61,10 @@ export default function AccountDetail() {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: t.notes || catName(t.category_id), type: t.transaction_type,
+        label: txLabel(t.notes, catName(t.category_id) || t.transaction_type), type: t.transaction_type,
         categoryId: t.category_id, payPeriodId: t.pay_period_id,
         signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        hasNote: hasNotes(t.notes), raw: t,
       };
     });
     const aTr = transfers.filter(t => t.from_account_id === account.id || t.to_account_id === account.id).map(t => {
@@ -73,6 +74,7 @@ export default function AccountDetail() {
         label: isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`,
         type: "transfer", categoryId: null, payPeriodId: t.pay_period_id,
         signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        hasNote: !!t.notes, raw: t,
       };
     });
     const all = [...aTxs, ...aTr].sort((a, b) =>
