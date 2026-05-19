@@ -18,6 +18,8 @@ type Movement = {
   type: string;
   signed: number;
   balanceAfter: number;
+  hasNote: boolean;
+  raw: any;
 };
 
 export default function Dashboard() {
