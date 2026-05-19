@@ -56,8 +56,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(TITLE_KEY);
-      if (saved && saved.trim()) setTitle(saved);
-      const t = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) || "light";
+      // Migrate old default away from "Money Tracker" so existing users see WealthOS.
+      if (saved && saved.trim() && saved.trim().toLowerCase() !== "money tracker") setTitle(saved);
+      const t = (localStorage.getItem(THEME_KEY) as "light" | "dark" | null) || "dark";
       setTheme(t);
       document.documentElement.classList.toggle("dark", t === "dark");
     } catch {}
