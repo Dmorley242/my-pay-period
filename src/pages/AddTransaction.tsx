@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { buildTxNotes } from "@/lib/txNotes";
 
 type TxType = "income" | "expense" | "withdrawal" | "transfer";
 
