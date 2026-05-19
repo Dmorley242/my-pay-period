@@ -217,7 +217,7 @@ export default function PayPeriods() {
               const acc = accounts.find(a => a.id === p.paycheck_account_id);
               const incomes = transactions.filter(t => t.transaction_type === "income" && t.pay_period_id === p.id);
               return (
-              <div key={p.id} className={`py-3 ${p.is_active ? "bg-primary/5 rounded-lg px-2" : ""}`}>
+              <div key={p.id} className={`py-3 px-2 ${p.is_active ? "bg-primary/5 rounded-lg" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-medium flex items-center gap-2 flex-wrap">
