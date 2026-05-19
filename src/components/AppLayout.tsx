@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [title, setTitle] = useState<string>(DEFAULT_TITLE);
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<string>("");
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     try {
