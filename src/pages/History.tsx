@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { money, fmtDate, accountLabel } from "@/lib/format";
-import { Pencil, Trash2, SlidersHorizontal } from "lucide-react";
+import { Pencil, Trash2, SlidersHorizontal, StickyNote } from "lucide-react";
+import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
+import { txLabel, hasNotes } from "@/lib/txNotes";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 
