@@ -93,11 +93,11 @@ export default function AddTransaction() {
 
       let effectiveNotes: string | null = notes || null;
       if (type === "income") {
-        effectiveNotes = incomeSource && notes ? `${incomeSource} — ${notes}` : (incomeSource || notes || null);
+        effectiveNotes = buildTxNotes(incomeSource, notes);
       } else if (type === "expense") {
-        effectiveNotes = expenseLabel && notes ? `${expenseLabel} — ${notes}` : (expenseLabel || notes || null);
+        effectiveNotes = buildTxNotes(expenseLabel, notes);
       } else if (type === "withdrawal") {
-        effectiveNotes = purpose && notes ? `${purpose} — ${notes}` : (purpose || notes || null);
+        effectiveNotes = buildTxNotes(purpose, notes);
       }
 
       const includeBudget = (type === "expense" || type === "withdrawal") && budgetItemId !== "none";
