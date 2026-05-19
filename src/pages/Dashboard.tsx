@@ -55,7 +55,7 @@ export default function Dashboard() {
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: txLabel(t.notes, catName(t.category_id) || t.transaction_type),
+        label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type),
         type: t.transaction_type, signed, balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,
       };
@@ -80,7 +80,7 @@ export default function Dashboard() {
   const recent = useMemo(() => [
     ...txs.slice(0, 10).map(t => {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
-      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, catName(t.category_id) || t.transaction_type), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
+      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
     }),
     ...transfers.slice(0, 10).map(t => ({
       id: t.id, kind: "transfer" as const, date: t.date, title: `${accName(t.from_account_id)} → ${accName(t.to_account_id)}`, subtitle: "Transfer between accounts", amount: Number(t.amount), direction: "transfer" as const,
