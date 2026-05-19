@@ -32,6 +32,7 @@ export default function Dashboard() {
   const active = useActivePayPeriod();
   const { data: budgetItems = [] } = useBudgetItems();
   const [idx, setIdx] = useState(0);
+  const [detail, setDetail] = useState<MovementRef | null>(null);
   const touchStart = useRef<number | null>(null);
 
   const total = accounts.reduce((s, a) => s + Number(a.current_balance), 0);
