@@ -120,7 +120,7 @@ export default function AddTransaction() {
   const isExpenseLike = type === "expense" || type === "withdrawal";
 
   const dateField = (
-    <div><Label>Date</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
+    <div><Label>Date</Label><Input type="date" className="max-w-full" value={date} onChange={e => setDate(e.target.value)} /></div>
   );
   const amountField = (
     <div><Label>Amount *</Label><Input type="number" inputMode="decimal" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
