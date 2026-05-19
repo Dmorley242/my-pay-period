@@ -82,15 +82,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const sidebar = (
     <div className="flex flex-col h-full p-4 bg-sidebar text-sidebar-foreground">
-      <div className="flex items-center gap-2 mb-8 px-2">
-        <Link to="/" aria-label="Go to dashboard" className="h-9 w-9 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity" style={{ background: "var(--gradient-primary)" }}>
-          <Wallet className="h-5 w-5 text-primary-foreground" />
+      <div className="flex items-center gap-3 mb-8 px-1">
+        <Link to="/" aria-label="Go to dashboard" className="hover:opacity-90 transition-opacity">
+          <WBadge size={40} variant="gold" />
         </Link>
-        <Link to="/" className="min-w-0 hover:opacity-90 transition-opacity">
-          <div className="font-semibold text-sm text-sidebar-primary-foreground truncate">{title}</div>
-          <div className="text-[11px] text-sidebar-foreground/70 -mt-0.5">Money Tracker</div>
+        <Link to="/" className="min-w-0 hover:opacity-90 transition-opacity flex-1">
+          <div className="font-semibold text-base tracking-[0.18em] text-sidebar-primary-foreground truncate uppercase">{title}</div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-gold/80 -mt-0.5 truncate">{TAGLINE}</div>
         </Link>
-        <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-sidebar-foreground/70 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-primary-foreground" onClick={openEdit} aria-label="Edit app title">
           <Pencil className="h-3.5 w-3.5" />
         </Button>
       </div>
