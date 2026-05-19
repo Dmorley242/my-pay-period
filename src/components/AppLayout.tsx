@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil, Sun, Moon, Download } from "lucide-react";
+import { LayoutDashboard, Wallet, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, Pencil, Sun, Moon, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WBadge } from "@/components/WBadge";
 
 const links = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
