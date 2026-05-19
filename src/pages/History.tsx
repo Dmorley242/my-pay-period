@@ -11,14 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { money, fmtDate, accountLabel } from "@/lib/format";
-import { Pencil, Trash2, SlidersHorizontal } from "lucide-react";
+import { Pencil, Trash2, SlidersHorizontal, StickyNote } from "lucide-react";
+import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
+import { txLabel, hasNotes } from "@/lib/txNotes";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 
 type Movement = {
   id: string; kind: "tx" | "transfer"; date: string; created_at: string;
   label: string; type: string; categoryId: string | null; payPeriodId: string | null;
-  signed: number; balanceAfter: number;
+  signed: number; balanceAfter: number; hasNote: boolean; raw: any;
 };
 
 export default function History() {
@@ -57,6 +59,7 @@ export default function History() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState({ name: "", bank_name: "", account_type: "" });
+  const [detail, setDetail] = useState<MovementRef | null>(null);
 
   useEffect(() => {
     if (account) setForm({ name: account.name, bank_name: account.bank_name ?? "", account_type: account.account_type ?? "" });
@@ -71,9 +74,10 @@ export default function History() {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: t.notes || catName(t.category_id), type: t.transaction_type,
+        label: txLabel(t.notes, catName(t.category_id) || t.transaction_type), type: t.transaction_type,
         categoryId: t.category_id, payPeriodId: t.pay_period_id,
         signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        hasNote: hasNotes(t.notes), raw: t,
       };
     });
     const aTr = transfers.filter(t => t.from_account_id === account.id || t.to_account_id === account.id).map(t => {
@@ -83,6 +87,7 @@ export default function History() {
         label: isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`,
         type: "transfer", categoryId: null, payPeriodId: t.pay_period_id,
         signed: isIn ? Number(t.amount) : -Number(t.amount), balanceAfter: 0,
+        hasNote: !!t.notes, raw: t,
       };
     });
     const all = [...aTxs, ...aTr].sort((a, b) =>
@@ -254,9 +259,20 @@ export default function History() {
               {filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
               <div className="divide-y">
                 {filtered.map(m => (
-                  <div key={m.kind + m.id} className="py-3 flex items-center justify-between gap-3">
+                  <div
+                    key={m.kind + m.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setDetail({ kind: m.kind, record: m.raw } as MovementRef)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw } as MovementRef); }}
+                    className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-accent/40 rounded-md px-2 -mx-2"
+                  >
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{m.label}<span className="text-xs uppercase ml-2 text-muted-foreground">{m.type}</span></div>
+                      <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                        <span className="truncate">{m.label}</span>
+                        {m.hasNote && <StickyNote className="h-3 w-3 text-muted-foreground shrink-0" />}
+                        <span className="text-xs uppercase ml-1 text-muted-foreground">{m.type}</span>
+                      </div>
                       <div className="text-xs text-muted-foreground truncate">{fmtDate(m.date)}</div>
                     </div>
                     <div className="text-right shrink-0">
@@ -265,7 +281,7 @@ export default function History() {
                       </div>
                       <div className="text-[11px] text-muted-foreground tabular-nums">bal {money(m.balanceAfter)}</div>
                     </div>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => delMovement(m.kind, m.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
               </div>
@@ -273,6 +289,7 @@ export default function History() {
           </Card>
         </>
       )}
+      <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
     </div>
   );
 }

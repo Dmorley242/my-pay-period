@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
 import { Link } from "react-router-dom";
-import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown, StickyNote } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
+import { txLabel, hasNotes } from "@/lib/txNotes";
 
 type Movement = {
   id: string;
@@ -16,6 +18,8 @@ type Movement = {
   type: string;
   signed: number;
   balanceAfter: number;
+  hasNote: boolean;
+  raw: any;
 };
 
 export default function Dashboard() {
@@ -28,6 +32,7 @@ export default function Dashboard() {
   const active = useActivePayPeriod();
   const { data: budgetItems = [] } = useBudgetItems();
   const [idx, setIdx] = useState(0);
+  const [detail, setDetail] = useState<MovementRef | null>(null);
   const touchStart = useRef<number | null>(null);
 
   const total = accounts.reduce((s, a) => s + Number(a.current_balance), 0);
@@ -50,14 +55,16 @@ export default function Dashboard() {
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: t.notes || catName(t.category_id), type: t.transaction_type, signed, balanceAfter: 0,
+        label: txLabel(t.notes, catName(t.category_id) || t.transaction_type),
+        type: t.transaction_type, signed, balanceAfter: 0,
+        hasNote: hasNotes(t.notes), raw: t,
       };
     });
     const aTr = transfers.filter(t => t.from_account_id === accountId || t.to_account_id === accountId).map(t => {
       const isIn = t.to_account_id === accountId;
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       const label = isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`;
-      return { id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date, label, type: "transfer", signed, balanceAfter: 0 };
+      return { id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date, label, type: "transfer", signed, balanceAfter: 0, hasNote: !!t.notes, raw: t };
     });
     const all = [...aTxs, ...aTr].sort((a, b) =>
       a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
@@ -73,7 +80,7 @@ export default function Dashboard() {
   const recent = useMemo(() => [
     ...txs.slice(0, 10).map(t => {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
-      return { id: t.id, kind: "tx" as const, date: t.date, title: t.notes || catName(t.category_id), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
+      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, catName(t.category_id) || t.transaction_type), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
     }),
     ...transfers.slice(0, 10).map(t => ({
       id: t.id, kind: "transfer" as const, date: t.date, title: `${accName(t.from_account_id)} → ${accName(t.to_account_id)}`, subtitle: "Transfer between accounts", amount: Number(t.amount), direction: "transfer" as const,
@@ -154,16 +161,24 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-1">
                     {currentMovements.map(m => (
-                      <div key={m.kind + m.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/10 px-3 py-2">
+                      <button
+                        type="button"
+                        key={m.kind + m.id}
+                        onClick={() => setDetail({ kind: m.kind, record: m.raw } as MovementRef)}
+                        className="w-full text-left flex items-center justify-between gap-2 rounded-xl bg-white/10 px-3 py-2 hover:bg-white/20 transition-colors"
+                      >
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{m.label}</div>
+                          <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                            <span className="truncate">{m.label}</span>
+                            {m.hasNote && <StickyNote className="h-3 w-3 opacity-80 shrink-0" />}
+                          </div>
                           <div className="text-[11px] opacity-80 truncate">{fmtDate(m.date)} · {m.type}</div>
                         </div>
                         <div className="text-right shrink-0">
                           <div className={`text-sm font-semibold tabular-nums ${m.signed >= 0 ? "text-income-foreground" : ""}`}>{m.signed >= 0 ? "+" : "-"}{money(Math.abs(m.signed))}</div>
                           <div className="text-[11px] opacity-80 tabular-nums">bal {money(m.balanceAfter)}</div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -295,15 +310,21 @@ export default function Dashboard() {
                             const ia = accounts.find(a => a.id === t.account_id);
                             const iaLbl = ia ? accountLabel(ia) : "—";
                             return (
-                              <div key={t.id} className="flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40">
+                              <button
+                                type="button"
+                                key={t.id}
+                                onClick={() => setDetail({ kind: "tx", record: t as any })}
+                                className="w-full text-left flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40 hover:bg-accent/40 rounded-r"
+                              >
                                 <div className="min-w-0 truncate">
                                   <span className="text-muted-foreground">{fmtDate(t.date)}</span>
                                   <span className="mx-1">·</span>
-                                  <span className="font-medium">{t.notes || "Income"}</span>
+                                  <span className="font-medium">{txLabel(t.notes, "Income")}</span>
                                   {ia && <><span className="mx-1">·</span><span className="text-muted-foreground">{iaLbl}</span></>}
+                                  {hasNotes(t.notes) && <StickyNote className="inline h-3 w-3 ml-1 text-muted-foreground" />}
                                 </div>
                                 <div className="text-income font-medium tabular-nums shrink-0">+{money(t.amount)}</div>
-                              </div>
+                              </button>
                             );
                           })}
                         </CollapsibleContent>
@@ -316,6 +337,7 @@ export default function Dashboard() {
           })()}
         </CardContent>
       </Card>
+      <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
     </div>
   );
 }
