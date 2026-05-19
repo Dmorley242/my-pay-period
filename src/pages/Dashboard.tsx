@@ -146,7 +146,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between mb-2 px-1">
                   <span className="text-xs font-medium opacity-90">Last 3 movements</span>
                   <Button asChild size="sm" variant="ghost" className="h-7 text-primary-foreground hover:bg-white/15">
-                    <Link to={`/accounts/${current.id}`}>See more <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+                    <Link to={`/history?account=${current.id}`}>See more <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
                   </Button>
                 </div>
                 {currentMovements.length === 0 ? (
