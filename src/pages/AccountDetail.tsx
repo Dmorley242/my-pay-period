@@ -19,7 +19,7 @@ import { friendlyError } from "@/lib/friendlyError";
 type Movement = {
   id: string; kind: "tx" | "transfer"; date: string; created_at: string;
   label: string; type: string; categoryId: string | null; payPeriodId: string | null;
-  signed: number; balanceAfter: number;
+  signed: number; balanceAfter: number; hasNote: boolean; raw: any;
 };
 
 export default function AccountDetail() {
