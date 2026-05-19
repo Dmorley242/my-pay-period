@@ -12,8 +12,8 @@ import { useAccounts, useCategories, usePayPeriods, type Transaction, type Trans
 import { parseTxNotes, buildTxNotes } from "@/lib/txNotes";
 
 export type MovementRef =
-  | { kind: "tx"; record: Transaction }
-  | { kind: "transfer"; record: Transfer };
+  | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
+  | { kind: "transfer"; record: Transfer; balanceBefore?: number; balanceAfter?: number };
 
 export function MovementDetailsDialog({
   open,
