@@ -224,7 +224,8 @@ export default function AddTransaction() {
                 )}
                 {notesField}
               </>
-            ) : type === "expense" ? (
+            ) : (
+              // expense
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
                 {subtractFromBudgetField}
@@ -232,19 +233,6 @@ export default function AddTransaction() {
                 <div>
                   <Label>Expense</Label>
                   <Input value={expenseLabel} onChange={e => setExpenseLabel(e.target.value)} placeholder="e.g. Ice cream, Gas, Food, Barber, Lunch" />
-                </div>
-                {payPeriodField}
-                {notesField}
-              </>
-            ) : (
-              // withdrawal
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{dateField}{amountField}</div>
-                {subtractFromBudgetField}
-                {accountField}
-                <div>
-                  <Label>Purpose</Label>
-                  <Input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g. Pay Barber, Cash for Food, Help Someone" />
                 </div>
                 {payPeriodField}
                 {notesField}
