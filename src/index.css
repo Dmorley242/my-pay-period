@@ -3,149 +3,184 @@
 @tailwind utilities;
 
 /* =========================================================
-   Y2K / Early 2000s Chrome Finance Theme
-   - Chrome silver + electric blue
-   - Glossy gradient buttons, glassy cards, soft bevels
+   WealthOS — Luxury Private Money OS Theme
+   Deep midnight + sapphire/indigo/violet + subtle gold.
+   Dark-first. Glassmorphism. Refined borders. Soft glow.
    ========================================================= */
 
 @layer base {
   :root {
-    --background: 210 40% 96%;
-    --foreground: 222 60% 12%;
+    /* Light mode (still usable, refined porcelain) */
+    --background: 220 30% 97%;
+    --foreground: 224 45% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 60% 12%;
+    --card-foreground: 224 45% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 60% 12%;
+    --popover-foreground: 224 45% 10%;
 
-    /* Electric blue primary */
-    --primary: 215 95% 52%;
+    --primary: 224 80% 48%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 200 100% 62%;
+    --primary-glow: 252 80% 62%;
 
-    --secondary: 210 30% 92%;
-    --secondary-foreground: 222 60% 12%;
+    --secondary: 220 25% 94%;
+    --secondary-foreground: 224 45% 12%;
 
-    --muted: 210 30% 94%;
-    --muted-foreground: 215 16% 42%;
+    --muted: 220 25% 94%;
+    --muted-foreground: 220 15% 42%;
 
-    --accent: 210 100% 94%;
-    --accent-foreground: 215 95% 32%;
+    --accent: 252 60% 95%;
+    --accent-foreground: 252 60% 32%;
 
-    --destructive: 348 90% 56%;
+    --destructive: 350 80% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 75% 42%;
+    --success: 158 65% 38%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 95% 52%;
+    --warning: 38 90% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --income: 152 75% 42%;
-    --expense: 348 90% 56%;
-    --transfer: 215 95% 52%;
+    --income: 158 65% 38%;
+    --expense: 350 80% 50%;
+    --transfer: 224 80% 50%;
 
-    --border: 214 30% 84%;
-    --input: 214 30% 86%;
-    --ring: 215 95% 52%;
+    --gold: 42 70% 52%;
+    --gold-foreground: 224 45% 10%;
 
-    --radius: 1rem;
+    --border: 220 20% 86%;
+    --input: 220 20% 88%;
+    --ring: 224 80% 50%;
 
-    /* Chrome + electric blue gradients (smooth, no hard divider line) */
-    --gradient-primary: linear-gradient(180deg,
-      hsl(210 100% 62%) 0%,
-      hsl(215 95% 50%) 55%,
-      hsl(220 90% 42%) 100%);
+    --radius: 1.1rem;
+
+    --gradient-primary: linear-gradient(135deg,
+      hsl(224 85% 52%) 0%,
+      hsl(244 80% 58%) 55%,
+      hsl(268 75% 60%) 100%);
     --gradient-chrome: linear-gradient(180deg,
       hsl(220 25% 98%) 0%,
-      hsl(215 20% 90%) 55%,
-      hsl(220 22% 82%) 100%);
+      hsl(220 20% 92%) 100%);
     --gradient-card: linear-gradient(180deg,
       hsl(0 0% 100%) 0%,
-      hsl(210 40% 97%) 50%,
-      hsl(210 35% 93%) 100%);
+      hsl(220 30% 97%) 100%);
     --gradient-hero: linear-gradient(135deg,
-      hsl(215 95% 52%) 0%,
-      hsl(200 100% 62%) 50%,
-      hsl(280 80% 60%) 100%);
+      hsl(224 85% 38%) 0%,
+      hsl(252 80% 48%) 45%,
+      hsl(278 75% 50%) 100%);
     --gradient-glass: linear-gradient(180deg,
       hsl(0 0% 100% / 0.85) 0%,
-      hsl(210 40% 96% / 0.6) 100%);
+      hsl(220 30% 96% / 0.6) 100%);
+    --gradient-gold: linear-gradient(135deg,
+      hsl(45 75% 62%) 0%,
+      hsl(38 80% 50%) 50%,
+      hsl(30 70% 42%) 100%);
 
-    /* Account-type gradients */
-    --gradient-cash: linear-gradient(135deg, hsl(152 80% 52%) 0%, hsl(180 80% 55%) 100%);
-    --gradient-credit: linear-gradient(135deg, hsl(320 85% 62%) 0%, hsl(280 75% 58%) 60%, hsl(220 30% 85%) 100%);
-    --gradient-bank: linear-gradient(135deg, hsl(215 95% 52%) 0%, hsl(200 100% 62%) 60%, hsl(220 30% 92%) 100%);
-    --gradient-other: linear-gradient(135deg, hsl(220 20% 88%) 0%, hsl(215 15% 70%) 100%);
+    --gradient-cash:   linear-gradient(135deg, hsl(158 60% 38%) 0%, hsl(190 65% 42%) 100%);
+    --gradient-credit: linear-gradient(135deg, hsl(280 65% 42%) 0%, hsl(310 60% 38%) 60%, hsl(224 55% 22%) 100%);
+    --gradient-bank:   linear-gradient(135deg, hsl(224 85% 28%) 0%, hsl(244 80% 36%) 60%, hsl(268 65% 30%) 100%);
+    --gradient-other:  linear-gradient(135deg, hsl(220 18% 28%) 0%, hsl(220 14% 18%) 100%);
 
-    --shadow-sm: 0 1px 2px 0 hsl(215 60% 20% / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.6);
-    --shadow-md: 0 6px 16px -4px hsl(215 60% 20% / 0.18), inset 0 1px 0 hsl(0 0% 100% / 0.7);
-    --shadow-lg: 0 18px 40px -10px hsl(215 60% 20% / 0.28), inset 0 1px 0 hsl(0 0% 100% / 0.7);
-    --shadow-glow: 0 8px 28px -6px hsl(215 95% 52% / 0.45);
-    --shadow-bevel: inset 0 1px 0 hsl(0 0% 100% / 0.85), inset 0 -1px 0 hsl(215 30% 60% / 0.35), 0 2px 6px hsl(215 60% 20% / 0.12);
+    --shadow-sm: 0 1px 2px 0 hsl(224 60% 10% / 0.08);
+    --shadow-md: 0 8px 24px -8px hsl(224 60% 10% / 0.18);
+    --shadow-lg: 0 24px 60px -16px hsl(224 60% 10% / 0.30);
+    --shadow-glow: 0 10px 32px -8px hsl(244 80% 58% / 0.40);
+    --shadow-gold: 0 8px 24px -8px hsl(42 70% 52% / 0.40);
+    --shadow-bevel: inset 0 1px 0 hsl(0 0% 100% / 0.70), 0 2px 6px hsl(224 60% 10% / 0.08);
 
-    --sidebar-background: 215 60% 14%;
-    --sidebar-foreground: 210 40% 92%;
-    --sidebar-primary: 200 100% 62%;
+    --sidebar-background: 224 50% 7%;
+    --sidebar-foreground: 220 25% 88%;
+    --sidebar-primary: 244 90% 70%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 55% 22%;
+    --sidebar-accent: 244 50% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 50% 26%;
-    --sidebar-ring: 200 100% 62%;
+    --sidebar-border: 244 40% 18%;
+    --sidebar-ring: 244 90% 70%;
   }
 
   .dark {
-    --background: 222 50% 7%;
-    --foreground: 210 40% 96%;
-    --card: 222 45% 11%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 45% 11%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 200 100% 60%;
+    /* Deep midnight luxury */
+    --background: 228 45% 5%;
+    --foreground: 220 30% 95%;
+
+    --card: 228 40% 9%;
+    --card-foreground: 220 30% 95%;
+
+    --popover: 228 40% 9%;
+    --popover-foreground: 220 30% 95%;
+
+    --primary: 244 90% 68%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 200 100% 70%;
-    --secondary: 222 40% 16%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 222 40% 16%;
-    --muted-foreground: 215 25% 70%;
-    --accent: 215 60% 22%;
-    --accent-foreground: 200 100% 70%;
-    --destructive: 348 90% 60%;
+    --primary-glow: 268 90% 72%;
+
+    --secondary: 228 35% 14%;
+    --secondary-foreground: 220 30% 95%;
+
+    --muted: 228 30% 13%;
+    --muted-foreground: 220 18% 65%;
+
+    --accent: 244 45% 22%;
+    --accent-foreground: 244 90% 80%;
+
+    --destructive: 350 85% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 40% 22%;
-    --input: 222 40% 22%;
-    --ring: 200 100% 60%;
 
-    --gradient-primary: linear-gradient(180deg,
-      hsl(200 100% 64%) 0%,
-      hsl(210 95% 48%) 55%,
-      hsl(218 90% 38%) 100%);
+    --success: 158 65% 50%;
+    --warning: 38 90% 60%;
+
+    --income: 158 65% 55%;
+    --expense: 350 85% 65%;
+    --transfer: 244 90% 72%;
+
+    --gold: 42 75% 60%;
+    --gold-foreground: 228 45% 8%;
+
+    --border: 228 30% 16%;
+    --input: 228 30% 16%;
+    --ring: 244 90% 68%;
+
+    --gradient-primary: linear-gradient(135deg,
+      hsl(224 90% 50%) 0%,
+      hsl(244 90% 60%) 55%,
+      hsl(268 85% 60%) 100%);
     --gradient-chrome: linear-gradient(180deg,
-      hsl(220 30% 28%) 0%,
-      hsl(220 28% 20%) 55%,
-      hsl(220 30% 14%) 100%);
+      hsl(228 35% 16%) 0%,
+      hsl(228 35% 10%) 100%);
     --gradient-card: linear-gradient(180deg,
-      hsl(222 45% 13%) 0%,
-      hsl(222 45% 10%) 100%);
+      hsl(228 40% 11%) 0%,
+      hsl(228 45% 7%) 100%);
+    --gradient-hero: linear-gradient(135deg,
+      hsl(224 80% 22%) 0%,
+      hsl(244 85% 32%) 45%,
+      hsl(278 75% 38%) 100%);
     --gradient-glass: linear-gradient(180deg,
-      hsl(222 45% 14% / 0.85) 0%,
-      hsl(222 45% 9% / 0.6) 100%);
-    --gradient-other: linear-gradient(135deg, hsl(220 25% 30%) 0%, hsl(220 20% 18%) 100%);
+      hsl(228 40% 12% / 0.85) 0%,
+      hsl(228 45% 6% / 0.6) 100%);
+    --gradient-gold: linear-gradient(135deg,
+      hsl(48 85% 70%) 0%,
+      hsl(42 80% 56%) 50%,
+      hsl(32 70% 42%) 100%);
 
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.4), inset 0 1px 0 hsl(0 0% 100% / 0.06);
-    --shadow-md: 0 6px 16px -4px hsl(0 0% 0% / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.08);
-    --shadow-lg: 0 18px 40px -10px hsl(0 0% 0% / 0.7), inset 0 1px 0 hsl(0 0% 100% / 0.08);
-    --shadow-glow: 0 8px 28px -6px hsl(200 100% 60% / 0.55);
-    --shadow-bevel: inset 0 1px 0 hsl(0 0% 100% / 0.12), inset 0 -1px 0 hsl(0 0% 0% / 0.55), 0 2px 6px hsl(0 0% 0% / 0.5);
+    --gradient-cash:   linear-gradient(135deg, hsl(158 55% 22%) 0%, hsl(190 60% 28%) 100%);
+    --gradient-credit: linear-gradient(135deg, hsl(280 60% 30%) 0%, hsl(310 55% 26%) 60%, hsl(228 50% 14%) 100%);
+    --gradient-bank:   linear-gradient(135deg, hsl(224 80% 22%) 0%, hsl(244 75% 28%) 60%, hsl(268 60% 22%) 100%);
+    --gradient-other:  linear-gradient(135deg, hsl(228 25% 22%) 0%, hsl(228 20% 12%) 100%);
 
-    --sidebar-background: 222 55% 8%;
-    --sidebar-foreground: 210 40% 90%;
-    --sidebar-primary: 200 100% 62%;
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 10px 28px -8px hsl(0 0% 0% / 0.6);
+    --shadow-lg: 0 28px 70px -18px hsl(0 0% 0% / 0.75);
+    --shadow-glow: 0 14px 40px -10px hsl(244 90% 60% / 0.55);
+    --shadow-gold: 0 10px 28px -8px hsl(42 80% 56% / 0.45);
+    --shadow-bevel: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 2px 6px hsl(0 0% 0% / 0.5);
+
+    --sidebar-background: 228 50% 5%;
+    --sidebar-foreground: 220 25% 88%;
+    --sidebar-primary: 244 90% 72%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 50% 18%;
+    --sidebar-accent: 244 45% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 40% 20%;
+    --sidebar-border: 244 35% 16%;
   }
 }
 
@@ -153,53 +188,49 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv02","cv03","cv04","cv11";
+    font-feature-settings: "cv02","cv03","cv04","cv11","ss01";
+    letter-spacing: -0.005em;
     background-image:
-      radial-gradient(1200px 600px at 0% -10%, hsl(var(--primary) / 0.10), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, hsl(var(--primary-glow) / 0.10), transparent 60%);
+      radial-gradient(1100px 600px at 0% -10%, hsl(var(--primary) / 0.18), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, hsl(var(--primary-glow) / 0.14), transparent 60%),
+      radial-gradient(700px 500px at 50% 110%, hsl(var(--gold) / 0.06), transparent 60%);
     background-attachment: fixed;
   }
 }
 
 @layer components {
-  /* Glossy chrome/electric primary buttons */
+  /* Premium primary button — sapphire→indigo→violet */
   .bg-primary {
     background: var(--gradient-primary) !important;
-    box-shadow: var(--shadow-bevel);
-    text-shadow: 0 1px 0 hsl(220 80% 25% / 0.45);
+    box-shadow: var(--shadow-glow);
   }
   .bg-primary:hover { filter: brightness(1.06) saturate(1.05); }
 
   .bg-secondary {
     background: var(--gradient-chrome) !important;
-    box-shadow: var(--shadow-bevel);
   }
 
   .bg-destructive {
-    background: linear-gradient(180deg,
-      hsl(348 92% 62%) 0%,
-      hsl(348 90% 52%) 55%,
-      hsl(348 88% 42%) 100%) !important;
-    box-shadow: var(--shadow-bevel);
-    text-shadow: 0 1px 0 hsl(348 80% 22% / 0.5);
+    background: linear-gradient(135deg,
+      hsl(350 85% 60%) 0%,
+      hsl(348 80% 48%) 100%) !important;
+    box-shadow: 0 8px 20px -8px hsl(350 80% 50% / 0.5);
   }
 
-  /* Cards: glassy with subtle bevel + top sheen */
+  /* Luxury glass card */
   .bg-card {
     background: var(--gradient-card) !important;
     box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     position: relative;
   }
 
-  /* Inputs/selects: inset chrome */
-  .bg-background {
-    background-image: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
-  }
+  /* Refined inputs */
   input, textarea, [role="combobox"] {
-    box-shadow: inset 0 2px 4px hsl(215 30% 30% / 0.12), inset 0 -1px 0 hsl(0 0% 100% / 0.6);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.04);
   }
   .dark input, .dark textarea, .dark [role="combobox"] {
-    box-shadow: inset 0 2px 4px hsl(0 0% 0% / 0.5), inset 0 -1px 0 hsl(0 0% 100% / 0.04);
     color-scheme: dark;
   }
   input[type="date"]::-webkit-calendar-picker-indicator,
@@ -219,49 +250,49 @@
     filter: brightness(0) invert(1);
   }
 
-  /* Normalize native date/time inputs on iOS Safari so they match other inputs
-     and never overflow their grid/flex parent. */
-  input[type="date"],
-  input[type="time"],
-  input[type="datetime-local"],
-  input[type="month"],
-  input[type="week"] {
+  input[type="date"], input[type="time"], input[type="datetime-local"],
+  input[type="month"], input[type="week"] {
     -webkit-appearance: none;
     appearance: none;
     display: block;
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    min-height: 2.5rem; /* match h-10 */
+    min-height: 2.5rem;
     box-sizing: border-box;
     font-family: inherit;
     line-height: 1.25rem;
   }
   input[type="date"]::-webkit-date-and-time-value,
   input[type="time"]::-webkit-date-and-time-value,
-  input[type="datetime-local"]::-webkit-date-and-time-value {
-    text-align: left;
-  }
+  input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }
 
-  /* Account card gradient utilities */
+  /* Luxury account card variants */
   .y2k-card-cash    { background: var(--gradient-cash) !important; color: hsl(0 0% 100%); }
   .y2k-card-credit  { background: var(--gradient-credit) !important; color: hsl(0 0% 100%); }
   .y2k-card-bank    { background: var(--gradient-bank) !important; color: hsl(0 0% 100%); }
-  .y2k-card-other   { background: var(--gradient-other) !important; color: hsl(222 60% 12%); }
+  .y2k-card-other   { background: var(--gradient-other) !important; color: hsl(0 0% 100%); }
   .y2k-card-cash, .y2k-card-credit, .y2k-card-bank, .y2k-card-other {
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-lg), inset 0 1px 0 hsl(0 0% 100% / 0.10);
     position: relative;
     overflow: hidden;
+    border: 1px solid hsl(0 0% 100% / 0.08);
   }
   .y2k-card-cash::before, .y2k-card-credit::before, .y2k-card-bank::before, .y2k-card-other::before {
     content: "";
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, hsl(0 0% 100% / 0.35) 0%, hsl(0 0% 100% / 0) 50%);
+    background: linear-gradient(180deg, hsl(0 0% 100% / 0.18) 0%, hsl(0 0% 100% / 0) 50%);
     pointer-events: none;
   }
 
-  /* Sidebar a touch glossier */
+  /* Sidebar — deepest midnight with subtle gold edge */
   aside {
-    background-image: linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(222 60% 10%) 100%);
+    background-image:
+      linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(228 55% 4%) 100%);
   }
+
+  /* Utility: gold text accent */
+  .text-gold { color: hsl(var(--gold)); }
+  .bg-gold { background: var(--gradient-gold); color: hsl(var(--gold-foreground)); }
+  .ring-gold { box-shadow: 0 0 0 1px hsl(var(--gold) / 0.5); }
 }
