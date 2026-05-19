@@ -21,7 +21,6 @@ type TxType = "income" | "expense" | "withdrawal" | "transfer";
 const TYPES: { value: TxType; label: string; desc: string }[] = [
   { value: "income", label: "Income", desc: "Money in (e.g. salary)" },
   { value: "expense", label: "Expense", desc: "Money spent" },
-  { value: "withdrawal", label: "Withdrawal", desc: "Decrease account balance" },
   { value: "transfer", label: "Transfer", desc: "Move money between accounts" },
 ];
 
