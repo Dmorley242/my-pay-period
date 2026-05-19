@@ -224,8 +224,8 @@ export default function AccountDetail() {
                 key={m.kind + m.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => setDetail({ kind: m.kind, record: m.raw } as MovementRef)}
-                onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw } as MovementRef); }}
+                onClick={() => setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef)}
+                onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef); }}
                 className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-accent/40 rounded-md px-2 -mx-2"
               >
                 <div className="min-w-0 flex-1">
