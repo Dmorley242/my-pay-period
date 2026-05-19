@@ -259,9 +259,20 @@ export default function History() {
               {filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
               <div className="divide-y">
                 {filtered.map(m => (
-                  <div key={m.kind + m.id} className="py-3 flex items-center justify-between gap-3">
+                  <div
+                    key={m.kind + m.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setDetail({ kind: m.kind, record: m.raw } as MovementRef)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw } as MovementRef); }}
+                    className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-accent/40 rounded-md px-2 -mx-2"
+                  >
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{m.label}<span className="text-xs uppercase ml-2 text-muted-foreground">{m.type}</span></div>
+                      <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                        <span className="truncate">{m.label}</span>
+                        {m.hasNote && <StickyNote className="h-3 w-3 text-muted-foreground shrink-0" />}
+                        <span className="text-xs uppercase ml-1 text-muted-foreground">{m.type}</span>
+                      </div>
                       <div className="text-xs text-muted-foreground truncate">{fmtDate(m.date)}</div>
                     </div>
                     <div className="text-right shrink-0">
@@ -270,7 +281,7 @@ export default function History() {
                       </div>
                       <div className="text-[11px] text-muted-foreground tabular-nums">bal {money(m.balanceAfter)}</div>
                     </div>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => delMovement(m.kind, m.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
               </div>
