@@ -289,6 +289,7 @@ export default function History() {
           </Card>
         </>
       )}
+      <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
     </div>
   );
 }
