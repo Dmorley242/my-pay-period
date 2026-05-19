@@ -114,10 +114,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <SheetContent side="left" className="p-0 w-64 bg-sidebar border-sidebar-border">{sidebar}</SheetContent>
           </Sheet>
           <Link to="/" className="flex items-center gap-2 min-w-0 hover:opacity-90 transition-opacity">
-            <span className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
-              <Wallet className="h-4 w-4 text-primary-foreground" />
-            </span>
-            <span className="font-semibold truncate">{title}</span>
+            <WBadge size={32} variant="gold" />
+            <span className="font-semibold tracking-[0.16em] uppercase truncate">{title}</span>
           </Link>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme} aria-label="Toggle theme">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
