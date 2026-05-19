@@ -310,15 +310,21 @@ export default function Dashboard() {
                             const ia = accounts.find(a => a.id === t.account_id);
                             const iaLbl = ia ? accountLabel(ia) : "—";
                             return (
-                              <div key={t.id} className="flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40">
+                              <button
+                                type="button"
+                                key={t.id}
+                                onClick={() => setDetail({ kind: "tx", record: t as any })}
+                                className="w-full text-left flex items-center justify-between text-xs pl-4 py-1 border-l-2 border-income/40 hover:bg-accent/40 rounded-r"
+                              >
                                 <div className="min-w-0 truncate">
                                   <span className="text-muted-foreground">{fmtDate(t.date)}</span>
                                   <span className="mx-1">·</span>
-                                  <span className="font-medium">{t.notes || "Income"}</span>
+                                  <span className="font-medium">{txLabel(t.notes, "Income")}</span>
                                   {ia && <><span className="mx-1">·</span><span className="text-muted-foreground">{iaLbl}</span></>}
+                                  {hasNotes(t.notes) && <StickyNote className="inline h-3 w-3 ml-1 text-muted-foreground" />}
                                 </div>
                                 <div className="text-income font-medium tabular-nums shrink-0">+{money(t.amount)}</div>
-                              </div>
+                              </button>
                             );
                           })}
                         </CollapsibleContent>
