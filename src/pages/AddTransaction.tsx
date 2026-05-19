@@ -174,7 +174,7 @@ export default function AddTransaction() {
         <CardHeader><CardTitle>Transaction Type</CardTitle></CardHeader>
         <CardContent>
           <Tabs value={type} onValueChange={v => { setType(v as TxType); setBudgetItemId("none"); }}>
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-3 w-full">
               {TYPES.map(t => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
             </TabsList>
           </Tabs>
