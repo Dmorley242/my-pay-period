@@ -46,7 +46,7 @@ export default function AddTransaction() {
   const { data: budgetItems = [] } = useBudgetItems();
 
   const initialType = searchParams.get("type");
-  const safeInitialType: TxType = (["income", "expense", "withdrawal", "transfer"].includes(initialType || "")
+  const safeInitialType: TxType = (["income", "expense", "transfer"].includes(initialType || "")
     ? initialType
     : "expense") as TxType;
 
