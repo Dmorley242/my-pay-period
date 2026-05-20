@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -123,7 +124,7 @@ export default function AddTransaction() {
     <div><Label>Date</Label><Input type="date" className="max-w-full" value={date} onChange={e => setDate(e.target.value)} /></div>
   );
   const amountField = (
-    <div><Label>Amount *</Label><Input type="number" inputMode="decimal" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+    <div><Label>Amount *</Label><MoneyInput required value={amount} onChange={setAmount} /></div>
   );
   const accountField = (
     <div>

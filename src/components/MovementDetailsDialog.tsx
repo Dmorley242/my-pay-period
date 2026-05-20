@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/MoneyInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -310,7 +311,7 @@ export function MovementDetailsDialog({
                 </div>
                 <div>
                   <Label>Amount</Label>
-                  <Input type="number" inputMode="decimal" step="0.01" value={eAmount} onChange={e => setEAmount(e.target.value)} />
+                  <MoneyInput value={eAmount} onChange={setEAmount} />
                 </div>
               </div>
 
@@ -376,7 +377,7 @@ export function MovementDetailsDialog({
                 </div>
                 <div>
                   <Label>Amount</Label>
-                  <Input type="number" inputMode="decimal" step="0.01" value={rAmount} onChange={e => setRAmount(e.target.value)} />
+                  <MoneyInput value={rAmount} onChange={setRAmount} />
                 </div>
               </div>
 

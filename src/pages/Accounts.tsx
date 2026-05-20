@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -118,7 +119,7 @@ function AccountFields({ f, setF }: { f: FormState; setF: (n: FormState) => void
       )}
       <div>
         <Label>Starting Balance</Label>
-        <Input type="number" inputMode="decimal" step="0.01" value={f.starting_balance} onChange={e => setF({ ...f, starting_balance: e.target.value })} />
+        <MoneyInput value={f.starting_balance} onChange={v => setF({ ...f, starting_balance: v })} />
       </div>
       <div>
         <Label>Alias / Nickname (optional)</Label>
