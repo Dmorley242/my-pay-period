@@ -683,7 +683,7 @@ export default function Budget() {
                       <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label className="text-xs">Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={siAmount} onChange={e => setSiAmount(e.target.value)} placeholder="0.00" /></div>
+                  <div><Label className="text-xs">Budget Amount *</Label><MoneyInput value={siAmount} onChange={setSiAmount} /></div>
                   <div className="rounded-md border p-2 space-y-2">
                     <div className="flex items-center gap-2">
                       <Checkbox id="si-rec" checked={siRecurring} onCheckedChange={v => setSiRecurring(!!v)} />
