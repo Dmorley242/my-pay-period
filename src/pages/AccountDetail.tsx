@@ -161,6 +161,49 @@ export default function AccountDetail() {
     qc.invalidateQueries();
   };
 
+  const enterReorder = () => {
+    setDraftKeys(chronoMovements.map(m => `${m.kind}:${m.id}`));
+    setReorderMode(true);
+  };
+  const cancelReorder = () => { setDraftKeys(null); setReorderMode(false); };
+
+  // displayIndex is index in displayed (newest-first) list. Up in display = later in chronological.
+  const moveAt = (displayIndex: number, dir: -1 | 1) => {
+    if (!draftKeys) return;
+    const n = draftKeys.length;
+    const chronoIdx = n - 1 - displayIndex;
+    const swapWith = chronoIdx + (dir === -1 ? 1 : -1); // up in display = +1 chrono
+    if (swapWith < 0 || swapWith >= n) return;
+    const next = [...draftKeys];
+    [next[chronoIdx], next[swapWith]] = [next[swapWith], next[chronoIdx]];
+    setDraftKeys(next);
+  };
+
+  const saveOrder = async () => {
+    if (!account || !draftKeys) return;
+    setSavingOrder(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not authenticated");
+      const rows = draftKeys.map((k, i) => {
+        const [movement_kind, movement_id] = k.split(":");
+        return { user_id: uid, account_id: account.id, movement_kind, movement_id, position: i };
+      });
+      const { error } = await (supabase as any).from("movement_orders")
+        .upsert(rows, { onConflict: "account_id,movement_kind,movement_id" });
+      if (error) throw error;
+      toast.success("Order saved");
+      setReorderMode(false);
+      setDraftKeys(null);
+      qc.invalidateQueries({ queryKey: ["movement_orders", account.id] });
+    } catch (e: any) {
+      toast.error(friendlyError(e));
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
   if (!account) {
     return (
       <div className="space-y-4">
