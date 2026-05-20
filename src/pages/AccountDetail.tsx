@@ -168,12 +168,19 @@ export default function AccountDetail() {
   const cancelReorder = () => { setDraftKeys(null); setReorderMode(false); };
 
   // displayIndex is index in displayed (newest-first) list. Up in display = later in chronological.
+  // Same-date only: only swap when neighbor shares the same date.
   const moveAt = (displayIndex: number, dir: -1 | 1) => {
     if (!draftKeys) return;
     const n = draftKeys.length;
     const chronoIdx = n - 1 - displayIndex;
-    const swapWith = chronoIdx + (dir === -1 ? 1 : -1); // up in display = +1 chrono
+    const swapWith = chronoIdx + (dir === -1 ? 1 : -1);
     if (swapWith < 0 || swapWith >= n) return;
+    const cur = chronoMovements[chronoIdx];
+    const nbr = chronoMovements[swapWith];
+    if (!cur || !nbr || cur.date !== nbr.date) {
+      toast.info("Same-date only. Edit the transaction date to move it to another day.");
+      return;
+    }
     const next = [...draftKeys];
     [next[chronoIdx], next[swapWith]] = [next[swapWith], next[chronoIdx]];
     setDraftKeys(next);
