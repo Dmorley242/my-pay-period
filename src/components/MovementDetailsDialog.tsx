@@ -311,7 +311,7 @@ export function MovementDetailsDialog({
                 </div>
                 <div>
                   <Label>Amount</Label>
-                  <Input type="number" inputMode="decimal" step="0.01" value={eAmount} onChange={e => setEAmount(e.target.value)} />
+                  <MoneyInput value={eAmount} onChange={setEAmount} />
                 </div>
               </div>
 
