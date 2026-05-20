@@ -333,7 +333,7 @@ export default function BudgetTemplates() {
                   <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={editingItem.budget_amount} onChange={e => setEditingItem({ ...editingItem, budget_amount: e.target.value })} /></div>
+              <div><Label>Budget Amount *</Label><MoneyInput value={editingItem.budget_amount} onChange={v => setEditingItem({ ...editingItem, budget_amount: v })} /></div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setEditingItem(null)}>Cancel</Button>
                 <Button onClick={saveItemEdit}>Save</Button>
