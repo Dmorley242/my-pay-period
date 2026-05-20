@@ -355,8 +355,8 @@ export default function AccountDetail() {
                 </div>
                 {reorderMode ? (
                   <div className="flex flex-col gap-1 shrink-0">
-                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveAt(idx, -1); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
-                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === allMovements.length - 1} onClick={(e) => { e.stopPropagation(); moveAt(idx, 1); }}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === 0 || arr[idx - 1]?.date !== m.date} onClick={(e) => { e.stopPropagation(); moveAt(idx, -1); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === arr.length - 1 || arr[idx + 1]?.date !== m.date} onClick={(e) => { e.stopPropagation(); moveAt(idx, 1); }}><ArrowDown className="h-3.5 w-3.5" /></Button>
                   </div>
                 ) : (
                   <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
