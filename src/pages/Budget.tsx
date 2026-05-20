@@ -1006,7 +1006,7 @@ function SubItems({ budgetItemId, parentAmount, subItems, userId }: {
       )}
       <form onSubmit={add} className="flex flex-wrap gap-2">
         <Input className="h-8 text-xs flex-1 min-w-[8rem]" placeholder="Sub-item name" value={n} onChange={e => setN(e.target.value)} />
-        <Input className="h-8 text-xs w-24" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={a} onChange={e => setA(e.target.value)} />
+        <MoneyInput className="h-8 text-xs w-28" value={a} onChange={setA} />
         <Button type="submit" size="sm" className="h-8"><Plus className="h-3.5 w-3.5" /></Button>
       </form>
     </div>
