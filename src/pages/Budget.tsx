@@ -911,7 +911,7 @@ export default function Budget() {
             )}
             <div>
               <Label className="text-xs">Parent Amount (optional override)</Label>
-              <Input type="number" inputMode="decimal" step="0.01" value={catAmountManual} onChange={e => setCatAmountManual(e.target.value)} placeholder={catSubsTotal ? String(catSubsTotal) : "auto from sub-items"} />
+              <MoneyInput value={catAmountManual} onChange={setCatAmountManual} placeholder={catSubsTotal ? `$${catSubsTotal.toFixed(2)}` : "auto from sub-items"} />
               {catMismatch && <div className="text-[11px] text-destructive mt-1">Manual amount does not match sub-items total ({money(catSubsTotal)}).</div>}
             </div>
             <div className="flex gap-2 justify-end pt-2">
