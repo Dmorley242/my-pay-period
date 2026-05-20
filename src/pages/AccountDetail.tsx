@@ -321,20 +321,10 @@ export default function AccountDetail() {
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between gap-2">
+        <CardHeader>
           <CardTitle className="text-base">
             {reorderMode ? `Reorder · ${allMovements.length}` : `${filtered.length} ${filtered.length === 1 ? "movement" : "movements"}`}
           </CardTitle>
-          {reorderMode ? (
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={cancelReorder} disabled={savingOrder}>Cancel</Button>
-              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>{savingOrder ? "Saving order..." : "Save Order"}</Button>
-            </div>
-          ) : (
-            <Button size="sm" variant="outline" onClick={enterReorder} disabled={allMovements.length < 2}>
-              <ArrowUpDown className="h-4 w-4 mr-1" />Reorder
-            </Button>
-          )}
         </CardHeader>
         <CardContent>
           {reorderMode && <p className="text-xs text-muted-foreground mb-2">Move items to match your bank statement order. Edit and delete are disabled while reordering.</p>}
