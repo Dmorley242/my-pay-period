@@ -730,7 +730,7 @@ export default function Budget() {
                 <form onSubmit={addCatSub} className="space-y-2">
                   <div className="flex flex-wrap gap-2 items-end">
                     <div className="flex-1 min-w-[10rem]"><Label className="text-xs">Sub-item</Label><Input value={csName} onChange={e => setCsName(e.target.value)} placeholder="ChatGPT" /></div>
-                    <div className="w-24 sm:w-28"><Label className="text-xs">Amount</Label><Input type="number" inputMode="decimal" step="0.01" value={csAmount} onChange={e => setCsAmount(e.target.value)} placeholder="0.00" /></div>
+                    <div className="w-24 sm:w-28"><Label className="text-xs">Amount</Label><MoneyInput value={csAmount} onChange={setCsAmount} /></div>
                     <Button type="submit" size="icon" className="h-10 w-10"><Plus className="h-4 w-4" /></Button>
                   </div>
                   <div className="flex items-center gap-2">
