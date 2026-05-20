@@ -81,7 +81,7 @@ export default function Transfers() {
                   <SelectContent>{accounts.filter(a => a.id !== from).map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Amount *</Label><Input type="number" inputMode="decimal" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+              <div><Label>Amount *</Label><MoneyInput required value={amount} onChange={setAmount} /></div>
               <div><Label>Pay Period</Label>
                 <Select value={periodId} onValueChange={setPeriodId}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
