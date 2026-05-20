@@ -262,7 +262,7 @@ export default function BudgetTemplates() {
                   <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={itemAmount} onChange={e => setItemAmount(e.target.value)} placeholder="0.00" /></div>
+              <div><Label>Budget Amount *</Label><MoneyInput value={itemAmount} onChange={setItemAmount} /></div>
               <div className="flex gap-2 justify-end">
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
                 <Button type="button" variant="outline" onClick={async () => { await saveTemplateMeta(); setBuilderOpen(false); setEditingTpl({ id: null, name: "", notes: "" }); }}>Done</Button>
