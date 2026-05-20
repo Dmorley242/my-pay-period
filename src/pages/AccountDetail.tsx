@@ -48,6 +48,20 @@ export default function AccountDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState({ name: "", bank_name: "", account_type: "" });
   const [detail, setDetail] = useState<MovementRef | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [draftKeys, setDraftKeys] = useState<string[] | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
+  const { data: orderRows = [] } = useQuery({
+    queryKey: ["movement_orders", accountId],
+    queryFn: async () => {
+      if (!accountId) return [];
+      const { data, error } = await (supabase as any).from("movement_orders").select("*").eq("account_id", accountId);
+      if (error) throw error;
+      return data as { movement_kind: string; movement_id: string; position: number }[];
+    },
+    enabled: !!accountId,
+  });
 
   useEffect(() => {
     if (account) setForm({ name: account.name, bank_name: account.bank_name ?? "", account_type: account.account_type ?? "" });
@@ -56,7 +70,14 @@ export default function AccountDetail() {
   const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
 
-  const allMovements: Movement[] = useMemo(() => {
+  const orderMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of orderRows) m.set(`${r.movement_kind}:${r.movement_id}`, r.position);
+    return m;
+  }, [orderRows]);
+
+  // Chronological (oldest first) base list with running balance
+  const chronoMovements: Movement[] = useMemo(() => {
     if (!account) return [];
     const aTxs = txs.filter(t => t.account_id === account.id).map(t => {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
@@ -78,13 +99,36 @@ export default function AccountDetail() {
         hasNote: !!t.notes, raw: t,
       };
     });
-    const all = [...aTxs, ...aTr].sort((a, b) =>
-      a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
-    );
+    const all = [...aTxs, ...aTr];
+    const posOf = (m: Movement) => orderMap.get(`${m.kind}:${m.id}`) ?? Number.MAX_SAFE_INTEGER;
+    all.sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      const pa = posOf(a), pb = posOf(b);
+      if (pa !== pb) return pa - pb;
+      return a.created_at < b.created_at ? -1 : 1;
+    });
+    // Apply draft reorder (chronological array) if active
+    let ordered = all;
+    if (reorderMode && draftKeys) {
+      const byKey = new Map(all.map(m => [`${m.kind}:${m.id}`, m]));
+      const seen = new Set<string>();
+      ordered = [];
+      for (const k of draftKeys) {
+        const m = byKey.get(k);
+        if (m) { ordered.push(m); seen.add(k); }
+      }
+      for (const m of all) {
+        const k = `${m.kind}:${m.id}`;
+        if (!seen.has(k)) ordered.push(m);
+      }
+    }
     let running = Number(account.starting_balance);
-    for (const m of all) { m.balanceBefore = running; running += m.signed; m.balanceAfter = running; }
-    return all.reverse();
-  }, [account, txs, transfers, cats, accounts]);
+    for (const m of ordered) { m.balanceBefore = running; running += m.signed; m.balanceAfter = running; }
+    return ordered;
+  }, [account, txs, transfers, cats, accounts, orderMap, reorderMode, draftKeys]);
+
+  // Display list (newest first)
+  const allMovements: Movement[] = useMemo(() => [...chronoMovements].reverse(), [chronoMovements]);
 
   const filtered = useMemo(() => allMovements.filter(m => {
     if (from && m.date < from) return false;
