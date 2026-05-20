@@ -120,11 +120,11 @@ export default function Holds() {
                   </Select>
                 </div>
                 {holdType === "reserve_hold" ? (
-                  <div className="sm:col-span-2"><Label>Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
+                  <div className="sm:col-span-2"><Label>Amount</Label><MoneyInput value={amount} onChange={setAmount} required /></div>
                 ) : (
                   <>
-                    <div><Label>Goal Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} required /></div>
-                    <div><Label>Starting Hold Amount</Label><Input type="number" inputMode="decimal" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+                    <div><Label>Goal Amount</Label><MoneyInput value={goalAmount} onChange={setGoalAmount} required /></div>
+                    <div><Label>Starting Hold Amount</Label><MoneyInput value={amount} onChange={setAmount} /></div>
                   </>
                 )}
                 <div className="sm:col-span-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
