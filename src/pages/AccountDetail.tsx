@@ -327,7 +327,7 @@ export default function AccountDetail() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {reorderMode && <p className="text-xs text-muted-foreground mb-2">Move items to match your bank statement order. Edit and delete are disabled while reordering.</p>}
+          {reorderMode && <p className="text-xs text-muted-foreground mb-2">Reorder same-date items to match your statement. To move to a different day, edit the transaction date.</p>}
           {!reorderMode && filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
           <div className="divide-y">
             {(reorderMode ? allMovements : filtered).map((m, idx) => (
