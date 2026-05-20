@@ -302,18 +302,33 @@ export default function AccountDetail() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{filtered.length} {filtered.length === 1 ? "movement" : "movements"}</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-2">
+          <CardTitle className="text-base">
+            {reorderMode ? `Reorder · ${allMovements.length}` : `${filtered.length} ${filtered.length === 1 ? "movement" : "movements"}`}
+          </CardTitle>
+          {reorderMode ? (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={cancelReorder} disabled={savingOrder}>Cancel</Button>
+              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>{savingOrder ? "Saving order..." : "Save Order"}</Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={enterReorder} disabled={allMovements.length < 2}>
+              <ArrowUpDown className="h-4 w-4 mr-1" />Reorder
+            </Button>
+          )}
+        </CardHeader>
         <CardContent>
-          {filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
+          {reorderMode && <p className="text-xs text-muted-foreground mb-2">Move items to match your bank statement order. Edit and delete are disabled while reordering.</p>}
+          {!reorderMode && filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
           <div className="divide-y">
-            {filtered.map(m => (
+            {(reorderMode ? allMovements : filtered).map((m, idx) => (
               <div
                 key={m.kind + m.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef)}
-                onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef); }}
-                className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-accent/40 rounded-md px-2 -mx-2"
+                role={reorderMode ? undefined : "button"}
+                tabIndex={reorderMode ? -1 : 0}
+                onClick={reorderMode ? undefined : () => setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef)}
+                onKeyDown={reorderMode ? undefined : (e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef); }}
+                className={`py-3 flex items-center justify-between gap-3 rounded-md px-2 -mx-2 ${reorderMode ? "" : "cursor-pointer hover:bg-accent/40"}`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium truncate flex items-center gap-1.5">
@@ -329,7 +344,14 @@ export default function AccountDetail() {
                   </div>
                   <div className="text-[11px] text-muted-foreground tabular-nums">bal {money(m.balanceAfter)}</div>
                 </div>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
+                {reorderMode ? (
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveAt(idx, -1); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === allMovements.length - 1} onClick={(e) => { e.stopPropagation(); moveAt(idx, 1); }}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                  </div>
+                ) : (
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
+                )}
               </div>
             ))}
           </div>
