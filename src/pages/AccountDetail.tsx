@@ -168,12 +168,19 @@ export default function AccountDetail() {
   const cancelReorder = () => { setDraftKeys(null); setReorderMode(false); };
 
   // displayIndex is index in displayed (newest-first) list. Up in display = later in chronological.
+  // Same-date only: only swap when neighbor shares the same date.
   const moveAt = (displayIndex: number, dir: -1 | 1) => {
     if (!draftKeys) return;
     const n = draftKeys.length;
     const chronoIdx = n - 1 - displayIndex;
-    const swapWith = chronoIdx + (dir === -1 ? 1 : -1); // up in display = +1 chrono
+    const swapWith = chronoIdx + (dir === -1 ? 1 : -1);
     if (swapWith < 0 || swapWith >= n) return;
+    const cur = chronoMovements[chronoIdx];
+    const nbr = chronoMovements[swapWith];
+    if (!cur || !nbr || cur.date !== nbr.date) {
+      toast.info("Same-date only. Edit the transaction date to move it to another day.");
+      return;
+    }
     const next = [...draftKeys];
     [next[chronoIdx], next[swapWith]] = [next[swapWith], next[chronoIdx]];
     setDraftKeys(next);
@@ -219,20 +226,32 @@ export default function AccountDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate("/")}><ArrowLeft className="h-4 w-4 mr-1" />Dashboard</Button>
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogTrigger asChild><Button variant="outline" size="sm"><Pencil className="h-4 w-4 mr-1" />Edit</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Edit Account</DialogTitle></DialogHeader>
-            <form onSubmit={saveEdit} className="space-y-3">
-              <div><Label>Account Name</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} /></div>
-                <div><Label>Type</Label><Input value={form.account_type} onChange={e => setForm({ ...form, account_type: e.target.value })} /></div>
-              </div>
-              <DialogFooter><Button type="submit">Save</Button></DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          {reorderMode ? (
+            <>
+              <Button size="sm" variant="outline" onClick={cancelReorder} disabled={savingOrder}>Cancel</Button>
+              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>{savingOrder ? "Saving..." : "Save Order"}</Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={enterReorder} disabled={allMovements.length < 2}>
+              <ArrowUpDown className="h-4 w-4 mr-1" />Reorder
+            </Button>
+          )}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild><Button variant="outline" size="sm" disabled={reorderMode}><Pencil className="h-4 w-4 mr-1" />Edit</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Edit Account</DialogTitle></DialogHeader>
+              <form onSubmit={saveEdit} className="space-y-3">
+                <div><Label>Account Name</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} /></div>
+                  <div><Label>Type</Label><Input value={form.account_type} onChange={e => setForm({ ...form, account_type: e.target.value })} /></div>
+                </div>
+                <DialogFooter><Button type="submit">Save</Button></DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="overflow-hidden">
@@ -302,26 +321,16 @@ export default function AccountDetail() {
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between gap-2">
+        <CardHeader>
           <CardTitle className="text-base">
             {reorderMode ? `Reorder · ${allMovements.length}` : `${filtered.length} ${filtered.length === 1 ? "movement" : "movements"}`}
           </CardTitle>
-          {reorderMode ? (
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={cancelReorder} disabled={savingOrder}>Cancel</Button>
-              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>{savingOrder ? "Saving order..." : "Save Order"}</Button>
-            </div>
-          ) : (
-            <Button size="sm" variant="outline" onClick={enterReorder} disabled={allMovements.length < 2}>
-              <ArrowUpDown className="h-4 w-4 mr-1" />Reorder
-            </Button>
-          )}
         </CardHeader>
         <CardContent>
-          {reorderMode && <p className="text-xs text-muted-foreground mb-2">Move items to match your bank statement order. Edit and delete are disabled while reordering.</p>}
+          {reorderMode && <p className="text-xs text-muted-foreground mb-2">Reorder same-date items to match your statement. To move to a different day, edit the transaction date.</p>}
           {!reorderMode && filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
           <div className="divide-y">
-            {(reorderMode ? allMovements : filtered).map((m, idx) => (
+            {(reorderMode ? allMovements : filtered).map((m, idx, arr) => (
               <div
                 key={m.kind + m.id}
                 role={reorderMode ? undefined : "button"}
@@ -346,8 +355,8 @@ export default function AccountDetail() {
                 </div>
                 {reorderMode ? (
                   <div className="flex flex-col gap-1 shrink-0">
-                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveAt(idx, -1); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
-                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === allMovements.length - 1} onClick={(e) => { e.stopPropagation(); moveAt(idx, 1); }}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === 0 || arr[idx - 1]?.date !== m.date} onClick={(e) => { e.stopPropagation(); moveAt(idx, -1); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === arr.length - 1 || arr[idx + 1]?.date !== m.date} onClick={(e) => { e.stopPropagation(); moveAt(idx, 1); }}><ArrowDown className="h-3.5 w-3.5" /></Button>
                   </div>
                 ) : (
                   <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
