@@ -330,7 +330,7 @@ export default function AccountDetail() {
           {reorderMode && <p className="text-xs text-muted-foreground mb-2">Reorder same-date items to match your statement. To move to a different day, edit the transaction date.</p>}
           {!reorderMode && filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
           <div className="divide-y">
-            {(reorderMode ? allMovements : filtered).map((m, idx) => (
+            {(reorderMode ? allMovements : filtered).map((m, idx, arr) => (
               <div
                 key={m.kind + m.id}
                 role={reorderMode ? undefined : "button"}
