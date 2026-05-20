@@ -598,7 +598,7 @@ export default function Budget() {
                 <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label>Budget Amount *</Label><Input type="number" inputMode="decimal" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+            <div><Label>Budget Amount *</Label><MoneyInput value={amount} onChange={setAmount} /></div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => { reset(); setBuilderOpen(false); }}>Cancel</Button>
               <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
