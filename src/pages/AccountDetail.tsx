@@ -226,20 +226,32 @@ export default function AccountDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate("/")}><ArrowLeft className="h-4 w-4 mr-1" />Dashboard</Button>
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogTrigger asChild><Button variant="outline" size="sm"><Pencil className="h-4 w-4 mr-1" />Edit</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Edit Account</DialogTitle></DialogHeader>
-            <form onSubmit={saveEdit} className="space-y-3">
-              <div><Label>Account Name</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} /></div>
-                <div><Label>Type</Label><Input value={form.account_type} onChange={e => setForm({ ...form, account_type: e.target.value })} /></div>
-              </div>
-              <DialogFooter><Button type="submit">Save</Button></DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          {reorderMode ? (
+            <>
+              <Button size="sm" variant="outline" onClick={cancelReorder} disabled={savingOrder}>Cancel</Button>
+              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>{savingOrder ? "Saving..." : "Save Order"}</Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={enterReorder} disabled={allMovements.length < 2}>
+              <ArrowUpDown className="h-4 w-4 mr-1" />Reorder
+            </Button>
+          )}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild><Button variant="outline" size="sm" disabled={reorderMode}><Pencil className="h-4 w-4 mr-1" />Edit</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Edit Account</DialogTitle></DialogHeader>
+              <form onSubmit={saveEdit} className="space-y-3">
+                <div><Label>Account Name</Label><Input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Bank</Label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} /></div>
+                  <div><Label>Type</Label><Input value={form.account_type} onChange={e => setForm({ ...form, account_type: e.target.value })} /></div>
+                </div>
+                <DialogFooter><Button type="submit">Save</Button></DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="overflow-hidden">
