@@ -123,7 +123,7 @@ export default function AddTransaction() {
     <div><Label>Date</Label><Input type="date" className="max-w-full" value={date} onChange={e => setDate(e.target.value)} /></div>
   );
   const amountField = (
-    <div><Label>Amount *</Label><Input type="number" inputMode="decimal" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+    <div><Label>Amount *</Label><MoneyInput required value={amount} onChange={setAmount} /></div>
   );
   const accountField = (
     <div>
