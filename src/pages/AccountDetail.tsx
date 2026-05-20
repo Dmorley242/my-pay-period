@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAccountHolds, useAccounts, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { money, fmtDate, accountLabel } from "@/lib/format";
-import { ArrowLeft, Pencil, Trash2, StickyNote } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, StickyNote, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
 import { txLabel, hasNotes } from "@/lib/txNotes";
 import { toast } from "sonner";
@@ -48,6 +48,20 @@ export default function AccountDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState({ name: "", bank_name: "", account_type: "" });
   const [detail, setDetail] = useState<MovementRef | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [draftKeys, setDraftKeys] = useState<string[] | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
+  const { data: orderRows = [] } = useQuery({
+    queryKey: ["movement_orders", accountId],
+    queryFn: async () => {
+      if (!accountId) return [];
+      const { data, error } = await (supabase as any).from("movement_orders").select("*").eq("account_id", accountId);
+      if (error) throw error;
+      return data as { movement_kind: string; movement_id: string; position: number }[];
+    },
+    enabled: !!accountId,
+  });
 
   useEffect(() => {
     if (account) setForm({ name: account.name, bank_name: account.bank_name ?? "", account_type: account.account_type ?? "" });
@@ -56,7 +70,14 @@ export default function AccountDetail() {
   const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
 
-  const allMovements: Movement[] = useMemo(() => {
+  const orderMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of orderRows) m.set(`${r.movement_kind}:${r.movement_id}`, r.position);
+    return m;
+  }, [orderRows]);
+
+  // Chronological (oldest first) base list with running balance
+  const chronoMovements: Movement[] = useMemo(() => {
     if (!account) return [];
     const aTxs = txs.filter(t => t.account_id === account.id).map(t => {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
@@ -78,13 +99,36 @@ export default function AccountDetail() {
         hasNote: !!t.notes, raw: t,
       };
     });
-    const all = [...aTxs, ...aTr].sort((a, b) =>
-      a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
-    );
+    const all = [...aTxs, ...aTr];
+    const posOf = (m: Movement) => orderMap.get(`${m.kind}:${m.id}`) ?? Number.MAX_SAFE_INTEGER;
+    all.sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      const pa = posOf(a), pb = posOf(b);
+      if (pa !== pb) return pa - pb;
+      return a.created_at < b.created_at ? -1 : 1;
+    });
+    // Apply draft reorder (chronological array) if active
+    let ordered = all;
+    if (reorderMode && draftKeys) {
+      const byKey = new Map(all.map(m => [`${m.kind}:${m.id}`, m]));
+      const seen = new Set<string>();
+      ordered = [];
+      for (const k of draftKeys) {
+        const m = byKey.get(k);
+        if (m) { ordered.push(m); seen.add(k); }
+      }
+      for (const m of all) {
+        const k = `${m.kind}:${m.id}`;
+        if (!seen.has(k)) ordered.push(m);
+      }
+    }
     let running = Number(account.starting_balance);
-    for (const m of all) { m.balanceBefore = running; running += m.signed; m.balanceAfter = running; }
-    return all.reverse();
-  }, [account, txs, transfers, cats, accounts]);
+    for (const m of ordered) { m.balanceBefore = running; running += m.signed; m.balanceAfter = running; }
+    return ordered;
+  }, [account, txs, transfers, cats, accounts, orderMap, reorderMode, draftKeys]);
+
+  // Display list (newest first)
+  const allMovements: Movement[] = useMemo(() => [...chronoMovements].reverse(), [chronoMovements]);
 
   const filtered = useMemo(() => allMovements.filter(m => {
     if (from && m.date < from) return false;
@@ -115,6 +159,49 @@ export default function AccountDetail() {
     if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries();
+  };
+
+  const enterReorder = () => {
+    setDraftKeys(chronoMovements.map(m => `${m.kind}:${m.id}`));
+    setReorderMode(true);
+  };
+  const cancelReorder = () => { setDraftKeys(null); setReorderMode(false); };
+
+  // displayIndex is index in displayed (newest-first) list. Up in display = later in chronological.
+  const moveAt = (displayIndex: number, dir: -1 | 1) => {
+    if (!draftKeys) return;
+    const n = draftKeys.length;
+    const chronoIdx = n - 1 - displayIndex;
+    const swapWith = chronoIdx + (dir === -1 ? 1 : -1); // up in display = +1 chrono
+    if (swapWith < 0 || swapWith >= n) return;
+    const next = [...draftKeys];
+    [next[chronoIdx], next[swapWith]] = [next[swapWith], next[chronoIdx]];
+    setDraftKeys(next);
+  };
+
+  const saveOrder = async () => {
+    if (!account || !draftKeys) return;
+    setSavingOrder(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not authenticated");
+      const rows = draftKeys.map((k, i) => {
+        const [movement_kind, movement_id] = k.split(":");
+        return { user_id: uid, account_id: account.id, movement_kind, movement_id, position: i };
+      });
+      const { error } = await (supabase as any).from("movement_orders")
+        .upsert(rows, { onConflict: "account_id,movement_kind,movement_id" });
+      if (error) throw error;
+      toast.success("Order saved");
+      setReorderMode(false);
+      setDraftKeys(null);
+      qc.invalidateQueries({ queryKey: ["movement_orders", account.id] });
+    } catch (e: any) {
+      toast.error(friendlyError(e));
+    } finally {
+      setSavingOrder(false);
+    }
   };
 
   if (!account) {
@@ -215,18 +302,33 @@ export default function AccountDetail() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{filtered.length} {filtered.length === 1 ? "movement" : "movements"}</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-2">
+          <CardTitle className="text-base">
+            {reorderMode ? `Reorder · ${allMovements.length}` : `${filtered.length} ${filtered.length === 1 ? "movement" : "movements"}`}
+          </CardTitle>
+          {reorderMode ? (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={cancelReorder} disabled={savingOrder}>Cancel</Button>
+              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>{savingOrder ? "Saving order..." : "Save Order"}</Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={enterReorder} disabled={allMovements.length < 2}>
+              <ArrowUpDown className="h-4 w-4 mr-1" />Reorder
+            </Button>
+          )}
+        </CardHeader>
         <CardContent>
-          {filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
+          {reorderMode && <p className="text-xs text-muted-foreground mb-2">Move items to match your bank statement order. Edit and delete are disabled while reordering.</p>}
+          {!reorderMode && filtered.length === 0 && <p className="text-sm text-muted-foreground">No movements match your filters.</p>}
           <div className="divide-y">
-            {filtered.map(m => (
+            {(reorderMode ? allMovements : filtered).map((m, idx) => (
               <div
                 key={m.kind + m.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef)}
-                onKeyDown={(e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef); }}
-                className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-accent/40 rounded-md px-2 -mx-2"
+                role={reorderMode ? undefined : "button"}
+                tabIndex={reorderMode ? -1 : 0}
+                onClick={reorderMode ? undefined : () => setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef)}
+                onKeyDown={reorderMode ? undefined : (e) => { if (e.key === "Enter") setDetail({ kind: m.kind, record: m.raw, balanceBefore: m.balanceBefore, balanceAfter: m.balanceAfter } as MovementRef); }}
+                className={`py-3 flex items-center justify-between gap-3 rounded-md px-2 -mx-2 ${reorderMode ? "" : "cursor-pointer hover:bg-accent/40"}`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium truncate flex items-center gap-1.5">
@@ -242,7 +344,14 @@ export default function AccountDetail() {
                   </div>
                   <div className="text-[11px] text-muted-foreground tabular-nums">bal {money(m.balanceAfter)}</div>
                 </div>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
+                {reorderMode ? (
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveAt(idx, -1); }}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="outline" className="h-7 w-7" disabled={idx === allMovements.length - 1} onClick={(e) => { e.stopPropagation(); moveAt(idx, 1); }}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                  </div>
+                ) : (
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); delMovement(m.kind, m.id); }}><Trash2 className="h-4 w-4" /></Button>
+                )}
               </div>
             ))}
           </div>

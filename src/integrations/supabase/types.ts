@@ -348,6 +348,39 @@ export type Database = {
         }
         Relationships: []
       }
+      movement_orders: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          movement_id: string
+          movement_kind: string
+          position: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          movement_id: string
+          movement_kind: string
+          position?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          movement_id?: string
+          movement_kind?: string
+          position?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pay_periods: {
         Row: {
           created_at: string
