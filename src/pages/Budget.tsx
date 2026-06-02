@@ -598,6 +598,9 @@ export default function Budget() {
                             )}
                           </div>
                           <div className="flex shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => openQuickAdd(i)} title="Add Movement">
+                              <Zap className="h-3.5 w-3.5" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpanded(s => ({ ...s, [i.id]: !s[i.id] }))} title="Sub-items">
                               {expanded[i.id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ListTree className="h-3.5 w-3.5" />}
                             </Button>
