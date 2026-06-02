@@ -80,6 +80,52 @@ export default function Budget() {
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
 
+  // Quick "Add Movement" from a budget item
+  type QuickAdd = { itemId: string; accountId: string; amount: string; date: string; notes: string };
+  const [quickAdd, setQuickAdd] = useState<QuickAdd | null>(null);
+  const [savingQuick, setSavingQuick] = useState(false);
+
+  const openQuickAdd = (item: { id: string; account_id: string }) => {
+    setQuickAdd({
+      itemId: item.id,
+      accountId: item.account_id,
+      amount: "",
+      date: new Date().toISOString().slice(0, 10),
+      notes: "",
+    });
+  };
+
+  const saveQuickAdd = async () => {
+    if (!user || !active || !quickAdd) return;
+    if (!quickAdd.itemId) return toast.error("Select a budget item");
+    if (!quickAdd.accountId) return toast.error("Select an account");
+    const amt = parseFloat(quickAdd.amount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    if (!quickAdd.date) return toast.error("Date required");
+    setSavingQuick(true);
+    try {
+      const { error } = await (supabase as any).from("transactions").insert({
+        user_id: user.id,
+        transaction_type: "expense",
+        date: quickAdd.date,
+        account_id: quickAdd.accountId,
+        pay_period_id: active.id,
+        budget_item_id: quickAdd.itemId,
+        amount: amt,
+        notes: quickAdd.notes || null,
+      });
+      if (error) return toast.error(friendlyError(error));
+      toast.success("Movement added");
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["pay_periods"] });
+      setQuickAdd(null);
+    } finally {
+      setSavingQuick(false);
+    }
+  };
+
   // ---- Full Build Budget workflow ----
   type DraftSub = { id: string; name: string; amount: number } & Recurring;
   type DraftItem = { id: string; name: string; account_id: string; budget_amount: number; subs: DraftSub[] } & Recurring;
