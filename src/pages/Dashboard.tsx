@@ -8,6 +8,8 @@ import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, Cal
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
 import { txLabel, hasNotes } from "@/lib/txNotes";
+import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
+import type { BudgetItem } from "@/hooks/useFinanceData";
 
 type Movement = {
   id: string;
@@ -33,6 +35,8 @@ export default function Dashboard() {
   const { data: budgetItems = [] } = useBudgetItems();
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<MovementRef | null>(null);
+  const [quickItem, setQuickItem] = useState<BudgetItem | null>(null);
+  const [showAllBudget, setShowAllBudget] = useState(false);
   const touchStart = useRef<number | null>(null);
 
   const total = accounts.reduce((s, a) => s + Number(a.current_balance), 0);
@@ -213,7 +217,7 @@ export default function Dashboard() {
         const spent = items.reduce((s, b) => s + (spentMap.get(b.id) || 0), 0);
         const remaining = budgeted - spent;
         const toAssign = payAmount - budgeted;
-        const top = items.slice(0, 5);
+        const visible = showAllBudget ? items : items.slice(0, 5);
         const accLbl = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
         return (
           <Card className="shadow-[var(--shadow-lg)] border-primary/30 ring-1 ring-primary/20 overflow-hidden">
@@ -242,18 +246,23 @@ export default function Dashboard() {
                 <DashCell label="Total Budget Spent" value={money(spent)} cls="text-expense" />
                 <DashCell label="Total Budget Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
               </div>
-              {top.length === 0 ? (
+              {visible.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-2">No budget items yet. <Link to="/budget" className="underline">Create one</Link>.</p>
               ) : (
                 <div className="space-y-1.5">
-                  {top.map(b => {
+                  {visible.map(b => {
                     const s = spentMap.get(b.id) || 0;
                     const r = Number(b.budget_amount) - s;
                     return (
                       <div key={b.id} className="rounded-md border px-3 py-2">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className="text-sm font-medium truncate">{b.name}</span>
-                          <span className="text-xs text-muted-foreground truncate">{accLbl(b.account_id)}</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
+                            <span className="text-sm font-medium truncate">{b.name}</span>
+                            <span className="text-xs text-muted-foreground truncate">{accLbl(b.account_id)}</span>
+                          </div>
+                          <Button size="sm" variant="outline" className="h-7 px-2 shrink-0" onClick={() => setQuickItem(b)}>
+                            <Plus className="h-3.5 w-3.5 mr-1" />Add
+                          </Button>
                         </div>
                         <div className="grid grid-cols-3 gap-2 mt-1 text-xs">
                           <DashCell label="Budget" value={money(b.budget_amount)} />
@@ -263,6 +272,13 @@ export default function Dashboard() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {items.length > 5 && (
+                <div className="flex justify-center">
+                  <Button variant="ghost" size="sm" onClick={() => setShowAllBudget(v => !v)}>
+                    {showAllBudget ? "Show less" : `Show all (${items.length})`}
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -338,6 +354,14 @@ export default function Dashboard() {
         </CardContent>
       </Card>
       <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
+      <QuickBudgetSpendDialog
+        open={!!quickItem}
+        onOpenChange={(o) => !o && setQuickItem(null)}
+        budgetItem={quickItem}
+        accounts={accounts}
+        budgetItems={budgetItems}
+        activePeriod={active}
+      />
     </div>
   );
 }
