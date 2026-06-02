@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { money, fmtDate } from "@/lib/format";
-import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree, Repeat } from "lucide-react";
+import { Plus, Trash2, Pencil, Wallet, ChevronDown, ChevronUp, ListTree, Repeat, Zap } from "lucide-react";
 
 type Recurring = { is_recurring: boolean; recurring_name?: string; recurring_amount?: number; recurring_date?: number; recurring_frequency?: "Monthly" | "Weekly" | "Every Pay Period" };
 const FREQS: Recurring["recurring_frequency"][] = ["Monthly", "Weekly", "Every Pay Period"];
@@ -79,6 +79,52 @@ export default function Budget() {
   const [templateName, setTemplateName] = useState("");
 
   const [editing, setEditing] = useState<null | { id: string; name: string; account_id: string; budget_amount: string }>(null);
+
+  // Quick "Add Movement" from a budget item
+  type QuickAdd = { itemId: string; accountId: string; amount: string; date: string; notes: string };
+  const [quickAdd, setQuickAdd] = useState<QuickAdd | null>(null);
+  const [savingQuick, setSavingQuick] = useState(false);
+
+  const openQuickAdd = (item: { id: string; account_id: string }) => {
+    setQuickAdd({
+      itemId: item.id,
+      accountId: item.account_id,
+      amount: "",
+      date: new Date().toISOString().slice(0, 10),
+      notes: "",
+    });
+  };
+
+  const saveQuickAdd = async () => {
+    if (!user || !active || !quickAdd) return;
+    if (!quickAdd.itemId) return toast.error("Select a budget item");
+    if (!quickAdd.accountId) return toast.error("Select an account");
+    const amt = parseFloat(quickAdd.amount);
+    if (!Number.isFinite(amt) || amt <= 0) return toast.error("Amount must be > 0");
+    if (!quickAdd.date) return toast.error("Date required");
+    setSavingQuick(true);
+    try {
+      const { error } = await (supabase as any).from("transactions").insert({
+        user_id: user.id,
+        transaction_type: "expense",
+        date: quickAdd.date,
+        account_id: quickAdd.accountId,
+        pay_period_id: active.id,
+        budget_item_id: quickAdd.itemId,
+        amount: amt,
+        notes: quickAdd.notes || null,
+      });
+      if (error) return toast.error(friendlyError(error));
+      toast.success("Movement added");
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["pay_periods"] });
+      setQuickAdd(null);
+    } finally {
+      setSavingQuick(false);
+    }
+  };
 
   // ---- Full Build Budget workflow ----
   type DraftSub = { id: string; name: string; amount: number } & Recurring;
@@ -552,6 +598,9 @@ export default function Budget() {
                             )}
                           </div>
                           <div className="flex shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => openQuickAdd(i)} title="Add Movement">
+                              <Zap className="h-3.5 w-3.5" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpanded(s => ({ ...s, [i.id]: !s[i.id] }))} title="Sub-items">
                               {expanded[i.id] ? <ChevronUp className="h-3.5 w-3.5" /> : <ListTree className="h-3.5 w-3.5" />}
                             </Button>
@@ -629,6 +678,67 @@ export default function Budget() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!quickAdd} onOpenChange={o => !o && setQuickAdd(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Movement</DialogTitle></DialogHeader>
+          {quickAdd && (() => {
+            const selItem = periodItems.find(p => p.id === quickAdd.itemId);
+            const spent = selItem ? (spentByItem.get(selItem.id) || 0) : 0;
+            const remaining = selItem ? Number(selItem.budget_amount) - spent : 0;
+            return (
+              <div className="space-y-3">
+                {selItem && (
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <Cell label="Budget" value={money(selItem.budget_amount)} />
+                    <Cell label="Spent" value={money(spent)} cls="text-expense" />
+                    <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
+                  </div>
+                )}
+                <div>
+                  <Label>Budget Item *</Label>
+                  <Select value={quickAdd.itemId} onValueChange={v => {
+                    const it = periodItems.find(p => p.id === v);
+                    setQuickAdd({ ...quickAdd, itemId: v, accountId: it?.account_id || quickAdd.accountId });
+                  }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{periodItems.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Account *</Label>
+                  <Select value={quickAdd.accountId} onValueChange={v => setQuickAdd({ ...quickAdd, accountId: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Amount *</Label>
+                  <MoneyInput value={quickAdd.amount} onChange={v => setQuickAdd({ ...quickAdd, amount: v })} autoFocus />
+                  {selItem && remaining > 0 && (
+                    <button type="button" className="text-xs text-primary mt-1 underline" onClick={() => setQuickAdd({ ...quickAdd, amount: remaining.toFixed(2) })}>
+                      Use remaining {money(remaining)}
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <Label>Date *</Label>
+                  <Input type="date" value={quickAdd.date} onChange={e => setQuickAdd({ ...quickAdd, date: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Note</Label>
+                  <Input value={quickAdd.notes} onChange={e => setQuickAdd({ ...quickAdd, notes: e.target.value })} placeholder="Optional" />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setQuickAdd(null)} disabled={savingQuick}>Cancel</Button>
+                  <Button onClick={saveQuickAdd} disabled={savingQuick}>{savingQuick ? "Saving..." : "Confirm"}</Button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={publishConfirmOpen} onOpenChange={setPublishConfirmOpen}>
         <DialogContent>
