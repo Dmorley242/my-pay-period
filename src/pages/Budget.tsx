@@ -679,6 +679,67 @@ export default function Budget() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!quickAdd} onOpenChange={o => !o && setQuickAdd(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Movement</DialogTitle></DialogHeader>
+          {quickAdd && (() => {
+            const selItem = periodItems.find(p => p.id === quickAdd.itemId);
+            const spent = selItem ? (spentByItem.get(selItem.id) || 0) : 0;
+            const remaining = selItem ? Number(selItem.budget_amount) - spent : 0;
+            return (
+              <div className="space-y-3">
+                {selItem && (
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <Cell label="Budget" value={money(selItem.budget_amount)} />
+                    <Cell label="Spent" value={money(spent)} cls="text-expense" />
+                    <Cell label="Remaining" value={money(remaining)} cls={remaining < 0 ? "text-destructive" : "text-income"} />
+                  </div>
+                )}
+                <div>
+                  <Label>Budget Item *</Label>
+                  <Select value={quickAdd.itemId} onValueChange={v => {
+                    const it = periodItems.find(p => p.id === v);
+                    setQuickAdd({ ...quickAdd, itemId: v, accountId: it?.account_id || quickAdd.accountId });
+                  }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{periodItems.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Account *</Label>
+                  <Select value={quickAdd.accountId} onValueChange={v => setQuickAdd({ ...quickAdd, accountId: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                    <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accLabel(a)}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Amount *</Label>
+                  <MoneyInput value={quickAdd.amount} onChange={v => setQuickAdd({ ...quickAdd, amount: v })} autoFocus />
+                  {selItem && remaining > 0 && (
+                    <button type="button" className="text-xs text-primary mt-1 underline" onClick={() => setQuickAdd({ ...quickAdd, amount: remaining.toFixed(2) })}>
+                      Use remaining {money(remaining)}
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <Label>Date *</Label>
+                  <Input type="date" value={quickAdd.date} onChange={e => setQuickAdd({ ...quickAdd, date: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Note</Label>
+                  <Input value={quickAdd.notes} onChange={e => setQuickAdd({ ...quickAdd, notes: e.target.value })} placeholder="Optional" />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setQuickAdd(null)} disabled={savingQuick}>Cancel</Button>
+                  <Button onClick={saveQuickAdd} disabled={savingQuick}>{savingQuick ? "Saving..." : "Confirm"}</Button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+
       <Dialog open={publishConfirmOpen} onOpenChange={setPublishConfirmOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Publish Budget</DialogTitle></DialogHeader>
