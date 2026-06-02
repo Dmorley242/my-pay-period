@@ -35,6 +35,8 @@ export default function Dashboard() {
   const { data: budgetItems = [] } = useBudgetItems();
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<MovementRef | null>(null);
+  const [quickItem, setQuickItem] = useState<BudgetItem | null>(null);
+  const [showAllBudget, setShowAllBudget] = useState(false);
   const touchStart = useRef<number | null>(null);
 
   const total = accounts.reduce((s, a) => s + Number(a.current_balance), 0);
