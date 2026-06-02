@@ -8,6 +8,8 @@ import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, Cal
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
 import { txLabel, hasNotes } from "@/lib/txNotes";
+import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
+import type { BudgetItem } from "@/hooks/useFinanceData";
 
 type Movement = {
   id: string;
