@@ -354,6 +354,14 @@ export default function Dashboard() {
         </CardContent>
       </Card>
       <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
+      <QuickBudgetSpendDialog
+        open={!!quickItem}
+        onOpenChange={(o) => !o && setQuickItem(null)}
+        budgetItem={quickItem}
+        accounts={accounts}
+        budgetItems={budgetItems}
+        activePeriod={active}
+      />
     </div>
   );
 }
