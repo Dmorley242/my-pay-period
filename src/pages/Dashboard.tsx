@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
 import { Link } from "react-router-dom";
-import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown, StickyNote } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown, StickyNote, CreditCard } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
 import { txLabel, hasNotes } from "@/lib/txNotes";
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
+import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
 import type { BudgetItem } from "@/hooks/useFinanceData";
 
 type Movement = {
@@ -36,6 +37,7 @@ export default function Dashboard() {
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<MovementRef | null>(null);
   const [quickItem, setQuickItem] = useState<BudgetItem | null>(null);
+  const [loadCCOpen, setLoadCCOpen] = useState(false);
   const [showAllBudget, setShowAllBudget] = useState(false);
   const touchStart = useRef<number | null>(null);
 
@@ -200,9 +202,12 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <Button asChild size="sm"><Link to="/add"><PlusCircle className="h-4 w-4 mr-1" />Add Transaction</Link></Button>
-        <Button asChild variant="outline" size="sm"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
+        <Button size="sm" variant="secondary" onClick={() => setLoadCCOpen(true)}>
+          <CreditCard className="h-4 w-4 mr-1" />Load Credit Card
+        </Button>
+        <Button asChild variant="outline" size="sm" className="col-span-2 sm:col-span-1"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
       {active && (() => {
@@ -361,6 +366,13 @@ export default function Dashboard() {
         accounts={accounts}
         budgetItems={budgetItems}
         activePeriod={active}
+      />
+      <LoadCreditCardDialog
+        open={loadCCOpen}
+        onOpenChange={setLoadCCOpen}
+        accounts={accounts}
+        activePeriod={active}
+        selectedAccountId={current?.id ?? null}
       />
     </div>
   );
