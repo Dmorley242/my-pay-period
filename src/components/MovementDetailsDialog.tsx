@@ -111,6 +111,33 @@ export function MovementDetailsDialog({
       setRPeriodId(rec.pay_period_id || "none");
       setRLabel("");
     }
+    // Repeat defaults — date defaults to today (local), all other fields copied
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    if (movement.kind === "tx") {
+      const parsed = parseTxNotes(rec.notes);
+      setPType(rec.transaction_type === "income" ? "income" : "expense");
+      setPDate(todayStr);
+      setPAmount(String(rec.amount));
+      setPAccountId(rec.account_id);
+      setPToAccountId("");
+      setPLabel(parsed.label || "");
+      setPNotes(parsed.notes || "");
+      setPPeriodId(rec.pay_period_id || "none");
+      setPCategoryId(rec.category_id || null);
+      setPBudgetItemId(rec.budget_item_id || null);
+    } else {
+      setPType("transfer");
+      setPDate(todayStr);
+      setPAmount(String(rec.amount));
+      setPAccountId(rec.from_account_id);
+      setPToAccountId(rec.to_account_id);
+      setPLabel("");
+      setPNotes(rec.notes || "");
+      setPPeriodId(rec.pay_period_id || "none");
+      setPCategoryId(null);
+      setPBudgetItemId(null);
+    }
   }, [open, movement?.kind, movement?.record?.id]);
 
   if (!movement) return null;
