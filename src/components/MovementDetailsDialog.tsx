@@ -514,11 +514,93 @@ export function MovementDetailsDialog({
             </div>
           )}
 
+          {mode === "repeat" && (
+            <div className="space-y-3">
+              {!isTx ? (
+                <p className="text-xs text-muted-foreground">Repeating a transfer.</p>
+              ) : (
+                <div>
+                  <Label>Transaction Type</Label>
+                  <Tabs value={pType} onValueChange={v => setPType(v as ReplaceType)}>
+                    <TabsList className="grid grid-cols-3 w-full">
+                      <TabsTrigger value="income">Income</TabsTrigger>
+                      <TabsTrigger value="expense">Expense</TabsTrigger>
+                      <TabsTrigger value="transfer">Transfer</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Date</Label>
+                  <Input type="date" value={pDate} onChange={e => setPDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Amount</Label>
+                  <MoneyInput value={pAmount} onChange={setPAmount} />
+                </div>
+              </div>
+
+              {pType === "transfer" ? (
+                <>
+                  <div>
+                    <Label>From Account</Label>
+                    <Select value={pAccountId} onValueChange={setPAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>To Account</Label>
+                    <Select value={pToAccountId} onValueChange={setPToAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.filter(a => a.id !== pAccountId).map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label>Account</Label>
+                    <Select value={pAccountId} onValueChange={setPAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>{pType === "income" ? "Source" : "Label"}</Label>
+                    <Input value={pLabel} onChange={e => setPLabel(e.target.value)} placeholder={pType === "income" ? "e.g. Salary" : "e.g. Groceries"} />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <Label>Pay Period</Label>
+                <Select value={pPeriodId} onValueChange={setPPeriodId}>
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.is_active ? " (active)" : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Notes</Label>
+                <Textarea value={pNotes} onChange={e => setPNotes(e.target.value)} rows={3} />
+              </div>
+
+              <p className="text-xs text-muted-foreground">A new movement will be created. The original is kept unchanged.</p>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 sm:gap-2 flex-col sm:flex-row">
             {mode === "view" && (
               <>
                 <Button variant="destructive" onClick={() => setConfirmDelete(true)}>Delete</Button>
                 <Button variant="outline" onClick={() => setMode("replace")}>Replace</Button>
+                <Button variant="outline" onClick={() => setMode("repeat")}>Repeat</Button>
                 <Button variant="outline" onClick={() => setMode("edit")}>Edit</Button>
                 <Button onClick={() => onOpenChange(false)}>Close</Button>
               </>
@@ -535,7 +617,25 @@ export function MovementDetailsDialog({
                 <Button onClick={doReplace} disabled={saving}>{saving ? "Replacing..." : "Confirm Replace"}</Button>
               </>
             )}
+            {mode === "repeat" && (
+              <>
+                <Button variant="outline" onClick={() => setMode("view")} disabled={saving}>Cancel</Button>
+                <Button
+                  onClick={doRepeat}
+                  disabled={
+                    saving ||
+                    !pDate ||
+                    !(parseFloat(pAmount) > 0) ||
+                    !pAccountId ||
+                    (pType === "transfer" && (!pToAccountId || pAccountId === pToAccountId))
+                  }
+                >
+                  {saving ? "Repeating..." : "Confirm Repeat"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
