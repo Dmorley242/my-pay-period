@@ -367,6 +367,13 @@ export default function Dashboard() {
         budgetItems={budgetItems}
         activePeriod={active}
       />
+      <LoadCreditCardDialog
+        open={loadCCOpen}
+        onOpenChange={setLoadCCOpen}
+        accounts={accounts}
+        activePeriod={active}
+        selectedAccountId={current?.id ?? null}
+      />
     </div>
   );
 }
