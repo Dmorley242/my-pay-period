@@ -61,6 +61,18 @@ export function MovementDetailsDialog({
   const [rNotes, setRNotes] = useState("");
   const [rPeriodId, setRPeriodId] = useState<string>("none");
 
+  // Repeat fields (independent of replace)
+  const [pType, setPType] = useState<ReplaceType>("expense");
+  const [pDate, setPDate] = useState("");
+  const [pAmount, setPAmount] = useState("");
+  const [pAccountId, setPAccountId] = useState("");
+  const [pToAccountId, setPToAccountId] = useState("");
+  const [pLabel, setPLabel] = useState("");
+  const [pNotes, setPNotes] = useState("");
+  const [pPeriodId, setPPeriodId] = useState<string>("none");
+  const [pCategoryId, setPCategoryId] = useState<string | null>(null);
+  const [pBudgetItemId, setPBudgetItemId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setMode("view");
