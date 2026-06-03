@@ -21,7 +21,7 @@ export type MovementRef =
   | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
   | { kind: "transfer"; record: Transfer; balanceBefore?: number; balanceAfter?: number };
 
-type Mode = "view" | "edit" | "replace";
+type Mode = "view" | "edit" | "replace" | "repeat";
 type ReplaceType = "income" | "expense" | "transfer";
 
 export function MovementDetailsDialog({
@@ -61,6 +61,18 @@ export function MovementDetailsDialog({
   const [rNotes, setRNotes] = useState("");
   const [rPeriodId, setRPeriodId] = useState<string>("none");
 
+  // Repeat fields (independent of replace)
+  const [pType, setPType] = useState<ReplaceType>("expense");
+  const [pDate, setPDate] = useState("");
+  const [pAmount, setPAmount] = useState("");
+  const [pAccountId, setPAccountId] = useState("");
+  const [pToAccountId, setPToAccountId] = useState("");
+  const [pLabel, setPLabel] = useState("");
+  const [pNotes, setPNotes] = useState("");
+  const [pPeriodId, setPPeriodId] = useState<string>("none");
+  const [pCategoryId, setPCategoryId] = useState<string | null>(null);
+  const [pBudgetItemId, setPBudgetItemId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setMode("view");
@@ -98,6 +110,33 @@ export function MovementDetailsDialog({
       setRNotes(rec.notes || "");
       setRPeriodId(rec.pay_period_id || "none");
       setRLabel("");
+    }
+    // Repeat defaults — date defaults to today (local), all other fields copied
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    if (movement.kind === "tx") {
+      const parsed = parseTxNotes(rec.notes);
+      setPType(rec.transaction_type === "income" ? "income" : "expense");
+      setPDate(todayStr);
+      setPAmount(String(rec.amount));
+      setPAccountId(rec.account_id);
+      setPToAccountId("");
+      setPLabel(parsed.label || "");
+      setPNotes(parsed.notes || "");
+      setPPeriodId(rec.pay_period_id || "none");
+      setPCategoryId(rec.category_id || null);
+      setPBudgetItemId(rec.budget_item_id || null);
+    } else {
+      setPType("transfer");
+      setPDate(todayStr);
+      setPAmount(String(rec.amount));
+      setPAccountId(rec.from_account_id);
+      setPToAccountId(rec.to_account_id);
+      setPLabel("");
+      setPNotes(rec.notes || "");
+      setPPeriodId(rec.pay_period_id || "none");
+      setPCategoryId(null);
+      setPBudgetItemId(null);
     }
   }, [open, movement?.kind, movement?.record?.id]);
 
@@ -237,11 +276,54 @@ export function MovementDetailsDialog({
     }
   };
 
-  const title = mode === "edit" ? "Edit" : mode === "replace" ? "Replace" : label;
+  const doRepeat = async () => {
+    if (!user) return toast.error("Not authenticated");
+    const parsedAmount = parseFloat(pAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return toast.error("Enter an amount greater than 0");
+    if (!pDate) return toast.error("Date required");
+
+    setSaving(true);
+    try {
+      if (pType === "transfer") {
+        if (!pAccountId) throw new Error("From account required");
+        if (!pToAccountId) throw new Error("To account required");
+        if (pAccountId === pToAccountId) throw new Error("From and To must differ");
+        const { error } = await supabase.from("transfers").insert({
+          user_id: user.id, date: pDate, from_account_id: pAccountId, to_account_id: pToAccountId,
+          pay_period_id: pPeriodId === "none" ? null : pPeriodId,
+          amount: parsedAmount, notes: pNotes.trim() || null,
+        });
+        if (error) throw error;
+      } else {
+        if (!pAccountId) throw new Error("Account required");
+        const effectiveNotes = buildTxNotes(pLabel.trim() || null, pNotes.trim() || null);
+        const { error } = await supabase.from("transactions").insert({
+          user_id: user.id, transaction_type: pType, date: pDate, account_id: pAccountId,
+          category_id: pCategoryId,
+          budget_item_id: pBudgetItemId,
+          pay_period_id: pPeriodId === "none" ? null : pPeriodId,
+          amount: parsedAmount, notes: effectiveNotes,
+        } as any);
+        if (error) throw error;
+      }
+      toast.success("Repeated");
+      invalidate();
+      setMode("view");
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(friendlyError(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const title = mode === "edit" ? "Edit" : mode === "replace" ? "Replace" : mode === "repeat" ? "Repeat" : label;
   const desc = mode === "edit"
     ? "Update details. Transaction type can't be changed here — use Replace."
     : mode === "replace"
     ? "Create a corrected transaction. The old one is removed only after the new one is saved."
+    : mode === "repeat"
+    ? "Create a new movement from this one. The original is kept unchanged."
     : (isTx ? "Transaction details" : "Transfer details");
 
   return (
@@ -432,11 +514,93 @@ export function MovementDetailsDialog({
             </div>
           )}
 
+          {mode === "repeat" && (
+            <div className="space-y-3">
+              {!isTx ? (
+                <p className="text-xs text-muted-foreground">Repeating a transfer.</p>
+              ) : (
+                <div>
+                  <Label>Transaction Type</Label>
+                  <Tabs value={pType} onValueChange={v => setPType(v as ReplaceType)}>
+                    <TabsList className="grid grid-cols-3 w-full">
+                      <TabsTrigger value="income">Income</TabsTrigger>
+                      <TabsTrigger value="expense">Expense</TabsTrigger>
+                      <TabsTrigger value="transfer">Transfer</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Date</Label>
+                  <Input type="date" value={pDate} onChange={e => setPDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Amount</Label>
+                  <MoneyInput value={pAmount} onChange={setPAmount} />
+                </div>
+              </div>
+
+              {pType === "transfer" ? (
+                <>
+                  <div>
+                    <Label>From Account</Label>
+                    <Select value={pAccountId} onValueChange={setPAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>To Account</Label>
+                    <Select value={pToAccountId} onValueChange={setPToAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.filter(a => a.id !== pAccountId).map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label>Account</Label>
+                    <Select value={pAccountId} onValueChange={setPAccountId}>
+                      <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                      <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>{pType === "income" ? "Source" : "Label"}</Label>
+                    <Input value={pLabel} onChange={e => setPLabel(e.target.value)} placeholder={pType === "income" ? "e.g. Salary" : "e.g. Groceries"} />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <Label>Pay Period</Label>
+                <Select value={pPeriodId} onValueChange={setPPeriodId}>
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.is_active ? " (active)" : ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Notes</Label>
+                <Textarea value={pNotes} onChange={e => setPNotes(e.target.value)} rows={3} />
+              </div>
+
+              <p className="text-xs text-muted-foreground">A new movement will be created. The original is kept unchanged.</p>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 sm:gap-2 flex-col sm:flex-row">
             {mode === "view" && (
               <>
                 <Button variant="destructive" onClick={() => setConfirmDelete(true)}>Delete</Button>
                 <Button variant="outline" onClick={() => setMode("replace")}>Replace</Button>
+                <Button variant="outline" onClick={() => setMode("repeat")}>Repeat</Button>
                 <Button variant="outline" onClick={() => setMode("edit")}>Edit</Button>
                 <Button onClick={() => onOpenChange(false)}>Close</Button>
               </>
@@ -453,7 +617,25 @@ export function MovementDetailsDialog({
                 <Button onClick={doReplace} disabled={saving}>{saving ? "Replacing..." : "Confirm Replace"}</Button>
               </>
             )}
+            {mode === "repeat" && (
+              <>
+                <Button variant="outline" onClick={() => setMode("view")} disabled={saving}>Cancel</Button>
+                <Button
+                  onClick={doRepeat}
+                  disabled={
+                    saving ||
+                    !pDate ||
+                    !(parseFloat(pAmount) > 0) ||
+                    !pAccountId ||
+                    (pType === "transfer" && (!pToAccountId || pAccountId === pToAccountId))
+                  }
+                >
+                  {saving ? "Repeating..." : "Confirm Repeat"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
