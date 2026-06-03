@@ -21,7 +21,7 @@ export type MovementRef =
   | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
   | { kind: "transfer"; record: Transfer; balanceBefore?: number; balanceAfter?: number };
 
-type Mode = "view" | "edit" | "replace";
+type Mode = "view" | "edit" | "replace" | "repeat";
 type ReplaceType = "income" | "expense" | "transfer";
 
 export function MovementDetailsDialog({
