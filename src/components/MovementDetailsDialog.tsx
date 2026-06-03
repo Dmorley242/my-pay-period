@@ -276,11 +276,54 @@ export function MovementDetailsDialog({
     }
   };
 
-  const title = mode === "edit" ? "Edit" : mode === "replace" ? "Replace" : label;
+  const doRepeat = async () => {
+    if (!user) return toast.error("Not authenticated");
+    const parsedAmount = parseFloat(pAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return toast.error("Enter an amount greater than 0");
+    if (!pDate) return toast.error("Date required");
+
+    setSaving(true);
+    try {
+      if (pType === "transfer") {
+        if (!pAccountId) throw new Error("From account required");
+        if (!pToAccountId) throw new Error("To account required");
+        if (pAccountId === pToAccountId) throw new Error("From and To must differ");
+        const { error } = await supabase.from("transfers").insert({
+          user_id: user.id, date: pDate, from_account_id: pAccountId, to_account_id: pToAccountId,
+          pay_period_id: pPeriodId === "none" ? null : pPeriodId,
+          amount: parsedAmount, notes: pNotes.trim() || null,
+        });
+        if (error) throw error;
+      } else {
+        if (!pAccountId) throw new Error("Account required");
+        const effectiveNotes = buildTxNotes(pLabel.trim() || null, pNotes.trim() || null);
+        const { error } = await supabase.from("transactions").insert({
+          user_id: user.id, transaction_type: pType, date: pDate, account_id: pAccountId,
+          category_id: pCategoryId,
+          budget_item_id: pBudgetItemId,
+          pay_period_id: pPeriodId === "none" ? null : pPeriodId,
+          amount: parsedAmount, notes: effectiveNotes,
+        } as any);
+        if (error) throw error;
+      }
+      toast.success("Repeated");
+      invalidate();
+      setMode("view");
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(friendlyError(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const title = mode === "edit" ? "Edit" : mode === "replace" ? "Replace" : mode === "repeat" ? "Repeat" : label;
   const desc = mode === "edit"
     ? "Update details. Transaction type can't be changed here — use Replace."
     : mode === "replace"
     ? "Create a corrected transaction. The old one is removed only after the new one is saved."
+    : mode === "repeat"
+    ? "Create a new movement from this one. The original is kept unchanged."
     : (isTx ? "Transaction details" : "Transfer details");
 
   return (
