@@ -202,9 +202,12 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <Button asChild size="sm"><Link to="/add"><PlusCircle className="h-4 w-4 mr-1" />Add Transaction</Link></Button>
-        <Button asChild variant="outline" size="sm"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
+        <Button size="sm" variant="secondary" onClick={() => setLoadCCOpen(true)}>
+          <CreditCard className="h-4 w-4 mr-1" />Load Credit Card
+        </Button>
+        <Button asChild variant="outline" size="sm" className="col-span-2 sm:col-span-1"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
       {active && (() => {
