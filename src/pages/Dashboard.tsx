@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<MovementRef | null>(null);
   const [quickItem, setQuickItem] = useState<BudgetItem | null>(null);
+  const [loadCCOpen, setLoadCCOpen] = useState(false);
   const [showAllBudget, setShowAllBudget] = useState(false);
   const touchStart = useRef<number | null>(null);
 
