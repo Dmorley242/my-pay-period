@@ -9,6 +9,7 @@ import {
   syncPendingMovements,
   type PendingMovement,
 } from "@/lib/offlineQueue";
+import { checkSupabaseConnection } from "@/lib/networkSync";
 
 function computeCounts(items: PendingMovement[]) {
   let pending = 0;
