@@ -138,7 +138,8 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         <div className="space-y-3">
           <div>
             <Label>Amount *</Label>
-            <MoneyInput value={amount} onChange={setAmount} autoFocus />
+            <MoneyInput ref={amountRef} value={amount} onChange={setAmount} autoFocus />
+
             {!amountValid && amount !== "" && (
               <p className="text-xs text-destructive mt-1">Amount must be greater than 0.</p>
             )}
