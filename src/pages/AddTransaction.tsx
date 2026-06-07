@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildTxNotes } from "@/lib/txNotes";
+import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 
 type TxType = "income" | "expense" | "withdrawal" | "transfer";
 
