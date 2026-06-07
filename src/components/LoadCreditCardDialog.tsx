@@ -162,7 +162,7 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
           <div className="space-y-3">
             <div>
               <Label>Amount *</Label>
-              <MoneyInput value={amount} onChange={setAmount} autoFocus />
+              <MoneyInput ref={amountRef} value={amount} onChange={setAmount} autoFocus />
             </div>
             <div>
               <Label>From Account *</Label>
