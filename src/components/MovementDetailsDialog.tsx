@@ -467,7 +467,7 @@ export function MovementDetailsDialog({
                 </div>
                 <div>
                   <Label>Amount</Label>
-                  <MoneyInput value={rAmount} onChange={setRAmount} />
+                  <MoneyInput ref={replaceAmountRef} value={rAmount} onChange={setRAmount} />
                 </div>
               </div>
 
