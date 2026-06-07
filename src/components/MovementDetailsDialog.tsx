@@ -39,6 +39,7 @@ export function MovementDetailsDialog({
   const { user } = useAuth();
   const { data: accounts = [] } = useAccounts();
   const { data: cats = [] } = useCategories();
+  const { data: budgetItems = [] } = useBudgetItems();
   const { data: periods = [] } = usePayPeriods();
 
   const [mode, setMode] = useState<Mode>("view");
