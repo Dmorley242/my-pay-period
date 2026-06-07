@@ -46,24 +46,31 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
   useEffect(() => {
     const refresh = () => setItems(getPendingMovements());
     const unsub = subscribeOfflineQueue(refresh);
-    const onOnline = () => {
-      if (getPendingMovements().filter(i => i.status === "pending").length > 0) {
-        runSync();
-      }
-    };
-    window.addEventListener("online", onOnline);
-    if (navigator.onLine && getPendingMovements().filter(i => i.status === "pending").length > 0) {
+    const trySync = () => {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
       runSync();
-    }
+    };
+    const onVisibility = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") trySync();
+    };
+    window.addEventListener("online", trySync);
+    window.addEventListener("focus", trySync);
+    document.addEventListener("visibilitychange", onVisibility);
+    // Initial check on mount
+    trySync();
     return () => {
       unsub();
-      window.removeEventListener("online", onOnline);
+      window.removeEventListener("online", trySync);
+      window.removeEventListener("focus", trySync);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const runSync = async () => {
     if (syncing) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
     if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
     setSyncing(true);
     const res = await syncPendingMovements();
@@ -71,6 +78,11 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     setItems(getPendingMovements());
     if (res.synced > 0) {
       toast.success(`Offline movements synced (${res.synced})`);
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["transfers"] });
+      qc.invalidateQueries({ queryKey: ["budget_items"] });
+      qc.invalidateQueries({ queryKey: ["pay_periods"] });
       qc.invalidateQueries();
     } else if (res.failed > 0) {
       toast.error(`${res.failed} pending movement(s) failed to sync`);
