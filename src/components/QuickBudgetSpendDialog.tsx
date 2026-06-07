@@ -56,9 +56,6 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         if (last && accounts.some(a => a.id === last)) nextAccount = last;
       } catch {}
       setAccountId(nextAccount);
-
-      // Focus amount input shortly after open
-      setTimeout(() => amountRef.current?.focus(), 60);
     }
   }, [open, budgetItem, accounts]);
 
@@ -138,7 +135,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         <div className="space-y-3">
           <div>
             <Label>Amount *</Label>
-            <MoneyInput ref={amountRef} value={amount} onChange={setAmount} autoFocus />
+            <MoneyInput ref={amountRef} value={amount} onChange={setAmount} />
 
             {!amountValid && amount !== "" && (
               <p className="text-xs text-destructive mt-1">Amount must be greater than 0.</p>
