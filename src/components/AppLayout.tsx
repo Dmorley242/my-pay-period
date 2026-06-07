@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PendingOfflineBar } from "@/components/PendingOfflineBar";
 
 const links = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
@@ -121,7 +122,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </Button>
         </header>
         <main className="flex-1 overflow-auto">
-          <div className="max-w-7xl mx-auto p-4 md:p-8">{children}</div>
+          <div className="max-w-7xl mx-auto p-4 md:p-8">
+            <PendingOfflineBar className="mb-3" />
+            {children}
+          </div>
         </main>
       </div>
 

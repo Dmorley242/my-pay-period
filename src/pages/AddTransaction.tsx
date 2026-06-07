@@ -76,6 +76,7 @@ export default function AddTransaction() {
     const parsedAmount = parseFloat(amount);
     if (!user || !amount) return toast.error("Amount required");
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return toast.error("Enter an amount greater than 0");
+    if (!date) return toast.error("Date required");
 
     if (type === "transfer") {
       if (!accountId || !toAccountId) return toast.error("From and To accounts required");

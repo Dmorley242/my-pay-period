@@ -106,7 +106,7 @@ export const syncPendingMovements = async (): Promise<{ synced: number; failed: 
   let synced = 0;
   let failed = 0;
   try {
-    const items = readAll().filter(i => i.status !== "syncing");
+    const items = readAll().filter(i => i.status === "pending");
     for (const item of items) {
       markStatus(item.local_id, "syncing");
       const table = item.kind === "transaction" ? "transactions" : "transfers";
