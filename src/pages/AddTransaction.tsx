@@ -97,14 +97,19 @@ export default function AddTransaction() {
       };
       if (typeof navigator !== "undefined" && navigator.onLine === false) return queueOffline("offline");
       try {
-        const { error } = await supabase.from("transfers").insert(payload);
+        const res: any = await withTimeout(
+          supabase.from("transfers").insert(payload) as unknown as Promise<any>,
+          7000,
+          "add-transfer-insert",
+        );
+        const error = res?.error;
         if (error) {
-          if (isNetworkError(error)) return queueOffline("network");
+          if (isLikelyNetworkOrTimeoutError(error)) return queueOffline("network");
           return toast.error(friendlyError(error));
         }
         toast.success("Transfer added");
       } catch (e: any) {
-        if (isNetworkError(e)) return queueOffline("network");
+        if (isLikelyNetworkOrTimeoutError(e)) return queueOffline("network");
         return toast.error(friendlyError(e));
       }
     } else {
