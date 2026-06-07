@@ -69,11 +69,17 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const runSync = async () => {
+  const runSync = async (opts: { manual?: boolean } = {}) => {
     if (syncing) return;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return;
     if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
     setSyncing(true);
+    const ok = await checkSupabaseConnection();
+    if (!ok) {
+      setSyncing(false);
+      if (opts.manual) toast.message("Internet not stable yet. Try again shortly.");
+      return;
+    }
     const res = await syncPendingMovements();
     setSyncing(false);
     setItems(getPendingMovements());
@@ -85,7 +91,11 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
       qc.invalidateQueries({ queryKey: ["budget_items"] });
       qc.invalidateQueries({ queryKey: ["pay_periods"] });
       qc.invalidateQueries();
-    } else if (res.failed > 0) {
+    }
+    if (res.skipped && res.skipped > 0) {
+      toast.message(`${res.skipped} pending item(s) already existed online`);
+    }
+    if (res.failed > 0) {
       toast.error(`${res.failed} pending movement(s) failed to sync`);
     }
   };
