@@ -143,6 +143,11 @@ export function MovementDetailsDialog({
     }
   }, [open, movement?.kind, movement?.record?.id]);
 
+  useEffect(() => {
+    if (mode === "repeat") setTimeout(() => repeatAmountRef.current?.focus(), 60);
+    if (mode === "replace") setTimeout(() => replaceAmountRef.current?.focus(), 60);
+  }, [mode]);
+
   if (!movement) return null;
 
   const accName = (id: string) => {
