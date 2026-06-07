@@ -330,9 +330,14 @@ export function MovementDetailsDialog({
 
     try {
       const table = kind === "transfer" ? "transfers" : "transactions";
-      const { error } = await supabase.from(table as any).insert(payload as any);
+      const res: any = await withTimeout(
+        supabase.from(table as any).insert(payload as any) as unknown as Promise<any>,
+        7000,
+        `repeat-${table}-insert`,
+      );
+      const error = res?.error;
       if (error) {
-        if (isNetworkError(error)) return queueOffline("network");
+        if (isLikelyNetworkOrTimeoutError(error)) return queueOffline("network");
         throw error;
       }
       toast.success("Repeated");
@@ -340,7 +345,7 @@ export function MovementDetailsDialog({
       setMode("view");
       onOpenChange(false);
     } catch (e: any) {
-      if (isNetworkError(e)) return queueOffline("network");
+      if (isLikelyNetworkOrTimeoutError(e)) return queueOffline("network");
       toast.error(friendlyError(e));
     } finally {
       setSaving(false);
