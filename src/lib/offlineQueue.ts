@@ -106,31 +106,31 @@ export const isNetworkError = (err: any): boolean => isLikelyNetworkOrTimeoutErr
 async function findDuplicate(kind: PendingKind, payload: Record<string, any>): Promise<string | null> {
   try {
     if (kind === "transaction") {
-      let q = supabase.from("transactions").select("id, notes, budget_item_id").limit(2)
+      const q = supabase.from("transactions").select("id, notes, budget_item_id").limit(5)
         .eq("user_id", payload.user_id)
         .eq("date", payload.date)
         .eq("account_id", payload.account_id)
         .eq("transaction_type", payload.transaction_type)
         .eq("amount", payload.amount);
-      const { data, error } = await withTimeout(q as any, 5000, "dup-check-tx");
-      if (error || !data) return null;
+      const res: any = await withTimeout(q as unknown as Promise<any>, 5000, "dup-check-tx");
+      if (res?.error || !res?.data) return null;
       const wantNotes = payload.notes ?? null;
       const wantBid = payload.budget_item_id ?? null;
-      const match = (data as any[]).find(r =>
+      const match = (res.data as any[]).find((r: any) =>
         (r.notes ?? null) === wantNotes && (r.budget_item_id ?? null) === wantBid
       );
       return match?.id ?? null;
     } else {
-      let q = supabase.from("transfers").select("id, notes").limit(2)
+      const q = supabase.from("transfers").select("id, notes").limit(5)
         .eq("user_id", payload.user_id)
         .eq("date", payload.date)
         .eq("from_account_id", payload.from_account_id)
         .eq("to_account_id", payload.to_account_id)
         .eq("amount", payload.amount);
-      const { data, error } = await withTimeout(q as any, 5000, "dup-check-tr");
-      if (error || !data) return null;
+      const res: any = await withTimeout(q as unknown as Promise<any>, 5000, "dup-check-tr");
+      if (res?.error || !res?.data) return null;
       const wantNotes = payload.notes ?? null;
-      const match = (data as any[]).find(r => (r.notes ?? null) === wantNotes);
+      const match = (res.data as any[]).find((r: any) => (r.notes ?? null) === wantNotes);
       return match?.id ?? null;
     }
   } catch {
