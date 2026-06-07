@@ -43,6 +43,8 @@ export function MovementDetailsDialog({
   const [mode, setMode] = useState<Mode>("view");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const replaceAmountRef = useRef<HTMLInputElement>(null);
+  const repeatAmountRef = useRef<HTMLInputElement>(null);
 
   // Edit fields
   const [eDate, setEDate] = useState("");
