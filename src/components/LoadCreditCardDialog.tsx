@@ -47,6 +47,7 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState(DEFAULT_NOTE);
   const [saving, setSaving] = useState(false);
+  const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -74,6 +75,8 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
       if (lastTo && creditCards.some(a => a.id === lastTo)) nextTo = lastTo;
     }
     setToId(nextTo);
+
+    setTimeout(() => amountRef.current?.focus(), 60);
   }, [open]);
 
   const parsed = parseFloat(amount);
@@ -93,7 +96,7 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
     if (!amountValid) return toast.error("Enter an amount greater than 0");
 
     setSaving(true);
-    const { error } = await supabase.from("transfers").insert({
+    const payload = {
       user_id: user.id,
       date,
       from_account_id: fromId,
@@ -101,18 +104,47 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
       pay_period_id: activePeriod?.id ?? null,
       amount: parsed,
       notes: notes?.trim() ? notes.trim() : DEFAULT_NOTE,
-    });
-    setSaving(false);
-    if (error) return toast.error(friendlyError(error));
+    };
+
+    const queueOffline = (reason: "offline" | "network") => {
+      addPendingMovement("transfer", payload);
+      try {
+        localStorage.setItem(LS_FROM, fromId);
+        localStorage.setItem(LS_TO, toId);
+      } catch {}
+      toast.success(
+        reason === "offline"
+          ? "Saved offline. It will sync when you're back online."
+          : "Connection issue. Saved offline for sync.",
+      );
+      setSaving(false);
+      onOpenChange(false);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      return queueOffline("offline");
+    }
 
     try {
-      localStorage.setItem(LS_FROM, fromId);
-      localStorage.setItem(LS_TO, toId);
-    } catch {}
-
-    toast.success("Credit card loaded");
-    qc.invalidateQueries();
-    onOpenChange(false);
+      const { error } = await supabase.from("transfers").insert(payload);
+      if (error) {
+        if (isNetworkError(error)) return queueOffline("network");
+        setSaving(false);
+        return toast.error(friendlyError(error));
+      }
+      try {
+        localStorage.setItem(LS_FROM, fromId);
+        localStorage.setItem(LS_TO, toId);
+      } catch {}
+      toast.success("Credit card loaded");
+      qc.invalidateQueries();
+      setSaving(false);
+      onOpenChange(false);
+    } catch (e: any) {
+      if (isNetworkError(e)) return queueOffline("network");
+      setSaving(false);
+      toast.error(friendlyError(e));
+    }
   };
 
   return (
