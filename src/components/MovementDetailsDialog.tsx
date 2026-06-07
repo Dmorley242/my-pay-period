@@ -154,13 +154,14 @@ export function MovementDetailsDialog({
     return a ? accountLabel(a) : "—";
   };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? null;
+  const biName = (id: string | null | undefined) => (id ? budgetItems.find(b => b.id === id)?.name ?? null : null);
   const periodName = (id: string | null) => periods.find(p => p.id === id)?.name ?? null;
 
   const isTx = movement.kind === "tx";
   const rec: any = movement.record;
   const parsedNotes = isTx ? parseTxNotes(rec.notes) : { label: null, notes: rec.notes };
   const label = isTx
-    ? (parsedNotes.label || catName(rec.category_id) || rec.transaction_type)
+    ? (parsedNotes.label || biName(rec.budget_item_id) || catName(rec.category_id) || rec.transaction_type)
     : `Transfer ${accName(rec.from_account_id)} → ${accName(rec.to_account_id)}`;
 
   const amount = Number(rec.amount);
