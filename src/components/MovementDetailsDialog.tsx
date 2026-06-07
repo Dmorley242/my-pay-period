@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAccounts, useCategories, usePayPeriods, type Transaction, type Transfer } from "@/hooks/useFinanceData";
 import { parseTxNotes, buildTxNotes } from "@/lib/txNotes";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
+import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
 export type MovementRef =
   | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
