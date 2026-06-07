@@ -14,6 +14,7 @@ import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel } from "@/lib/format";
 import type { Account, BudgetItem, PayPeriod } from "@/hooks/useFinanceData";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
+import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
 const todayLocal = () => {
   const d = new Date();
