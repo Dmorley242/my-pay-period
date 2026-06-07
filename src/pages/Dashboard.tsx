@@ -11,6 +11,7 @@ import { txLabel, hasNotes } from "@/lib/txNotes";
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
 import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
 import type { BudgetItem } from "@/hooks/useFinanceData";
+import { usePendingOfflineMovements, computePendingAccountImpacts, computePendingBudgetSpend } from "@/hooks/usePendingOfflineMovements";
 
 
 type Movement = {
@@ -42,7 +43,13 @@ export default function Dashboard() {
   const [showAllBudget, setShowAllBudget] = useState(false);
   const touchStart = useRef<number | null>(null);
 
-  const total = accounts.reduce((s, a) => s + Number(a.current_balance), 0);
+  const pendingItems = usePendingOfflineMovements();
+  const pendingAccountImpacts = useMemo(() => computePendingAccountImpacts(pendingItems), [pendingItems]);
+  const pendingBudgetSpend = useMemo(() => computePendingBudgetSpend(pendingItems), [pendingItems]);
+  const hasAnyPendingBudget = Object.keys(pendingBudgetSpend).length > 0;
+
+  const projectedBalance = (id: string) => Number(accounts.find(a => a.id === id)?.current_balance ?? 0) + (pendingAccountImpacts[id] || 0);
+  const total = accounts.reduce((s, a) => s + projectedBalance(a.id), 0);
   const periodTxs = active ? txs.filter(t => t.pay_period_id === active.id) : [];
   const periodTransfers = active ? transfers.filter(t => t.pay_period_id === active.id) : [];
   const income = periodTxs.filter(t => t.transaction_type === "income" || t.transaction_type === "deposit").reduce((s, t) => s + Number(t.amount), 0);
@@ -135,12 +142,17 @@ export default function Dashboard() {
 
               {(() => {
                 const activeHolds = holds.filter(h => h.account_id === current.id && h.status === "active").reduce((s, h) => s + Number(h.amount), 0);
-                const available = Number(current.current_balance) - activeHolds;
+                const pendingDelta = pendingAccountImpacts[current.id] || 0;
+                const displayBalance = Number(current.current_balance) + pendingDelta;
+                const available = displayBalance - activeHolds;
                 return (
                   <>
                     <div className="mt-6 text-center">
-                      <div className="text-4xl md:text-5xl font-bold tracking-tight tabular-nums">{money(current.current_balance)}</div>
+                      <div className="text-4xl md:text-5xl font-bold tracking-tight tabular-nums">{money(displayBalance)}</div>
                       <div className="mt-1 text-xs opacity-80">Current balance · started at {money(current.starting_balance)}</div>
+                      {pendingDelta !== 0 && (
+                        <div className="mt-1 text-[11px] opacity-90">Includes pending offline movements</div>
+                      )}
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <div className="rounded-xl bg-white/10 backdrop-blur p-3 text-center">
