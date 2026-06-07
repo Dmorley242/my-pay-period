@@ -110,7 +110,7 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
         <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
         <span className="truncate">{statusText(items)}</span>
       </div>
-      <Button size="sm" variant="outline" onClick={runSync} disabled={syncing || !canSync}>
+      <Button size="sm" variant="outline" onClick={() => runSync({ manual: true })} disabled={syncing || !canSync}>
         <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
         {syncing ? "Syncing…" : "Sync Now"}
       </Button>
