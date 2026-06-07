@@ -168,7 +168,8 @@ export const syncPendingMovements = async (): Promise<{ synced: number; failed: 
       const table = item.kind === "transaction" ? "transactions" : "transfers";
       try {
         const insertPromise = supabase.from(table as any).insert(item.payload as any);
-        const { error } = await withTimeout(insertPromise as any, 8000, `insert-${table}`);
+        const res: any = await withTimeout(insertPromise as unknown as Promise<any>, 8000, `insert-${table}`);
+        const error = res?.error;
         if (error) {
           if (isLikelyNetworkOrTimeoutError(error)) {
             markStatus(item.local_id, "pending");
