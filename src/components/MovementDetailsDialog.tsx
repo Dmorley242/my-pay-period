@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { friendlyError } from "@/lib/friendlyError";
 import { useAuth } from "@/hooks/useAuth";
 import { useAccounts, useCategories, usePayPeriods, type Transaction, type Transfer } from "@/hooks/useFinanceData";
 import { parseTxNotes, buildTxNotes } from "@/lib/txNotes";
+import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 
 export type MovementRef =
   | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
