@@ -290,35 +290,59 @@ export function MovementDetailsDialog({
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) return toast.error("Enter an amount greater than 0");
     if (!pDate) return toast.error("Date required");
 
+    let kind: "transaction" | "transfer";
+    let payload: Record<string, any>;
+    if (pType === "transfer") {
+      if (!pAccountId) return toast.error("From account required");
+      if (!pToAccountId) return toast.error("To account required");
+      if (pAccountId === pToAccountId) return toast.error("From and To must differ");
+      kind = "transfer";
+      payload = {
+        user_id: user.id, date: pDate, from_account_id: pAccountId, to_account_id: pToAccountId,
+        pay_period_id: pPeriodId === "none" ? null : pPeriodId,
+        amount: parsedAmount, notes: pNotes.trim() || null,
+      };
+    } else {
+      if (!pAccountId) return toast.error("Account required");
+      const effectiveNotes = buildTxNotes(pLabel.trim() || null, pNotes.trim() || null);
+      kind = "transaction";
+      payload = {
+        user_id: user.id, transaction_type: pType, date: pDate, account_id: pAccountId,
+        category_id: pCategoryId,
+        budget_item_id: pBudgetItemId,
+        pay_period_id: pPeriodId === "none" ? null : pPeriodId,
+        amount: parsedAmount, notes: effectiveNotes,
+      };
+    }
+
     setSaving(true);
+
+    const queueOffline = (reason: "offline" | "network") => {
+      addPendingMovement(kind, payload);
+      toast.success(reason === "offline"
+        ? "Saved offline. It will sync when you're back online."
+        : "Connection issue. Saved offline for sync.");
+      invalidate();
+      setSaving(false);
+      setMode("view");
+      onOpenChange(false);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return queueOffline("offline");
+
     try {
-      if (pType === "transfer") {
-        if (!pAccountId) throw new Error("From account required");
-        if (!pToAccountId) throw new Error("To account required");
-        if (pAccountId === pToAccountId) throw new Error("From and To must differ");
-        const { error } = await supabase.from("transfers").insert({
-          user_id: user.id, date: pDate, from_account_id: pAccountId, to_account_id: pToAccountId,
-          pay_period_id: pPeriodId === "none" ? null : pPeriodId,
-          amount: parsedAmount, notes: pNotes.trim() || null,
-        });
-        if (error) throw error;
-      } else {
-        if (!pAccountId) throw new Error("Account required");
-        const effectiveNotes = buildTxNotes(pLabel.trim() || null, pNotes.trim() || null);
-        const { error } = await supabase.from("transactions").insert({
-          user_id: user.id, transaction_type: pType, date: pDate, account_id: pAccountId,
-          category_id: pCategoryId,
-          budget_item_id: pBudgetItemId,
-          pay_period_id: pPeriodId === "none" ? null : pPeriodId,
-          amount: parsedAmount, notes: effectiveNotes,
-        } as any);
-        if (error) throw error;
+      const table = kind === "transfer" ? "transfers" : "transactions";
+      const { error } = await supabase.from(table as any).insert(payload as any);
+      if (error) {
+        if (isNetworkError(error)) return queueOffline("network");
+        throw error;
       }
       toast.success("Repeated");
       invalidate();
       setMode("view");
       onOpenChange(false);
     } catch (e: any) {
+      if (isNetworkError(e)) return queueOffline("network");
       toast.error(friendlyError(e));
     } finally {
       setSaving(false);
