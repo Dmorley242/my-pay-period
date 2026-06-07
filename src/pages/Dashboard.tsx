@@ -11,6 +11,7 @@ import { txLabel, hasNotes } from "@/lib/txNotes";
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
 import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
 import type { BudgetItem } from "@/hooks/useFinanceData";
+import { PendingOfflineBar } from "@/components/PendingOfflineBar";
 
 type Movement = {
   id: string;
@@ -106,6 +107,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      <PendingOfflineBar />
       <section className="overflow-hidden rounded-3xl border bg-card shadow-[var(--shadow-lg)]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="relative p-6 md:p-8 text-primary-foreground" style={{ background: "var(--gradient-hero)" }}>
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />

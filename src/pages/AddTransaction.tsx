@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildTxNotes } from "@/lib/txNotes";
+import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 
 type TxType = "income" | "expense" | "withdrawal" | "transfer";
 
@@ -79,13 +80,31 @@ export default function AddTransaction() {
     if (type === "transfer") {
       if (!accountId || !toAccountId) return toast.error("From and To accounts required");
       if (accountId === toAccountId) return toast.error("From and To must differ");
-      const { error } = await supabase.from("transfers").insert({
+      const payload = {
         user_id: user.id, date, from_account_id: accountId, to_account_id: toAccountId,
-        pay_period_id: null,
+        pay_period_id: null as string | null,
         amount: parsedAmount, notes: notes || null,
-      });
-      if (error) return toast.error(friendlyError(error));
-      toast.success("Transfer added");
+      };
+      const queueOffline = (reason: "offline" | "network") => {
+        addPendingMovement("transfer", payload);
+        toast.success(reason === "offline"
+          ? "Saved offline. It will sync when you're back online."
+          : "Connection issue. Saved offline for sync.");
+        qc.invalidateQueries();
+        nav("/");
+      };
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return queueOffline("offline");
+      try {
+        const { error } = await supabase.from("transfers").insert(payload);
+        if (error) {
+          if (isNetworkError(error)) return queueOffline("network");
+          return toast.error(friendlyError(error));
+        }
+        toast.success("Transfer added");
+      } catch (e: any) {
+        if (isNetworkError(e)) return queueOffline("network");
+        return toast.error(friendlyError(e));
+      }
     } else {
       if (!accountId) return toast.error("Account required");
       const effectivePeriodId = type === "income"
@@ -103,15 +122,33 @@ export default function AddTransaction() {
 
       const includeBudget = (type === "expense" || type === "withdrawal") && budgetItemId !== "none";
 
-      const { error } = await supabase.from("transactions").insert({
+      const payload: Record<string, any> = {
         user_id: user.id, transaction_type: type, date, account_id: accountId,
         category_id: null,
         pay_period_id: effectivePeriodId,
         amount: parsedAmount, notes: effectiveNotes,
         ...(includeBudget ? { budget_item_id: budgetItemId } : {}),
-      } as any);
-      if (error) return toast.error(friendlyError(error));
-      toast.success("Transaction added");
+      };
+      const queueOffline = (reason: "offline" | "network") => {
+        addPendingMovement("transaction", payload);
+        toast.success(reason === "offline"
+          ? "Saved offline. It will sync when you're back online."
+          : "Connection issue. Saved offline for sync.");
+        qc.invalidateQueries();
+        nav("/");
+      };
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return queueOffline("offline");
+      try {
+        const { error } = await supabase.from("transactions").insert(payload as any);
+        if (error) {
+          if (isNetworkError(error)) return queueOffline("network");
+          return toast.error(friendlyError(error));
+        }
+        toast.success("Transaction added");
+      } catch (e: any) {
+        if (isNetworkError(e)) return queueOffline("network");
+        return toast.error(friendlyError(e));
+      }
     }
     qc.invalidateQueries();
     nav("/");

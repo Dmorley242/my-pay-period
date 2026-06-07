@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel } from "@/lib/format";
 import type { Account, BudgetItem, PayPeriod } from "@/hooks/useFinanceData";
+import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 
 const todayLocal = () => {
   const d = new Date();
@@ -39,6 +40,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open && budgetItem) {
@@ -54,6 +56,9 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         if (last && accounts.some(a => a.id === last)) nextAccount = last;
       } catch {}
       setAccountId(nextAccount);
+
+      // Focus amount input shortly after open
+      setTimeout(() => amountRef.current?.focus(), 60);
     }
   }, [open, budgetItem, accounts]);
 
@@ -76,7 +81,8 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
     if (!accountValid) return toast.error("Account is required");
     if (!budgetValid) return toast.error("Budget item is required");
     setSaving(true);
-    const { error } = await supabase.from("transactions").insert({
+
+    const payload = {
       user_id: user.id,
       transaction_type: "expense",
       date,
@@ -86,15 +92,41 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
       amount: parsed,
       notes: notes || null,
       budget_item_id: budgetItemId,
-    } as any);
-    setSaving(false);
-    if (error) return toast.error(friendlyError(error));
+    };
+
+    const queueOffline = (reason: "offline" | "network") => {
+      addPendingMovement("transaction", payload);
+      try { localStorage.setItem(lsKey(budgetItemId), accountId); } catch {}
+      toast.success(
+        reason === "offline"
+          ? "Saved offline. It will sync when you're back online."
+          : "Connection issue. Saved offline for sync.",
+      );
+      setSaving(false);
+      onOpenChange(false);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      return queueOffline("offline");
+    }
+
     try {
-      localStorage.setItem(lsKey(budgetItemId), accountId);
-    } catch {}
-    toast.success("Expense added");
-    qc.invalidateQueries();
-    onOpenChange(false);
+      const { error } = await supabase.from("transactions").insert(payload as any);
+      if (error) {
+        if (isNetworkError(error)) return queueOffline("network");
+        setSaving(false);
+        return toast.error(friendlyError(error));
+      }
+      try { localStorage.setItem(lsKey(budgetItemId), accountId); } catch {}
+      toast.success("Expense added");
+      qc.invalidateQueries();
+      setSaving(false);
+      onOpenChange(false);
+    } catch (e: any) {
+      if (isNetworkError(e)) return queueOffline("network");
+      setSaving(false);
+      toast.error(friendlyError(e));
+    }
   };
 
   return (
@@ -106,7 +138,8 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         <div className="space-y-3">
           <div>
             <Label>Amount *</Label>
-            <MoneyInput value={amount} onChange={setAmount} autoFocus />
+            <MoneyInput ref={amountRef} value={amount} onChange={setAmount} autoFocus />
+
             {!amountValid && amount !== "" && (
               <p className="text-xs text-destructive mt-1">Amount must be greater than 0.</p>
             )}
