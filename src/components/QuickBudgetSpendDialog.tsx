@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel } from "@/lib/format";
 import type { Account, BudgetItem, PayPeriod } from "@/hooks/useFinanceData";
+import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 
 const todayLocal = () => {
   const d = new Date();
