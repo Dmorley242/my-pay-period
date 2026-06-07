@@ -59,6 +59,8 @@ export default function Dashboard() {
 
   const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
+  const biName = (id: string | null | undefined) => (id ? budgetItems.find(b => b.id === id)?.name : null) ?? null;
+  const txFallback = (t: any) => biName(t.budget_item_id) || cats.find(c => c.id === t.category_id)?.name || t.transaction_type;
 
   const safeIdx = accounts.length === 0 ? 0 : Math.min(idx, accounts.length - 1);
   const current = accounts[safeIdx];
@@ -69,7 +71,7 @@ export default function Dashboard() {
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type),
+        label: txLabel(t.notes, txFallback(t)),
         type: t.transaction_type, signed, balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,
       };
@@ -94,7 +96,7 @@ export default function Dashboard() {
   const recent = useMemo(() => [
     ...txs.slice(0, 10).map(t => {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
-      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
+      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, txFallback(t)), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
     }),
     ...transfers.slice(0, 10).map(t => ({
       id: t.id, kind: "transfer" as const, date: t.date, title: `${accName(t.from_account_id)} → ${accName(t.to_account_id)}`, subtitle: "Transfer between accounts", amount: Number(t.amount), direction: "transfer" as const,

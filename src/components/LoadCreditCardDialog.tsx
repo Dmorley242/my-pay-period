@@ -14,6 +14,7 @@ import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel, money } from "@/lib/format";
 import type { Account, PayPeriod } from "@/hooks/useFinanceData";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
+import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
 const todayLocal = () => {
   const d = new Date();
@@ -124,9 +125,14 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
     }
 
     try {
-      const { error } = await supabase.from("transfers").insert(payload);
+      const res: any = await withTimeout(
+        supabase.from("transfers").insert(payload) as unknown as Promise<any>,
+        7000,
+        "load-cc-insert",
+      );
+      const error = res?.error;
       if (error) {
-        if (isNetworkError(error)) return queueOffline("network");
+        if (isLikelyNetworkOrTimeoutError(error)) return queueOffline("network");
         setSaving(false);
         return toast.error(friendlyError(error));
       }
@@ -139,7 +145,7 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
       setSaving(false);
       onOpenChange(false);
     } catch (e: any) {
-      if (isNetworkError(e)) return queueOffline("network");
+      if (isLikelyNetworkOrTimeoutError(e)) return queueOffline("network");
       setSaving(false);
       toast.error(friendlyError(e));
     }

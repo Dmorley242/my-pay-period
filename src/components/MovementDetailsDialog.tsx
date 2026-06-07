@@ -14,9 +14,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { useAuth } from "@/hooks/useAuth";
-import { useAccounts, useCategories, usePayPeriods, type Transaction, type Transfer } from "@/hooks/useFinanceData";
+import { useAccounts, useBudgetItems, useCategories, usePayPeriods, type Transaction, type Transfer } from "@/hooks/useFinanceData";
 import { parseTxNotes, buildTxNotes } from "@/lib/txNotes";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
+import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
 export type MovementRef =
   | { kind: "tx"; record: Transaction; balanceBefore?: number; balanceAfter?: number }
@@ -38,6 +39,7 @@ export function MovementDetailsDialog({
   const { user } = useAuth();
   const { data: accounts = [] } = useAccounts();
   const { data: cats = [] } = useCategories();
+  const { data: budgetItems = [] } = useBudgetItems();
   const { data: periods = [] } = usePayPeriods();
 
   const [mode, setMode] = useState<Mode>("view");
@@ -152,13 +154,14 @@ export function MovementDetailsDialog({
     return a ? accountLabel(a) : "—";
   };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? null;
+  const biName = (id: string | null | undefined) => (id ? budgetItems.find(b => b.id === id)?.name ?? null : null);
   const periodName = (id: string | null) => periods.find(p => p.id === id)?.name ?? null;
 
   const isTx = movement.kind === "tx";
   const rec: any = movement.record;
   const parsedNotes = isTx ? parseTxNotes(rec.notes) : { label: null, notes: rec.notes };
   const label = isTx
-    ? (parsedNotes.label || catName(rec.category_id) || rec.transaction_type)
+    ? (parsedNotes.label || biName(rec.budget_item_id) || catName(rec.category_id) || rec.transaction_type)
     : `Transfer ${accName(rec.from_account_id)} → ${accName(rec.to_account_id)}`;
 
   const amount = Number(rec.amount);
@@ -329,9 +332,14 @@ export function MovementDetailsDialog({
 
     try {
       const table = kind === "transfer" ? "transfers" : "transactions";
-      const { error } = await supabase.from(table as any).insert(payload as any);
+      const res: any = await withTimeout(
+        supabase.from(table as any).insert(payload as any) as unknown as Promise<any>,
+        7000,
+        `repeat-${table}-insert`,
+      );
+      const error = res?.error;
       if (error) {
-        if (isNetworkError(error)) return queueOffline("network");
+        if (isLikelyNetworkOrTimeoutError(error)) return queueOffline("network");
         throw error;
       }
       toast.success("Repeated");
@@ -339,7 +347,7 @@ export function MovementDetailsDialog({
       setMode("view");
       onOpenChange(false);
     } catch (e: any) {
-      if (isNetworkError(e)) return queueOffline("network");
+      if (isLikelyNetworkOrTimeoutError(e)) return queueOffline("network");
       toast.error(friendlyError(e));
     } finally {
       setSaving(false);

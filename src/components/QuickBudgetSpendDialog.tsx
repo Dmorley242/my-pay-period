@@ -14,6 +14,7 @@ import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel } from "@/lib/format";
 import type { Account, BudgetItem, PayPeriod } from "@/hooks/useFinanceData";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
+import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
 const todayLocal = () => {
   const d = new Date();
@@ -108,9 +109,14 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
     }
 
     try {
-      const { error } = await supabase.from("transactions").insert(payload as any);
+      const res: any = await withTimeout(
+        supabase.from("transactions").insert(payload as any) as unknown as Promise<any>,
+        7000,
+        "quick-spend-insert",
+      );
+      const error = res?.error;
       if (error) {
-        if (isNetworkError(error)) return queueOffline("network");
+        if (isLikelyNetworkOrTimeoutError(error)) return queueOffline("network");
         setSaving(false);
         return toast.error(friendlyError(error));
       }
@@ -120,7 +126,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
       setSaving(false);
       onOpenChange(false);
     } catch (e: any) {
-      if (isNetworkError(e)) return queueOffline("network");
+      if (isLikelyNetworkOrTimeoutError(e)) return queueOffline("network");
       setSaving(false);
       toast.error(friendlyError(e));
     }

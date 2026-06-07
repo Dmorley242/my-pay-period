@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAccountHolds, useAccounts, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
+import { useAccountHolds, useAccounts, useBudgetItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,7 @@ export default function History() {
   const { data: txs = [] } = useTransactions();
   const { data: transfers = [] } = useTransfers();
   const { data: cats = [] } = useCategories();
+  const { data: budgetItems = [] } = useBudgetItems();
   const { data: periods = [] } = usePayPeriods();
   const { data: holds = [] } = useAccountHolds();
 
@@ -98,7 +99,7 @@ export default function History() {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), type: t.transaction_type,
+        label: txLabel(t.notes, (((t as any).budget_item_id && budgetItems.find(b => b.id === (t as any).budget_item_id)?.name) || cats.find(c => c.id === t.category_id)?.name || t.transaction_type)), type: t.transaction_type,
         categoryId: t.category_id, payPeriodId: t.pay_period_id,
         signed: isIn ? Number(t.amount) : -Number(t.amount), balanceBefore: 0, balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,

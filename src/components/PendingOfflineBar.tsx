@@ -9,6 +9,7 @@ import {
   syncPendingMovements,
   type PendingMovement,
 } from "@/lib/offlineQueue";
+import { checkSupabaseConnection } from "@/lib/networkSync";
 
 function computeCounts(items: PendingMovement[]) {
   let pending = 0;
@@ -68,11 +69,17 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const runSync = async () => {
+  const runSync = async (opts: { manual?: boolean } = {}) => {
     if (syncing) return;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return;
     if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
     setSyncing(true);
+    const ok = await checkSupabaseConnection();
+    if (!ok) {
+      setSyncing(false);
+      if (opts.manual) toast.message("Internet not stable yet. Try again shortly.");
+      return;
+    }
     const res = await syncPendingMovements();
     setSyncing(false);
     setItems(getPendingMovements());
@@ -84,7 +91,11 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
       qc.invalidateQueries({ queryKey: ["budget_items"] });
       qc.invalidateQueries({ queryKey: ["pay_periods"] });
       qc.invalidateQueries();
-    } else if (res.failed > 0) {
+    }
+    if (res.skipped && res.skipped > 0) {
+      toast.message(`${res.skipped} pending item(s) already existed online`);
+    }
+    if (res.failed > 0) {
       toast.error(`${res.failed} pending movement(s) failed to sync`);
     }
   };
@@ -99,7 +110,7 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
         <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
         <span className="truncate">{statusText(items)}</span>
       </div>
-      <Button size="sm" variant="outline" onClick={runSync} disabled={syncing || !canSync}>
+      <Button size="sm" variant="outline" onClick={() => runSync({ manual: true })} disabled={syncing || !canSync}>
         <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
         {syncing ? "Syncing…" : "Sync Now"}
       </Button>
