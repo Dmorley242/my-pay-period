@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { PendingOfflineBar } from "@/components/PendingOfflineBar";
+
 
 const TABLES = [
   "accounts","transactions","transfers","pay_periods",
@@ -55,7 +55,6 @@ export default function Backup() {
 
   return (
     <div className="space-y-6">
-      <PendingOfflineBar />
       <div>
         <h1 className="text-3xl font-bold">Backup</h1>
         <p className="text-muted-foreground mt-1">Download a private copy of your data.</p>
