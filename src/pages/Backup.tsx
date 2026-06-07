@@ -5,6 +5,7 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PendingOfflineBar } from "@/components/PendingOfflineBar";
 
 const TABLES = [
   "accounts","transactions","transfers","pay_periods",
