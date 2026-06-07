@@ -146,14 +146,19 @@ export default function AddTransaction() {
       };
       if (typeof navigator !== "undefined" && navigator.onLine === false) return queueOffline("offline");
       try {
-        const { error } = await supabase.from("transactions").insert(payload as any);
+        const res: any = await withTimeout(
+          supabase.from("transactions").insert(payload as any) as unknown as Promise<any>,
+          7000,
+          "add-transaction-insert",
+        );
+        const error = res?.error;
         if (error) {
-          if (isNetworkError(error)) return queueOffline("network");
+          if (isLikelyNetworkOrTimeoutError(error)) return queueOffline("network");
           return toast.error(friendlyError(error));
         }
         toast.success("Transaction added");
       } catch (e: any) {
-        if (isNetworkError(e)) return queueOffline("network");
+        if (isLikelyNetworkOrTimeoutError(e)) return queueOffline("network");
         return toast.error(friendlyError(e));
       }
     }
