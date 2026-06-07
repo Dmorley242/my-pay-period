@@ -230,6 +230,10 @@ export default function Dashboard() {
           const bid = (t as any).budget_item_id as string | null | undefined;
           if (bid && t.transaction_type === "expense") spentMap.set(bid, (spentMap.get(bid) || 0) + Number(t.amount));
         });
+        // Include pending offline expenses with budget_item_id
+        for (const [bid, amt] of Object.entries(pendingBudgetSpend)) {
+          spentMap.set(bid, (spentMap.get(bid) || 0) + amt);
+        }
         const payAmount = Number(active.net_pay_amount ?? 0);
         const budgeted = items.reduce((s, b) => s + Number(b.budget_amount), 0);
         const spent = items.reduce((s, b) => s + (spentMap.get(b.id) || 0), 0);
@@ -244,6 +248,9 @@ export default function Dashboard() {
               <Button asChild variant="ghost" size="sm"><Link to="/budget">See More</Link></Button>
             </CardHeader>
             <CardContent className="space-y-3">
+              {hasAnyPendingBudget && (
+                <div className="text-[11px] text-muted-foreground">Includes pending offline spending</div>
+              )}
               <div
                 className={`relative overflow-hidden rounded-xl px-4 py-3 flex items-center justify-between border ${toAssign < 0 ? "border-destructive/50" : "border-primary/40"}`}
                 style={{ background: "var(--gradient-hero)", boxShadow: "var(--shadow-glow)" }}
