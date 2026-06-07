@@ -59,6 +59,8 @@ export default function Dashboard() {
 
   const accName = (id: string) => { const a = accounts.find(x => x.id === id); return a ? accountLabel(a) : "—"; };
   const catName = (id: string | null) => cats.find(c => c.id === id)?.name ?? "Uncategorized";
+  const biName = (id: string | null | undefined) => (id ? budgetItems.find(b => b.id === id)?.name : null) ?? null;
+  const txFallback = (t: any) => biName(t.budget_item_id) || cats.find(c => c.id === t.category_id)?.name || t.transaction_type;
 
   const safeIdx = accounts.length === 0 ? 0 : Math.min(idx, accounts.length - 1);
   const current = accounts[safeIdx];
