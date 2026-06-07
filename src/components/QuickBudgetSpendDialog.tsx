@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,8 @@ const todayLocal = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
+
+const lsKey = (budgetItemId: string) => `quickSpend:lastAccount:${budgetItemId}`;
 
 interface Props {
   open: boolean;
@@ -41,21 +43,38 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
   useEffect(() => {
     if (open && budgetItem) {
       setDate(todayLocal());
-      setAccountId(budgetItem.account_id);
       setBudgetItemId(budgetItem.id);
       setAmount("");
       setNotes("");
-    }
-  }, [open, budgetItem]);
 
-  const periodItems = activePeriod ? budgetItems.filter(b => b.pay_period_id === activePeriod.id) : [];
+      // Default account: last-used for this budget item, else linked account
+      let nextAccount = budgetItem.account_id;
+      try {
+        const last = localStorage.getItem(lsKey(budgetItem.id));
+        if (last && accounts.some(a => a.id === last)) nextAccount = last;
+      } catch {}
+      setAccountId(nextAccount);
+    }
+  }, [open, budgetItem, accounts]);
+
+  const periodItems = useMemo(
+    () => (activePeriod ? budgetItems.filter(b => b.pay_period_id === activePeriod.id) : []),
+    [activePeriod, budgetItems],
+  );
+
+  const parsed = parseFloat(amount);
+  const amountValid = Number.isFinite(parsed) && parsed > 0;
+  const dateValid = !!date;
+  const accountValid = !!accountId && accounts.some(a => a.id === accountId);
+  const budgetValid = !!budgetItemId;
+  const canConfirm = !!user && amountValid && dateValid && accountValid && budgetValid && !saving;
 
   const confirm = async () => {
     if (!user) return toast.error("Not signed in");
-    const parsed = parseFloat(amount);
-    if (!Number.isFinite(parsed) || parsed <= 0) return toast.error("Enter an amount greater than 0");
-    if (!accountId) return toast.error("Account required");
-    if (!budgetItemId) return toast.error("Budget item required");
+    if (!amountValid) return toast.error("Enter an amount greater than 0");
+    if (!dateValid) return toast.error("Date is required");
+    if (!accountValid) return toast.error("Account is required");
+    if (!budgetValid) return toast.error("Budget item is required");
     setSaving(true);
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
@@ -70,6 +89,9 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
     } as any);
     setSaving(false);
     if (error) return toast.error(friendlyError(error));
+    try {
+      localStorage.setItem(lsKey(budgetItemId), accountId);
+    } catch {}
     toast.success("Expense added");
     qc.invalidateQueries();
     onOpenChange(false);
@@ -85,28 +107,34 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
           <div>
             <Label>Amount *</Label>
             <MoneyInput value={amount} onChange={setAmount} autoFocus />
+            {!amountValid && amount !== "" && (
+              <p className="text-xs text-destructive mt-1">Amount must be greater than 0.</p>
+            )}
           </div>
           <div>
-            <Label>Date</Label>
+            <Label>Date *</Label>
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            {!dateValid && <p className="text-xs text-destructive mt-1">Date is required.</p>}
           </div>
           <div>
-            <Label>Account</Label>
+            <Label>Account *</Label>
             <Select value={accountId} onValueChange={setAccountId}>
               <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
               <SelectContent>
                 {accounts.map(a => <SelectItem key={a.id} value={a.id}>{accountLabel(a)}</SelectItem>)}
               </SelectContent>
             </Select>
+            {!accountValid && <p className="text-xs text-destructive mt-1">Account is required.</p>}
           </div>
           <div>
-            <Label>Budget Item</Label>
+            <Label>Budget Item *</Label>
             <Select value={budgetItemId} onValueChange={setBudgetItemId}>
               <SelectTrigger><SelectValue placeholder="Select budget item" /></SelectTrigger>
               <SelectContent>
                 {periodItems.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
+            {!budgetValid && <p className="text-xs text-destructive mt-1">Budget item is required.</p>}
           </div>
           <div>
             <Label>Note (optional)</Label>
@@ -115,7 +143,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={confirm} disabled={saving}>{saving ? "Saving…" : "Confirm"}</Button>
+          <Button onClick={confirm} disabled={!canConfirm}>{saving ? "Saving…" : "Confirm"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
