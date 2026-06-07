@@ -55,6 +55,7 @@ export default function Backup() {
 
   return (
     <div className="space-y-6">
+      <PendingOfflineBar />
       <div>
         <h1 className="text-3xl font-bold">Backup</h1>
         <p className="text-muted-foreground mt-1">Download a private copy of your data.</p>
