@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CloudOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -10,18 +10,51 @@ import {
   type PendingMovement,
 } from "@/lib/offlineQueue";
 
+function computeCounts(items: PendingMovement[]) {
+  let pending = 0;
+  let failed = 0;
+  let syncing = 0;
+  for (const item of items) {
+    if (item.status === "pending") pending++;
+    else if (item.status === "failed") failed++;
+    else if (item.status === "syncing") syncing++;
+  }
+  return { pending, failed, syncing };
+}
+
+function statusText(items: PendingMovement[]) {
+  const { pending, failed } = computeCounts(items);
+  const pendingLabel = `${pending} pending offline movement${pending === 1 ? "" : "s"}`;
+  const failedLabel = `${failed} failed offline movement${failed === 1 ? "" : "s"}`;
+
+  if (pending > 0 && failed > 0) {
+    return `${pendingLabel}, ${failedLabel}`;
+  }
+  if (failed > 0) {
+    return failedLabel;
+  }
+  return pendingLabel;
+}
+
 export function PendingOfflineBar({ className = "" }: { className?: string }) {
   const qc = useQueryClient();
   const [items, setItems] = useState<PendingMovement[]>(() => getPendingMovements());
   const [syncing, setSyncing] = useState(false);
 
+  const counts = useMemo(() => computeCounts(items), [items]);
+
   useEffect(() => {
     const refresh = () => setItems(getPendingMovements());
     const unsub = subscribeOfflineQueue(refresh);
-    const onOnline = () => { runSync(); };
+    const onOnline = () => {
+      if (getPendingMovements().filter(i => i.status === "pending").length > 0) {
+        runSync();
+      }
+    };
     window.addEventListener("online", onOnline);
-    // Try once on mount in case we're already online with pending items
-    if (navigator.onLine && getPendingMovements().length > 0) runSync();
+    if (navigator.onLine && getPendingMovements().filter(i => i.status === "pending").length > 0) {
+      runSync();
+    }
     return () => {
       unsub();
       window.removeEventListener("online", onOnline);
@@ -31,7 +64,7 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
 
   const runSync = async () => {
     if (syncing) return;
-    if (getPendingMovements().length === 0) return;
+    if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
     setSyncing(true);
     const res = await syncPendingMovements();
     setSyncing(false);
@@ -46,15 +79,15 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
 
   if (items.length === 0) return null;
 
+  const canSync = counts.pending > 0;
+
   return (
     <div className={`flex items-center justify-between gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm ${className}`}>
       <div className="flex items-center gap-2 min-w-0">
         <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
-        <span className="truncate">
-          {items.length} pending offline movement{items.length === 1 ? "" : "s"}
-        </span>
+        <span className="truncate">{statusText(items)}</span>
       </div>
-      <Button size="sm" variant="outline" onClick={runSync} disabled={syncing}>
+      <Button size="sm" variant="outline" onClick={runSync} disabled={syncing || !canSync}>
         <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
         {syncing ? "Syncing…" : "Sync Now"}
       </Button>
