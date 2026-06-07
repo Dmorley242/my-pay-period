@@ -75,8 +75,6 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
       if (lastTo && creditCards.some(a => a.id === lastTo)) nextTo = lastTo;
     }
     setToId(nextTo);
-
-    setTimeout(() => amountRef.current?.focus(), 60);
   }, [open]);
 
   const parsed = parseFloat(amount);
@@ -162,7 +160,7 @@ export function LoadCreditCardDialog({ open, onOpenChange, accounts, activePerio
           <div className="space-y-3">
             <div>
               <Label>Amount *</Label>
-              <MoneyInput ref={amountRef} value={amount} onChange={setAmount} autoFocus />
+              <MoneyInput ref={amountRef} value={amount} onChange={setAmount} />
             </div>
             <div>
               <Label>From Account *</Label>
