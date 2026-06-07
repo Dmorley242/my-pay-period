@@ -71,7 +71,7 @@ export default function Dashboard() {
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
       return {
         id: t.id, kind: "tx" as const, date: t.date, created_at: (t as any).created_at ?? t.date,
-        label: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type),
+        label: txLabel(t.notes, txFallback(t)),
         type: t.transaction_type, signed, balanceAfter: 0,
         hasNote: hasNotes(t.notes), raw: t,
       };
