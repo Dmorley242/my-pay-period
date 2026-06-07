@@ -96,7 +96,7 @@ export default function Dashboard() {
   const recent = useMemo(() => [
     ...txs.slice(0, 10).map(t => {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
-      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, cats.find(c => c.id === t.category_id)?.name || t.transaction_type), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
+      return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, txFallback(t)), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
     }),
     ...transfers.slice(0, 10).map(t => ({
       id: t.id, kind: "transfer" as const, date: t.date, title: `${accName(t.from_account_id)} → ${accName(t.to_account_id)}`, subtitle: "Transfer between accounts", amount: Number(t.amount), direction: "transfer" as const,
