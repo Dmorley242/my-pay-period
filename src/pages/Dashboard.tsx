@@ -11,6 +11,7 @@ import { txLabel, hasNotes } from "@/lib/txNotes";
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
 import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
 import type { BudgetItem } from "@/hooks/useFinanceData";
+import { PendingOfflineBar } from "@/components/PendingOfflineBar";
 
 type Movement = {
   id: string;
