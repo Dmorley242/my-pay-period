@@ -31,6 +31,7 @@ export default function History() {
   const { data: txs = [] } = useTransactions();
   const { data: transfers = [] } = useTransfers();
   const { data: cats = [] } = useCategories();
+  const { data: budgetItems = [] } = useBudgetItems();
   const { data: periods = [] } = usePayPeriods();
   const { data: holds = [] } = useAccountHolds();
 
