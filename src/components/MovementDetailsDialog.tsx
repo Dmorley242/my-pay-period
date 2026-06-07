@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { useAuth } from "@/hooks/useAuth";
-import { useAccounts, useCategories, usePayPeriods, type Transaction, type Transfer } from "@/hooks/useFinanceData";
+import { useAccounts, useBudgetItems, useCategories, usePayPeriods, type Transaction, type Transfer } from "@/hooks/useFinanceData";
 import { parseTxNotes, buildTxNotes } from "@/lib/txNotes";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
