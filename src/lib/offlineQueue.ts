@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isLikelyNetworkOrTimeoutError, withTimeout } from "@/lib/networkSync";
-import { createSyncAuditRecord } from "@/lib/syncAudit";
+import { createSyncAuditRecord, updateAuditByLocalId } from "@/lib/syncAudit";
+import { toast } from "sonner";
 
 
 
