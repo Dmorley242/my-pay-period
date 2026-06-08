@@ -48,27 +48,40 @@ export const subscribeOfflineQueue = (cb: () => void) => {
   return () => { listeners.delete(cb); };
 };
 
-const genId = () => {
+const genId = (prefix: string) => {
   try {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) return (crypto as any).randomUUID();
   } catch {}
-  return `local_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 };
 
 export const addPendingMovement = (kind: PendingKind, payload: Record<string, any>): PendingMovement => {
   const items = readAll();
+  const local_id = genId("local");
+  const client_sync_id = genId("csid");
+  const payloadWithSync = { ...payload, client_sync_id };
   const item: PendingMovement = {
-    local_id: genId(),
+    local_id,
+    client_sync_id,
     created_at: new Date().toISOString(),
     status: "pending",
     kind,
-    payload,
+    payload: payloadWithSync,
     attempt_count: 0,
   };
   items.push(item);
   writeAll(items);
+  try {
+    createSyncAuditRecord({
+      local_id,
+      client_sync_id,
+      kind,
+      local_payload: payloadWithSync,
+    });
+  } catch {}
   return item;
 };
+
 
 export const getPendingMovements = (): PendingMovement[] => readAll();
 
