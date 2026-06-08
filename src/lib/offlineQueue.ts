@@ -1,11 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isLikelyNetworkOrTimeoutError, withTimeout } from "@/lib/networkSync";
+import { createSyncAuditRecord } from "@/lib/syncAudit";
+
+
 
 export type PendingKind = "transaction" | "transfer";
 export type PendingStatus = "pending" | "syncing" | "failed";
 
 export interface PendingMovement {
   local_id: string;
+  client_sync_id: string;
   created_at: string;
   status: PendingStatus;
   kind: PendingKind;
