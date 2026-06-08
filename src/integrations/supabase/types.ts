@@ -480,6 +480,7 @@ export type Database = {
           amount: number
           budget_item_id: string | null
           category_id: string | null
+          client_sync_id: string | null
           created_at: string
           date: string
           id: string
@@ -493,6 +494,7 @@ export type Database = {
           amount: number
           budget_item_id?: string | null
           category_id?: string | null
+          client_sync_id?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -506,6 +508,7 @@ export type Database = {
           amount?: number
           budget_item_id?: string | null
           category_id?: string | null
+          client_sync_id?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -541,6 +544,7 @@ export type Database = {
       transfers: {
         Row: {
           amount: number
+          client_sync_id: string | null
           created_at: string
           date: string
           from_account_id: string
@@ -552,6 +556,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          client_sync_id?: string | null
           created_at?: string
           date?: string
           from_account_id: string
@@ -563,6 +568,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          client_sync_id?: string | null
           created_at?: string
           date?: string
           from_account_id?: string
