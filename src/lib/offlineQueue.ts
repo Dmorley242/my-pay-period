@@ -320,17 +320,24 @@ export const syncPendingMovements = async (): Promise<{ synced: number; failed: 
         } else {
           const serverRow = res?.data ?? null;
           const match = serverRow ? comparePayloads(item.kind, item.payload, serverRow) : true;
-          updateAuditByLocalId(item.local_id, {
-            status: match ? "synced" : "conflict",
-            server_id: serverRow?.id ?? null,
-            server_payload: serverRow,
-            synced_at: new Date().toISOString(),
-            error: match ? null : "Server row differs from local payload after insert",
-          });
-          removePendingMovement(item.local_id);
           if (match) {
+            updateAuditByLocalId(item.local_id, {
+              status: "synced",
+              server_id: serverRow?.id ?? null,
+              server_payload: serverRow,
+              synced_at: new Date().toISOString(),
+              error: null,
+            });
+            removePendingMovement(item.local_id);
             synced++;
           } else {
+            updateAuditByLocalId(item.local_id, {
+              status: "conflict",
+              server_id: serverRow?.id ?? null,
+              server_payload: serverRow,
+              error: "Server row differs from local payload after insert",
+            });
+            markPendingFailed(item.local_id, "Sync conflict — review needed");
             conflicts++;
             if (!conflictToastShown) {
               conflictToastShown = true;
