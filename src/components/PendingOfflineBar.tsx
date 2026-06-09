@@ -74,6 +74,7 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     trySync();
     return () => {
       unsub();
+      unsubAudit();
       window.removeEventListener("online", trySync);
       window.removeEventListener("focus", trySync);
       document.removeEventListener("visibilitychange", onVisibility);
