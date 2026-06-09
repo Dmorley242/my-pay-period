@@ -43,6 +43,10 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
   const qc = useQueryClient();
   const [items, setItems] = useState<PendingMovement[]>(() => getPendingMovements());
   const [syncing, setSyncing] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [unresolvedCount, setUnresolvedCount] = useState(
+    () => getSyncAuditRecords().filter(a => a.status === "conflict" || a.status === "failed").length
+  );
 
   const counts = useMemo(() => computeCounts(items), [items]);
 
