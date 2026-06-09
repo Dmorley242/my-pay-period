@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CloudOff, RefreshCw } from "lucide-react";
+import { AlertTriangle, CloudOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,6 +10,8 @@ import {
   type PendingMovement,
 } from "@/lib/offlineQueue";
 import { checkSupabaseConnection } from "@/lib/networkSync";
+import { getSyncAuditRecords, subscribeSyncAudit } from "@/lib/syncAudit";
+import { SyncConflictReviewDialog } from "@/components/SyncConflictReviewDialog";
 
 function computeCounts(items: PendingMovement[]) {
   let pending = 0;
@@ -41,12 +43,22 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
   const qc = useQueryClient();
   const [items, setItems] = useState<PendingMovement[]>(() => getPendingMovements());
   const [syncing, setSyncing] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [unresolvedCount, setUnresolvedCount] = useState(
+    () => getSyncAuditRecords().filter(a => a.status === "conflict" || a.status === "failed").length
+  );
 
   const counts = useMemo(() => computeCounts(items), [items]);
 
   useEffect(() => {
-    const refresh = () => setItems(getPendingMovements());
+    const refreshAudit = () =>
+      setUnresolvedCount(
+        getSyncAuditRecords().filter(a => a.status === "conflict" || a.status === "failed").length
+      );
+    const refresh = () => { setItems(getPendingMovements()); refreshAudit(); };
     const unsub = subscribeOfflineQueue(refresh);
+    const unsubAudit = subscribeSyncAudit(refreshAudit);
+    refreshAudit();
     const trySync = () => {
       if (typeof navigator !== "undefined" && navigator.onLine === false) return;
       if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
@@ -62,6 +74,7 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     trySync();
     return () => {
       unsub();
+      unsubAudit();
       window.removeEventListener("online", trySync);
       window.removeEventListener("focus", trySync);
       document.removeEventListener("visibilitychange", onVisibility);
@@ -100,21 +113,35 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     }
   };
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && unresolvedCount === 0) return null;
 
   const canSync = counts.pending > 0;
+  const showReview = unresolvedCount > 0;
 
   return (
-    <div className={`flex items-center justify-between gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm ${className}`}>
-      <div className="flex items-center gap-2 min-w-0">
-        <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
-        <span className="truncate">{statusText(items)}</span>
+    <>
+      <div className={`flex items-center justify-between gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm ${className}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
+          <span className="truncate">{statusText(items)}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {showReview && (
+            <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>
+              <AlertTriangle className="h-3.5 w-3.5 mr-1 text-amber-600" />
+              Review Sync Issue
+            </Button>
+          )}
+          {items.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => runSync({ manual: true })} disabled={syncing || !canSync}>
+              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Sync Now"}
+            </Button>
+          )}
+        </div>
       </div>
-      <Button size="sm" variant="outline" onClick={() => runSync({ manual: true })} disabled={syncing || !canSync}>
-        <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
-        {syncing ? "Syncing…" : "Sync Now"}
-      </Button>
-    </div>
+      <SyncConflictReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} />
+    </>
   );
 }
 
