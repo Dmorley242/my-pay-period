@@ -141,6 +141,14 @@ export function SyncConflictReviewDialog({ open, onOpenChange }: Props) {
 
   const handleKeepServer = async () => {
     if (!current) return;
+    // Safety: if no server row exists, "Keep Server" effectively discards the local item.
+    const hasServerRow = !!(current.server_payload || current.server_id);
+    if (!hasServerRow) {
+      const ok = typeof window !== "undefined"
+        ? window.confirm("No server version exists for this item. Continuing will discard your local entry. Continue?")
+        : true;
+      if (!ok) return;
+    }
     setWorking(true);
     try {
       // Remove pending item if still present
@@ -151,7 +159,7 @@ export function SyncConflictReviewDialog({ open, onOpenChange }: Props) {
         resolved_at: new Date().toISOString(),
         error: null,
       });
-      toast.success("Kept server version");
+      toast.success(hasServerRow ? "Kept server version" : "Local entry discarded");
       qc.invalidateQueries();
     } finally {
       setWorking(false);
