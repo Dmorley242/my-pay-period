@@ -113,21 +113,35 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
     }
   };
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && unresolvedCount === 0) return null;
 
   const canSync = counts.pending > 0;
+  const showReview = unresolvedCount > 0;
 
   return (
-    <div className={`flex items-center justify-between gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm ${className}`}>
-      <div className="flex items-center gap-2 min-w-0">
-        <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
-        <span className="truncate">{statusText(items)}</span>
+    <>
+      <div className={`flex items-center justify-between gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm ${className}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <CloudOff className="h-4 w-4 text-amber-600 shrink-0" />
+          <span className="truncate">{statusText(items)}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {showReview && (
+            <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)}>
+              <AlertTriangle className="h-3.5 w-3.5 mr-1 text-amber-600" />
+              Review Sync Issue
+            </Button>
+          )}
+          {items.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => runSync({ manual: true })} disabled={syncing || !canSync}>
+              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Sync Now"}
+            </Button>
+          )}
+        </div>
       </div>
-      <Button size="sm" variant="outline" onClick={() => runSync({ manual: true })} disabled={syncing || !canSync}>
-        <RefreshCw className={`h-3.5 w-3.5 mr-1 ${syncing ? "animate-spin" : ""}`} />
-        {syncing ? "Syncing…" : "Sync Now"}
-      </Button>
-    </div>
+      <SyncConflictReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} />
+    </>
   );
 }
 
