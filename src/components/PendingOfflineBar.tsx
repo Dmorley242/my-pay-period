@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CloudOff, RefreshCw } from "lucide-react";
+import { AlertTriangle, CloudOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,6 +10,8 @@ import {
   type PendingMovement,
 } from "@/lib/offlineQueue";
 import { checkSupabaseConnection } from "@/lib/networkSync";
+import { getSyncAuditRecords, subscribeSyncAudit } from "@/lib/syncAudit";
+import { SyncConflictReviewDialog } from "@/components/SyncConflictReviewDialog";
 
 function computeCounts(items: PendingMovement[]) {
   let pending = 0;
