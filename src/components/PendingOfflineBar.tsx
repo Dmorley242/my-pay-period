@@ -51,8 +51,14 @@ export function PendingOfflineBar({ className = "" }: { className?: string }) {
   const counts = useMemo(() => computeCounts(items), [items]);
 
   useEffect(() => {
-    const refresh = () => setItems(getPendingMovements());
+    const refreshAudit = () =>
+      setUnresolvedCount(
+        getSyncAuditRecords().filter(a => a.status === "conflict" || a.status === "failed").length
+      );
+    const refresh = () => { setItems(getPendingMovements()); refreshAudit(); };
     const unsub = subscribeOfflineQueue(refresh);
+    const unsubAudit = subscribeSyncAudit(refreshAudit);
+    refreshAudit();
     const trySync = () => {
       if (typeof navigator !== "undefined" && navigator.onLine === false) return;
       if (getPendingMovements().filter(i => i.status === "pending").length === 0) return;
