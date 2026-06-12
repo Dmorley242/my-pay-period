@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil, Sun, Moon, Download } from "lucide-react";
+import { LayoutDashboard, Wallet, PlusCircle, Tags, CalendarRange, History, LogOut, Menu, Lock, PieChart, LayoutTemplate, Pencil, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ const links = [
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
   { to: "/history", icon: History, label: "Account History" },
-  { to: "/backup", icon: Download, label: "Backup" },
 ];
 
 const TITLE_KEY = "app:customTitle";
@@ -93,8 +92,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </Button>
       </div>
       <NavItems />
-      <div className="mt-auto pt-4 border-t border-sidebar-border">
-        <div className="px-2 pb-2 text-xs text-sidebar-foreground/70 truncate">{user?.email}</div>
+      <div className="mt-auto pt-4 border-t border-sidebar-border space-y-1">
+        <NavLink
+          to="/account"
+          className={({ isActive }) => cn(
+            "block px-2 py-1.5 rounded-md transition-colors hover:bg-sidebar-accent/60",
+            isActive && "bg-sidebar-accent"
+          )}
+        >
+          <div className="text-[11px] text-sidebar-foreground/70">Account settings</div>
+          <div className="text-xs text-sidebar-primary-foreground truncate">{user?.email}</div>
+        </NavLink>
         <Button variant="ghost" size="sm" onClick={handleOut} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary-foreground">
           <LogOut className="h-4 w-4 mr-2" />Sign out
         </Button>

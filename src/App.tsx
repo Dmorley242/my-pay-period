@@ -18,6 +18,7 @@ import Holds from "./pages/Holds";
 import Budget from "./pages/Budget";
 import BudgetTemplates from "./pages/BudgetTemplates";
 import Backup from "./pages/Backup";
+import AccountCenter from "./pages/AccountCenter";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/budget" element={<Protected el={<Budget />} />} />
             <Route path="/budget-templates" element={<Protected el={<BudgetTemplates />} />} />
             <Route path="/backup" element={<Protected el={<Backup />} />} />
+            <Route path="/account" element={<Protected el={<AccountCenter />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
