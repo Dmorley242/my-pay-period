@@ -48,7 +48,7 @@ const App = () => (
             <Route path="/holds" element={<Protected el={<Holds />} />} />
             <Route path="/budget" element={<Protected el={<Budget />} />} />
             <Route path="/budget-templates" element={<Protected el={<BudgetTemplates />} />} />
-            <Route path="/backup" element={<Protected el={<Backup />} />} />
+            <Route path="/backup" element={<Navigate to="/account" replace />} />
             <Route path="/account" element={<Protected el={<AccountCenter />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
