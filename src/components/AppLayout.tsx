@@ -18,7 +18,6 @@ const links = [
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/pay-periods", icon: CalendarRange, label: "Pay Periods" },
   { to: "/history", icon: History, label: "Account History" },
-  { to: "/backup", icon: Download, label: "Backup" },
 ];
 
 const TITLE_KEY = "app:customTitle";
