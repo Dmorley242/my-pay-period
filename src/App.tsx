@@ -17,7 +17,7 @@ import History from "./pages/History";
 import Holds from "./pages/Holds";
 import Budget from "./pages/Budget";
 import BudgetTemplates from "./pages/BudgetTemplates";
-import Backup from "./pages/Backup";
+
 import AccountCenter from "./pages/AccountCenter";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
