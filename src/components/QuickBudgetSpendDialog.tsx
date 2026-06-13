@@ -21,18 +21,20 @@ const todayLocal = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-const lsKey = (budgetItemId: string) => `quickSpend:lastAccount:${budgetItemId}`;
+const lsKey = (budgetItemId: string, subItemId?: string | null) =>
+  subItemId ? `quickSpend:lastAccount:${budgetItemId}:${subItemId}` : `quickSpend:lastAccount:${budgetItemId}`;
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   budgetItem: BudgetItem | null;
+  budgetSubItem?: BudgetSubItem | null;
   accounts: Account[];
   budgetItems: BudgetItem[];
   activePeriod: PayPeriod | null;
 }
 
-export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, accounts, budgetItems, activePeriod }: Props) {
+export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetSubItem, accounts, budgetItems, activePeriod }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [date, setDate] = useState(todayLocal());
