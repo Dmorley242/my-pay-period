@@ -438,8 +438,9 @@ export default function Dashboard() {
       <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
       <QuickBudgetSpendDialog
         open={!!quickItem}
-        onOpenChange={(o) => !o && setQuickItem(null)}
+        onOpenChange={(o) => { if (!o) { setQuickItem(null); setQuickSubItem(null); } }}
         budgetItem={quickItem}
+        budgetSubItem={quickSubItem}
         accounts={accounts}
         budgetItems={budgetItems}
         activePeriod={active}
