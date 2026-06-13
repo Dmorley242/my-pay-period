@@ -167,7 +167,7 @@ async function findByClientSyncId(kind: PendingKind, payload: Record<string, any
 async function findDuplicate(kind: PendingKind, payload: Record<string, any>): Promise<string | null> {
   try {
     if (kind === "transaction") {
-      const q = supabase.from("transactions").select("id, notes, budget_item_id").limit(5)
+      const q = supabase.from("transactions").select("id, notes, budget_item_id, budget_sub_item_id").limit(5)
         .eq("user_id", payload.user_id)
         .eq("date", payload.date)
         .eq("account_id", payload.account_id)
@@ -177,8 +177,9 @@ async function findDuplicate(kind: PendingKind, payload: Record<string, any>): P
       if (res?.error || !res?.data) return null;
       const wantNotes = payload.notes ?? null;
       const wantBid = payload.budget_item_id ?? null;
+      const wantSub = payload.budget_sub_item_id ?? null;
       const match = (res.data as any[]).find((r: any) =>
-        (r.notes ?? null) === wantNotes && (r.budget_item_id ?? null) === wantBid
+        (r.notes ?? null) === wantNotes && (r.budget_item_id ?? null) === wantBid && (r.budget_sub_item_id ?? null) === wantSub
       );
       return match?.id ?? null;
     } else {
