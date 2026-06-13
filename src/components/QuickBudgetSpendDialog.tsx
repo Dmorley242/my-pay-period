@@ -52,15 +52,19 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetS
       setAmount("");
       setNotes("");
 
-      // Default account: last-used for this budget item, else linked account
+      // Default account: last-used for this budget item (or sub-item), else linked account
       let nextAccount = budgetItem.account_id;
       try {
-        const last = localStorage.getItem(lsKey(budgetItem.id));
+        const last = localStorage.getItem(lsKey(budgetItem.id, budgetSubItem?.id));
         if (last && accounts.some(a => a.id === last)) nextAccount = last;
+        else {
+          const fallback = localStorage.getItem(lsKey(budgetItem.id));
+          if (fallback && accounts.some(a => a.id === fallback)) nextAccount = fallback;
+        }
       } catch {}
       setAccountId(nextAccount);
     }
-  }, [open, budgetItem, accounts]);
+  }, [open, budgetItem, budgetSubItem, accounts]);
 
   const periodItems = useMemo(
     () => (activePeriod ? budgetItems.filter(b => b.pay_period_id === activePeriod.id) : []),
