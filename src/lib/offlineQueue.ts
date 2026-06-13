@@ -120,7 +120,7 @@ const recordAttempt = (local_id: string) => {
 // Back-compat re-export
 export const isNetworkError = (err: any): boolean => isLikelyNetworkOrTimeoutError(err);
 
-const TX_COMPARE_FIELDS = ["date", "account_id", "transaction_type", "amount", "budget_item_id", "notes", "pay_period_id", "client_sync_id"];
+const TX_COMPARE_FIELDS = ["date", "account_id", "transaction_type", "amount", "budget_item_id", "budget_sub_item_id", "notes", "pay_period_id", "client_sync_id"];
 const TR_COMPARE_FIELDS = ["date", "from_account_id", "to_account_id", "amount", "notes", "pay_period_id", "client_sync_id"];
 
 const norm = (v: any) => {
