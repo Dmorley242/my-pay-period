@@ -12,7 +12,7 @@ import { MoneyInput } from "@/components/MoneyInput";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel } from "@/lib/format";
-import type { Account, BudgetItem, PayPeriod } from "@/hooks/useFinanceData";
+import type { Account, BudgetItem, BudgetSubItem, PayPeriod } from "@/hooks/useFinanceData";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
