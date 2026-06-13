@@ -143,7 +143,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Quick spend{budgetItem ? ` · ${budgetItem.name}` : ""}</DialogTitle>
+          <DialogTitle>Quick spend{budgetItem ? ` · ${budgetItem.name}${budgetSubItem ? ` / ${budgetSubItem.name}` : ""}` : ""}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
