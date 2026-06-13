@@ -127,7 +127,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetS
         setSaving(false);
         return toast.error(friendlyError(error));
       }
-      try { localStorage.setItem(lsKey(budgetItemId), accountId); } catch {}
+      try { localStorage.setItem(lsKey(budgetItemId, budgetSubItem?.id), accountId); } catch {}
       toast.success("Expense added");
       qc.invalidateQueries();
       setSaving(false);
