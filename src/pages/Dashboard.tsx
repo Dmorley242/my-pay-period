@@ -36,17 +36,21 @@ export default function Dashboard() {
   const { data: periods = [] } = usePayPeriods();
   const active = useActivePayPeriod();
   const { data: budgetItems = [] } = useBudgetItems();
+  const { data: budgetSubItems = [] } = useBudgetSubItems();
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<MovementRef | null>(null);
   const [quickItem, setQuickItem] = useState<BudgetItem | null>(null);
+  const [quickSubItem, setQuickSubItem] = useState<BudgetSubItem | null>(null);
   const [loadCCOpen, setLoadCCOpen] = useState(false);
   const [showAllBudget, setShowAllBudget] = useState(false);
+  const [expandedBudget, setExpandedBudget] = useState<Record<string, boolean>>({});
   const touchStart = useRef<number | null>(null);
 
   const pendingItems = usePendingOfflineMovements();
   const pendingAccountImpacts = useMemo(() => computePendingAccountImpacts(pendingItems), [pendingItems]);
   const pendingBudgetSpend = useMemo(() => computePendingBudgetSpend(pendingItems), [pendingItems]);
-  const hasAnyPendingBudget = Object.keys(pendingBudgetSpend).length > 0;
+  const pendingBudgetSubItemSpend = useMemo(() => computePendingBudgetSubItemSpend(pendingItems), [pendingItems]);
+  const hasAnyPendingBudget = Object.keys(pendingBudgetSpend).length > 0 || Object.keys(pendingBudgetSubItemSpend).length > 0;
 
   const projectedBalance = (id: string) => Number(accounts.find(a => a.id === id)?.current_balance ?? 0) + (pendingAccountImpacts[id] || 0);
   const total = accounts.reduce((s, a) => s + projectedBalance(a.id), 0);
