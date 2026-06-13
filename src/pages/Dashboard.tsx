@@ -314,14 +314,13 @@ export default function Dashboard() {
                               </button>
                             )}
                             <span className="text-sm font-medium truncate">{b.name}</span>
-                            {hasSubs && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground">{subs.length} bills</span>
-                            )}
                             <span className="text-xs text-muted-foreground truncate">{accLbl(b.account_id)}</span>
                           </div>
-                          <Button size="sm" variant="outline" className="h-7 px-2 shrink-0" onClick={() => { setQuickSubItem(null); setQuickItem(b); }}>
-                            <Plus className="h-3.5 w-3.5 mr-1" />Add
-                          </Button>
+                          {!hasSubs && (
+                            <Button size="sm" variant="outline" className="h-7 px-2 shrink-0" onClick={() => { setQuickSubItem(null); setQuickItem(b); }}>
+                              <Plus className="h-3.5 w-3.5 mr-1" />Add
+                            </Button>
+                          )}
                         </div>
                         <div className="grid grid-cols-3 gap-2 mt-1 text-xs">
                           <DashCell label="Budget" value={money(b.budget_amount)} />
