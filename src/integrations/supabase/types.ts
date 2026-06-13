@@ -479,6 +479,7 @@ export type Database = {
           account_id: string
           amount: number
           budget_item_id: string | null
+          budget_sub_item_id: string | null
           category_id: string | null
           client_sync_id: string | null
           created_at: string
@@ -493,6 +494,7 @@ export type Database = {
           account_id: string
           amount: number
           budget_item_id?: string | null
+          budget_sub_item_id?: string | null
           category_id?: string | null
           client_sync_id?: string | null
           created_at?: string
@@ -507,6 +509,7 @@ export type Database = {
           account_id?: string
           amount?: number
           budget_item_id?: string | null
+          budget_sub_item_id?: string | null
           category_id?: string | null
           client_sync_id?: string | null
           created_at?: string
@@ -523,6 +526,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_budget_sub_item_id_fkey"
+            columns: ["budget_sub_item_id"]
+            isOneToOne: false
+            referencedRelation: "budget_sub_items"
             referencedColumns: ["id"]
           },
           {

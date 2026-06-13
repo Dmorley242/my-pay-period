@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useAccountHolds, useAccounts, useActivePayPeriod, useBudgetItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
+import { useAccountHolds, useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
@@ -10,8 +10,8 @@ import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDe
 import { txLabel, hasNotes } from "@/lib/txNotes";
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
 import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
-import type { BudgetItem } from "@/hooks/useFinanceData";
-import { usePendingOfflineMovements, computePendingAccountImpacts, computePendingBudgetSpend } from "@/hooks/usePendingOfflineMovements";
+import type { BudgetItem, BudgetSubItem } from "@/hooks/useFinanceData";
+import { usePendingOfflineMovements, computePendingAccountImpacts, computePendingBudgetSpend, computePendingBudgetSubItemSpend } from "@/hooks/usePendingOfflineMovements";
 
 
 type Movement = {
@@ -36,17 +36,21 @@ export default function Dashboard() {
   const { data: periods = [] } = usePayPeriods();
   const active = useActivePayPeriod();
   const { data: budgetItems = [] } = useBudgetItems();
+  const { data: budgetSubItems = [] } = useBudgetSubItems();
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<MovementRef | null>(null);
   const [quickItem, setQuickItem] = useState<BudgetItem | null>(null);
+  const [quickSubItem, setQuickSubItem] = useState<BudgetSubItem | null>(null);
   const [loadCCOpen, setLoadCCOpen] = useState(false);
   const [showAllBudget, setShowAllBudget] = useState(false);
+  const [expandedBudget, setExpandedBudget] = useState<Record<string, boolean>>({});
   const touchStart = useRef<number | null>(null);
 
   const pendingItems = usePendingOfflineMovements();
   const pendingAccountImpacts = useMemo(() => computePendingAccountImpacts(pendingItems), [pendingItems]);
   const pendingBudgetSpend = useMemo(() => computePendingBudgetSpend(pendingItems), [pendingItems]);
-  const hasAnyPendingBudget = Object.keys(pendingBudgetSpend).length > 0;
+  const pendingBudgetSubItemSpend = useMemo(() => computePendingBudgetSubItemSpend(pendingItems), [pendingItems]);
+  const hasAnyPendingBudget = Object.keys(pendingBudgetSpend).length > 0 || Object.keys(pendingBudgetSubItemSpend).length > 0;
 
   const projectedBalance = (id: string) => Number(accounts.find(a => a.id === id)?.current_balance ?? 0) + (pendingAccountImpacts[id] || 0);
   const total = accounts.reduce((s, a) => s + projectedBalance(a.id), 0);
@@ -227,14 +231,26 @@ export default function Dashboard() {
 
       {active && (() => {
         const items = budgetItems.filter(b => b.pay_period_id === active.id);
+        const subItemsByBid = new Map<string, BudgetSubItem[]>();
+        for (const s of budgetSubItems) {
+          const arr = subItemsByBid.get(s.budget_item_id) || [];
+          arr.push(s);
+          subItemsByBid.set(s.budget_item_id, arr);
+        }
         const spentMap = new Map<string, number>();
+        const subSpentMap = new Map<string, number>();
         txs.forEach(t => {
+          if (t.transaction_type !== "expense") return;
           const bid = (t as any).budget_item_id as string | null | undefined;
-          if (bid && t.transaction_type === "expense") spentMap.set(bid, (spentMap.get(bid) || 0) + Number(t.amount));
+          if (bid) spentMap.set(bid, (spentMap.get(bid) || 0) + Number(t.amount));
+          const sid = (t as any).budget_sub_item_id as string | null | undefined;
+          if (sid) subSpentMap.set(sid, (subSpentMap.get(sid) || 0) + Number(t.amount));
         });
-        // Include pending offline expenses with budget_item_id
         for (const [bid, amt] of Object.entries(pendingBudgetSpend)) {
           spentMap.set(bid, (spentMap.get(bid) || 0) + amt);
+        }
+        for (const [sid, amt] of Object.entries(pendingBudgetSubItemSpend)) {
+          subSpentMap.set(sid, (subSpentMap.get(sid) || 0) + amt);
         }
         const payAmount = Number(active.net_pay_amount ?? 0);
         const budgeted = items.reduce((s, b) => s + Number(b.budget_amount), 0);
@@ -280,14 +296,30 @@ export default function Dashboard() {
                   {visible.map(b => {
                     const s = spentMap.get(b.id) || 0;
                     const r = Number(b.budget_amount) - s;
+                    const subs = subItemsByBid.get(b.id) || [];
+                    const hasSubs = subs.length > 0;
+                    const isOpen = !!expandedBudget[b.id];
                     return (
                       <div key={b.id} className="rounded-md border px-3 py-2">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
+                          <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                            {hasSubs && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedBudget(prev => ({ ...prev, [b.id]: !prev[b.id] }))}
+                                className="p-0.5 -ml-1 text-muted-foreground hover:text-foreground"
+                                aria-label={isOpen ? "Collapse" : "Expand"}
+                              >
+                                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                            )}
                             <span className="text-sm font-medium truncate">{b.name}</span>
+                            {hasSubs && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground">{subs.length} bills</span>
+                            )}
                             <span className="text-xs text-muted-foreground truncate">{accLbl(b.account_id)}</span>
                           </div>
-                          <Button size="sm" variant="outline" className="h-7 px-2 shrink-0" onClick={() => setQuickItem(b)}>
+                          <Button size="sm" variant="outline" className="h-7 px-2 shrink-0" onClick={() => { setQuickSubItem(null); setQuickItem(b); }}>
                             <Plus className="h-3.5 w-3.5 mr-1" />Add
                           </Button>
                         </div>
@@ -296,6 +328,29 @@ export default function Dashboard() {
                           <DashCell label="Spent" value={money(s)} cls="text-expense" />
                           <DashCell label="Remaining" value={money(r)} cls={r < 0 ? "text-destructive" : "text-income"} />
                         </div>
+                        {hasSubs && isOpen && (
+                          <div className="mt-2 space-y-1 border-l-2 border-primary/30 pl-2">
+                            {subs.map(sub => {
+                              const ss = subSpentMap.get(sub.id) || 0;
+                              const sr = Number(sub.amount) - ss;
+                              return (
+                                <div key={sub.id} className="rounded bg-accent/40 px-2 py-1.5">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs font-medium truncate">{sub.name}</span>
+                                    <Button size="sm" variant="ghost" className="h-6 px-1.5 shrink-0" onClick={() => { setQuickSubItem(sub); setQuickItem(b); }}>
+                                      <Plus className="h-3 w-3 mr-0.5" />Add
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-1 mt-0.5 text-[11px]">
+                                    <DashCell label="Budget" value={money(sub.amount)} />
+                                    <DashCell label="Spent" value={money(ss)} cls="text-expense" />
+                                    <DashCell label="Remaining" value={money(sr)} cls={sr < 0 ? "text-destructive" : "text-income"} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -383,8 +438,9 @@ export default function Dashboard() {
       <MovementDetailsDialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)} movement={detail} />
       <QuickBudgetSpendDialog
         open={!!quickItem}
-        onOpenChange={(o) => !o && setQuickItem(null)}
+        onOpenChange={(o) => { if (!o) { setQuickItem(null); setQuickSubItem(null); } }}
         budgetItem={quickItem}
+        budgetSubItem={quickSubItem}
         accounts={accounts}
         budgetItems={budgetItems}
         activePeriod={active}

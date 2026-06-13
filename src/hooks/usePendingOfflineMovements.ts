@@ -58,3 +58,21 @@ export function computePendingBudgetSpend(items: PendingMovement[]): Record<stri
   }
   return map;
 }
+
+/** Map of budget_sub_item_id -> pending expense amount. */
+export function computePendingBudgetSubItemSpend(items: PendingMovement[]): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const it of items) {
+    if (!isCountable(it)) continue;
+    if (it.kind !== "transaction") continue;
+    const p = it.payload || {};
+    const type = String(p.transaction_type || "").toLowerCase();
+    if (type !== "expense") continue;
+    const sid = p.budget_sub_item_id as string | undefined | null;
+    if (!sid) continue;
+    const amt = Number(p.amount) || 0;
+    if (!amt) continue;
+    map[sid] = (map[sid] || 0) + amt;
+  }
+  return map;
+}

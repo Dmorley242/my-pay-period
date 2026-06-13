@@ -12,7 +12,7 @@ import { MoneyInput } from "@/components/MoneyInput";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendlyError";
 import { accountLabel } from "@/lib/format";
-import type { Account, BudgetItem, PayPeriod } from "@/hooks/useFinanceData";
+import type { Account, BudgetItem, BudgetSubItem, PayPeriod } from "@/hooks/useFinanceData";
 import { addPendingMovement, isNetworkError } from "@/lib/offlineQueue";
 import { withTimeout, isLikelyNetworkOrTimeoutError } from "@/lib/networkSync";
 
@@ -21,18 +21,20 @@ const todayLocal = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-const lsKey = (budgetItemId: string) => `quickSpend:lastAccount:${budgetItemId}`;
+const lsKey = (budgetItemId: string, subItemId?: string | null) =>
+  subItemId ? `quickSpend:lastAccount:${budgetItemId}:${subItemId}` : `quickSpend:lastAccount:${budgetItemId}`;
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   budgetItem: BudgetItem | null;
+  budgetSubItem?: BudgetSubItem | null;
   accounts: Account[];
   budgetItems: BudgetItem[];
   activePeriod: PayPeriod | null;
 }
 
-export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, accounts, budgetItems, activePeriod }: Props) {
+export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetSubItem, accounts, budgetItems, activePeriod }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [date, setDate] = useState(todayLocal());
@@ -50,15 +52,19 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
       setAmount("");
       setNotes("");
 
-      // Default account: last-used for this budget item, else linked account
+      // Default account: last-used for this budget item (or sub-item), else linked account
       let nextAccount = budgetItem.account_id;
       try {
-        const last = localStorage.getItem(lsKey(budgetItem.id));
+        const last = localStorage.getItem(lsKey(budgetItem.id, budgetSubItem?.id));
         if (last && accounts.some(a => a.id === last)) nextAccount = last;
+        else {
+          const fallback = localStorage.getItem(lsKey(budgetItem.id));
+          if (fallback && accounts.some(a => a.id === fallback)) nextAccount = fallback;
+        }
       } catch {}
       setAccountId(nextAccount);
     }
-  }, [open, budgetItem, accounts]);
+  }, [open, budgetItem, budgetSubItem, accounts]);
 
   const periodItems = useMemo(
     () => (activePeriod ? budgetItems.filter(b => b.pay_period_id === activePeriod.id) : []),
@@ -80,7 +86,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
     if (!budgetValid) return toast.error("Budget item is required");
     setSaving(true);
 
-    const payload = {
+    const payload: Record<string, any> = {
       user_id: user.id,
       transaction_type: "expense",
       date,
@@ -91,10 +97,11 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
       notes: notes || null,
       budget_item_id: budgetItemId,
     };
+    if (budgetSubItem?.id) payload.budget_sub_item_id = budgetSubItem.id;
 
     const queueOffline = (reason: "offline" | "network") => {
       addPendingMovement("transaction", payload);
-      try { localStorage.setItem(lsKey(budgetItemId), accountId); } catch {}
+      try { localStorage.setItem(lsKey(budgetItemId, budgetSubItem?.id), accountId); } catch {}
       toast.success(
         reason === "offline"
           ? "Saved offline. It will sync when you're back online."
@@ -120,7 +127,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
         setSaving(false);
         return toast.error(friendlyError(error));
       }
-      try { localStorage.setItem(lsKey(budgetItemId), accountId); } catch {}
+      try { localStorage.setItem(lsKey(budgetItemId, budgetSubItem?.id), accountId); } catch {}
       toast.success("Expense added");
       qc.invalidateQueries();
       setSaving(false);
@@ -136,7 +143,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, account
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Quick spend{budgetItem ? ` · ${budgetItem.name}` : ""}</DialogTitle>
+          <DialogTitle>Quick spend{budgetItem ? ` · ${budgetItem.name}${budgetSubItem ? ` / ${budgetSubItem.name}` : ""}` : ""}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
