@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useAccountHolds, useAccounts, useActivePayPeriod, useBudgetItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
+import { useAccountHolds, useAccounts, useActivePayPeriod, useBudgetItems, useBudgetSubItems, useCategories, usePayPeriods, useTransactions, useTransfers } from "@/hooks/useFinanceData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
@@ -10,8 +10,8 @@ import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDe
 import { txLabel, hasNotes } from "@/lib/txNotes";
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
 import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
-import type { BudgetItem } from "@/hooks/useFinanceData";
-import { usePendingOfflineMovements, computePendingAccountImpacts, computePendingBudgetSpend } from "@/hooks/usePendingOfflineMovements";
+import type { BudgetItem, BudgetSubItem } from "@/hooks/useFinanceData";
+import { usePendingOfflineMovements, computePendingAccountImpacts, computePendingBudgetSpend, computePendingBudgetSubItemSpend } from "@/hooks/usePendingOfflineMovements";
 
 
 type Movement = {
