@@ -1,0 +1,2 @@
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS budget_sub_item_id uuid REFERENCES public.budget_sub_items(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_transactions_budget_sub_item_id ON public.transactions (budget_sub_item_id) WHERE budget_sub_item_id IS NOT NULL;
