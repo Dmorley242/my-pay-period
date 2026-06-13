@@ -86,7 +86,7 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetS
     if (!budgetValid) return toast.error("Budget item is required");
     setSaving(true);
 
-    const payload = {
+    const payload: Record<string, any> = {
       user_id: user.id,
       transaction_type: "expense",
       date,
@@ -97,10 +97,11 @@ export function QuickBudgetSpendDialog({ open, onOpenChange, budgetItem, budgetS
       notes: notes || null,
       budget_item_id: budgetItemId,
     };
+    if (budgetSubItem?.id) payload.budget_sub_item_id = budgetSubItem.id;
 
     const queueOffline = (reason: "offline" | "network") => {
       addPendingMovement("transaction", payload);
-      try { localStorage.setItem(lsKey(budgetItemId), accountId); } catch {}
+      try { localStorage.setItem(lsKey(budgetItemId, budgetSubItem?.id), accountId); } catch {}
       toast.success(
         reason === "offline"
           ? "Saved offline. It will sync when you're back online."
