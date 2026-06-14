@@ -17,6 +17,7 @@ import History from "./pages/History";
 import Holds from "./pages/Holds";
 import Budget from "./pages/Budget";
 import BudgetTemplates from "./pages/BudgetTemplates";
+import BatchMovement from "./pages/BatchMovement";
 
 import AccountCenter from "./pages/AccountCenter";
 import Auth from "./pages/Auth";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/holds" element={<Protected el={<Holds />} />} />
             <Route path="/budget" element={<Protected el={<Budget />} />} />
             <Route path="/budget-templates" element={<Protected el={<BudgetTemplates />} />} />
+            <Route path="/batch-movement" element={<Protected el={<BatchMovement />} />} />
             <Route path="/backup" element={<Navigate to="/account" replace />} />
             <Route path="/account" element={<Protected el={<AccountCenter />} />} />
             <Route path="*" element={<NotFound />} />

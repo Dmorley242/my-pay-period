@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { money, fmtDate, accountLabel, accountParts } from "@/lib/format";
 import { Link } from "react-router-dom";
-import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown, StickyNote, CreditCard } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown, StickyNote, CreditCard, Layers } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
 import { txLabel, hasNotes } from "@/lib/txNotes";
@@ -221,11 +221,12 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button asChild size="sm"><Link to="/add"><PlusCircle className="h-4 w-4 mr-1" />Add Transaction</Link></Button>
         <Button size="sm" variant="secondary" onClick={() => setLoadCCOpen(true)}>
           <CreditCard className="h-4 w-4 mr-1" />Load Credit Card
         </Button>
+        <Button asChild size="sm" variant="secondary"><Link to="/batch-movement"><Layers className="h-4 w-4 mr-1" />Batch Movement</Link></Button>
         <Button asChild variant="outline" size="sm" className="col-span-2 sm:col-span-1"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
