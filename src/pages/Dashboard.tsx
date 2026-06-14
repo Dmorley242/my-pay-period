@@ -226,7 +226,7 @@ export default function Dashboard() {
         <Button size="sm" variant="secondary" onClick={() => setLoadCCOpen(true)}>
           <CreditCard className="h-4 w-4 mr-1" />Load Credit Card
         </Button>
-        <Button asChild size="sm" variant="secondary"><Link to="/batch-movement"><Layers className="h-4 w-4 mr-1" />Batch Movement</Link></Button>
+        <Button asChild size="sm" variant="secondary"><Link to="/batch-movement"><Layers className="h-4 w-4 mr-1" />Batch Entry</Link></Button>
         <Button asChild variant="outline" size="sm" className="col-span-2 sm:col-span-1"><Link to="/accounts"><Plus className="h-4 w-4 mr-1" />Add Account</Link></Button>
       </div>
 
