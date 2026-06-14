@@ -7,7 +7,13 @@ import { Link } from "react-router-dom";
 import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight, PlusCircle, Plus, CalendarRange, History, ChevronLeft, ChevronRight, ArrowRight, PieChart, ChevronDown, StickyNote, CreditCard, Layers } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MovementDetailsDialog, type MovementRef } from "@/components/MovementDetailsDialog";
-import { txLabel, hasNotes } from "@/lib/txNotes";
+import { txLabel, hasNotes, parseTxNotes } from "@/lib/txNotes";
+
+const SEP = "\u001F";
+const transferTitle = (raw: string | null | undefined) => {
+  if (!raw || !raw.includes(SEP)) return null;
+  return parseTxNotes(raw).label;
+};
 import { QuickBudgetSpendDialog } from "@/components/QuickBudgetSpendDialog";
 import { LoadCreditCardDialog } from "@/components/LoadCreditCardDialog";
 import type { BudgetItem, BudgetSubItem } from "@/hooks/useFinanceData";
@@ -83,8 +89,13 @@ export default function Dashboard() {
     const aTr = transfers.filter(t => t.from_account_id === accountId || t.to_account_id === accountId).map(t => {
       const isIn = t.to_account_id === accountId;
       const signed = isIn ? Number(t.amount) : -Number(t.amount);
-      const label = isIn ? `Transfer from ${accName(t.from_account_id)}` : `Transfer to ${accName(t.to_account_id)}`;
-      return { id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date, label, type: "transfer", signed, balanceAfter: 0, hasNote: !!t.notes, raw: t };
+      const title = transferTitle(t.notes);
+      const fromName = accName(t.from_account_id);
+      const toName = accName(t.to_account_id);
+      const fallback = isIn ? `Transfer from ${fromName}` : `Transfer to ${toName}`;
+      const label = title || fallback;
+      const typeText = title ? `Transfer · ${fromName} → ${toName}` : "transfer";
+      return { id: t.id, kind: "transfer" as const, date: t.date, created_at: (t as any).created_at ?? t.date, label, type: typeText, signed, balanceAfter: 0, hasNote: !!t.notes, raw: t };
     });
     const all = [...aTxs, ...aTr].sort((a, b) =>
       a.date === b.date ? (a.created_at < b.created_at ? -1 : 1) : (a.date < b.date ? -1 : 1)
@@ -102,9 +113,17 @@ export default function Dashboard() {
       const isIn = ["income", "deposit"].includes(t.transaction_type);
       return { id: t.id, kind: "tx" as const, date: t.date, title: txLabel(t.notes, txFallback(t)), subtitle: `${accName(t.account_id)} · ${t.transaction_type}`, amount: Number(t.amount), direction: isIn ? "in" as const : "out" as const };
     }),
-    ...transfers.slice(0, 10).map(t => ({
-      id: t.id, kind: "transfer" as const, date: t.date, title: `${accName(t.from_account_id)} → ${accName(t.to_account_id)}`, subtitle: "Transfer between accounts", amount: Number(t.amount), direction: "transfer" as const,
-    })),
+    ...transfers.slice(0, 10).map(t => {
+      const title = transferTitle(t.notes);
+      const fromName = accName(t.from_account_id);
+      const toName = accName(t.to_account_id);
+      return {
+        id: t.id, kind: "transfer" as const, date: t.date,
+        title: title || `${fromName} → ${toName}`,
+        subtitle: title ? `Transfer · ${fromName} → ${toName}` : "Transfer between accounts",
+        amount: Number(t.amount), direction: "transfer" as const,
+      };
+    }),
   ].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 5), [txs, transfers, accounts, cats]);
 
   const prev = () => setIdx(i => (accounts.length ? (i - 1 + accounts.length) % accounts.length : 0));
