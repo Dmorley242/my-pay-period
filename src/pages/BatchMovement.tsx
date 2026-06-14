@@ -37,6 +37,11 @@ const cents = (s: string) => {
   return Math.round(n * 100);
 };
 
+const todayLocal = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 const composeNote = (batchName: string, batchNote: string, rowLabel: string): string | null => {
   const rl = rowLabel.trim();
   const bn = batchName.trim();
@@ -56,7 +61,7 @@ export default function BatchMovement() {
   const { data: accounts = [] } = useAccounts();
 
   const [batchName, setBatchName] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayLocal());
   const [expectedTotal, setExpectedTotal] = useState("");
   const [batchNote, setBatchNote] = useState("");
   const [rows, setRows] = useState<Row[]>([newRow()]);
